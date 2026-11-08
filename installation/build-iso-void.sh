@@ -525,10 +525,8 @@ echo "build-iso-void: building Asura Go binaries..."
 	if [ -n "$SYSMON_SRC" ] && [ -d "$SYSMON_SRC/cmd/asura-sysmon" ]; then
 		echo "build-iso-void: building asura-sysmon from standalone repo ($SYSMON_SRC)..."
 		( cd "$SYSMON_SRC/cmd/asura-sysmon" && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$INCLUDE_DIR/usr/bin/asura-sysmon" . )
-		if [ -d "$SYSMON_SRC/ui" ]; then
-			mkdir -p "$INCLUDE_DIR/usr/share/asura/sysmon"
-			cp -r "$SYSMON_SRC/ui"/* "$INCLUDE_DIR/usr/share/asura/sysmon/" 2>/dev/null || true
-		fi
+		mkdir -p "$INCLUDE_DIR/usr/share/asura/sysmon"
+		cp -r "$REPO_ROOT/shell/sysmon"/* "$INCLUDE_DIR/usr/share/asura/sysmon/" 2>/dev/null || true
 	else
 		echo "build-iso-void: building asura-sysmon from desktop tree..."
 		CGO_ENABLED=0 go build -o "$INCLUDE_DIR/usr/bin/asura-sysmon" ./cmd/asura-sysmon
