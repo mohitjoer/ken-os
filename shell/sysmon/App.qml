@@ -333,34 +333,6 @@ Rectangle {
                 }
             }
 
-            Rectangle {
-                width: 54
-                height: 24
-                radius: 12
-                color: "#181a22"
-                border.color: "#282b37"
-                border.width: 1
-
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 5
-                    Rectangle {
-                        width: 6
-                        height: 6
-                        radius: 3
-                        color: statsProc.running ? "#38bdf8" : "#22c55e"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "LIVE"
-                        color: "#9ca3af"
-                        font.family: root.fontMono
-                        font.pixelSize: 9
-                        font.weight: Font.Bold
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-            }
 
             Rectangle {
                 width: 28
