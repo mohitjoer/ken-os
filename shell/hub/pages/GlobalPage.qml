@@ -97,7 +97,7 @@ Item {
         schema: pg.schema
         draft: pg.hub ? pg.hub.draft : null
         defaults: pg.hub ? pg.hub.committed : ({})
-        advanced: pg.hub ? pg.hub.advanced : false
+        advanced: pg.hub ? pg.hub.advanced : true
         title: pg.pTitle
         eyebrow: pg.pEyebrow
         blurb: pg.pBlurb

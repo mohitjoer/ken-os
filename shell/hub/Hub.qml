@@ -82,11 +82,9 @@ Rectangle {
     property string query: ""
     readonly property bool hasVoiceEngine: false
 
-    // progressive disclosure: one global Advanced switch (in the rail) reveals the
-    // deep knobs across every schema page. persisted like `section`, restored at
-    // startup by `advancedGet` below.
-    property bool advanced: false
-    onAdvancedChanged: Quickshell.execDetached(["asura-hubd", "config", "set", "advanced", hub.advanced ? "1" : "0"])
+    // Advanced mode is permanently enabled across the Hub: every schema page,
+    // power-user section, and deep tuning knob is always accessible by default.
+    readonly property bool advanced: true
 
     // The full catalogue. `wired` marks the pages whose content and
     // persistence are ported; the rest render an honest porting plate rather
@@ -838,14 +836,6 @@ Rectangle {
             }
         }
     }
-    Process {
-        id: advancedGet
-        command: ["asura-hubd", "config", "get", "advanced"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: { if (this.text.trim() === "1") hub.advanced = true; }
-        }
-    }
 
     property string cfgDir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/asura"
 
@@ -1132,41 +1122,12 @@ Rectangle {
             }
         }
 
-        // The one global switch at the foot: Advanced reveals the deep per-page
-        // knobs inside a schema page (the rail always lists every section). It
-        // persists and restores at startup by `advancedGet` / the settings
-        // daemon.
-        Item {
-            id: advToggle
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.leftMargin: Tokens.s5; anchors.rightMargin: Tokens.s5
-            anchors.bottomMargin: Tokens.s4
-            height: Tokens.ctlH
-            Rectangle {
-                anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: -Tokens.s3 }
-                height: 1; color: Tokens.lineSoft
-            }
-            Text {
-                anchors { left: parent.left; right: advSw.left; rightMargin: Tokens.s3; verticalCenter: parent.verticalCenter }
-                elide: Text.ElideRight
-                text: I18n.tr("Advanced")
-                color: hub.advanced ? Tokens.ink : Tokens.inkMuted
-                font.family: Tokens.ui; font.pixelSize: Tokens.fSmall
-                font.weight: Font.Medium; font.letterSpacing: Tokens.trackLabel
-            }
-            Sw {
-                id: advSw
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                on: hub.advanced
-                onToggled: (v) => hub.advanced = v
-            }
-        }
-
         Flickable {
             id: navFlick
-            anchors { left: parent.left; right: parent.right; top: railHead.bottom; bottom: advToggle.top }
+            anchors { left: parent.left; right: parent.right; top: railHead.bottom; bottom: parent.bottom }
             anchors.margins: Tokens.s5
             anchors.topMargin: Tokens.s4
+            anchors.bottomMargin: Tokens.s4
             contentHeight: nav.height
             clip: true
             ScrollBar.vertical: ScrollRail { policy: ScrollBar.AsNeeded }

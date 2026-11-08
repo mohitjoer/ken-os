@@ -32,10 +32,9 @@ Item {
     property var defaults: ({})      // factory values, for the struck default
     property string tab: ""
     property string query: ""
-    // progressive disclosure: rows tagged `adv: true` are the deep knobs, hidden
-    // until Advanced is on. search still reaches them (the query branch ignores
-    // this), so nothing is ever truly buried.
-    property bool advanced: false
+    // progressive disclosure: rows tagged `adv: true` are the deep knobs.
+    // Kept permanently enabled so all settings are always accessible.
+    property bool advanced: true
     // the row a search jump lands on: switched to, scrolled into view, and
     // flashed. Cleared shortly after so the wash is a pulse, not a highlight.
     property string spotlightKey: ""

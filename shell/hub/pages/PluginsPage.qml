@@ -294,7 +294,7 @@ Item {
         schema: pg.settingsSchema
         draft: pg.draft
         defaults: pg.committed
-        advanced: pg.hub ? pg.hub.advanced : false
+        advanced: pg.hub ? pg.hub.advanced : true
         title: pg.pTitle
         eyebrow: pg.pEyebrow
         blurb: pg.pBlurb

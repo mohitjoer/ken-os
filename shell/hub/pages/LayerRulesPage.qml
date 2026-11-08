@@ -393,7 +393,7 @@ Item {
             schema: pg.provRows
             draft: pg.provDraft
             defaults: pg.provCommitted
-            advanced: pg.hub ? pg.hub.advanced : false
+            advanced: pg.hub ? pg.hub.advanced : true
             title: I18n.tr("Layer Rules")
             eyebrow: I18n.tr("COMPOSITOR")
             blurb: I18n.tr("Layer surfaces by namespace: blur, shadow, opacity and geometry.")
