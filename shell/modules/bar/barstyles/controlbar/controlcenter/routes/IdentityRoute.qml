@@ -116,15 +116,27 @@ Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.verticalCenter: parent.verticalCenter
                                     anchors.verticalCenterOffset: page.tk ? -page.tk.gap : -12
-                                width: mark.implicitWidth + 12
+                                    width: markCard.iconMode ? 32 : (mark.implicitWidth + 12)
                                     height: page.root ? page.root.pillH : 20
                                     radius: page.root ? page.root.pillRadius : 8
                                     color: page.root ? page.root.pill : "#222222"
                                     border.color: page.root ? page.root.pillBorder : "#333333"
                                     border.width: page.root ? page.root.pillBorderW : 1
 
+                                    Image {
+                                        visible: markCard.iconMode
+                                        anchors.centerIn: parent
+                                        width: 14
+                                        height: 14
+                                        sourceSize.width: 28
+                                        sourceSize.height: 28
+                                        fillMode: Image.PreserveAspectFit
+                                        source: Qt.resolvedUrl("../../../../../../assets/asura-logo-on-dark.svg")
+                                    }
+
                                     Text {
                                         id: mark
+                                        visible: !markCard.iconMode
                                         anchors.centerIn: parent
                                         text: markCard.modelData.glyph
                                         color: page.root ? page.root.seal : "#c0392b"

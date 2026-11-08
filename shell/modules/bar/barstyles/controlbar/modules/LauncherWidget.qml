@@ -7,7 +7,9 @@ Item {
     id: rootMod
     required property var root
 
-    implicitWidth: logo.implicitWidth + logoPadding
+    readonly property bool isAsuraLogo: root.launcherLogoMode === "icon" && (root.launcherLogoIcon === "asura" || root.launcherLogoIcon === "" || root.launcherLogoIcon === undefined)
+
+    implicitWidth: (isAsuraLogo ? 18 : logo.implicitWidth) + logoPadding
     implicitHeight: 28
 
     readonly property string tooltipText: I18n.tr("Quick settings")
@@ -28,7 +30,7 @@ Item {
     Rectangle {
         id: pill
         anchors.centerIn: parent
-        width: logo.implicitWidth + rootMod.logoPadding
+        width: (rootMod.isAsuraLogo ? 18 : logo.implicitWidth) + rootMod.logoPadding
         height: root.pillH
         color: "transparent"
         border.width: 0
@@ -89,10 +91,27 @@ Item {
         }
     }
 
+    Image {
+        id: logoImg
+        visible: rootMod.isAsuraLogo
+        anchors.centerIn: parent
+        width: 16
+        height: 16
+        sourceSize.width: 32
+        sourceSize.height: 32
+        fillMode: Image.PreserveAspectFit
+        source: Qt.resolvedUrl("../../../../../assets/asura-logo-on-dark.svg")
+        smooth: true
+        mipmap: true
+        opacity: (ma.containsMouse || root.controlVisible) ? 1.0 : 0.9
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+    }
+
     // Asura brand mark by default; the chosen wordmark or icon option otherwise,
     // themed with the seal. Resolvers live in Theme so the picker and bar agree.
     Text {
         id: logo
+        visible: !rootMod.isAsuraLogo
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: root.launcherLogoMode === "icon"
             ? root.launcherLogoIconXOffset(root.launcherLogoIcon) : 0

@@ -535,7 +535,7 @@ Rectangle {
         "qsbar.barAutoHide": false, "qsbar.barBorderEnabled": true, "qsbar.barCornerRadius": 6,
         "qsbar.panelTooltipBorderEnabled": true, "qsbar.barShadowEnabled": false, "qsbar.barFrostEnabled": false,
         "qsbar.barGapTop": 0, "qsbar.barGapBottom": 0, "qsbar.barGapLeft": 0, "qsbar.barGapRight": 0,
-        "qsbar.launcherLogoMode": "text", "qsbar.launcherLogoText": "asura", "qsbar.launcherLogoIcon": "asura",
+        "qsbar.launcherLogoMode": "icon", "qsbar.launcherLogoText": "asura", "qsbar.launcherLogoIcon": "asura",
         "qsbar.workspaceStyle": "default", "qsbar.workspaceMode": "active",
         "qsbar.widgets.battery": true, "qsbar.widgets.bluetooth": true, "qsbar.widgets.brightness": true,
         "qsbar.widgets.cpu": true, "qsbar.widgets.cpuTemperature": true, "qsbar.widgets.gpu": true,

@@ -2625,7 +2625,7 @@ Item {
 
     // ── picker visual style (theme/wallpaper/screenshot/video pickers) ──
     property string pickerStyle: "tanzaku"   // "tanzaku", "hearthstone", "carousel"
-    property string launcherLogoMode: "text"     // "text" or "icon"
+    property string launcherLogoMode: "icon"     // "text" or "icon" (default "icon")
     property string launcherLogoText: "asura"    // "asura", "omarchy", "hyprland", "arch", or "omacom"
     property string launcherLogoIcon: "asura"    // see launcherLogoIconGlyph()
     // Legacy launcher-logo text values migrated to the current text mode.
