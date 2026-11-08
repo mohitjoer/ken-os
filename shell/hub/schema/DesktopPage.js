@@ -88,6 +88,46 @@ var rows = [
         "unit": "px"
     },
     {
+        "tab": "General",
+        "group": "NOTIFICATIONS",
+        "key": "frameBars.menus.notifications.anchor",
+        "label": "Sidebar edge",
+        "desc": "Which edge the notifications panel opens from",
+        "ctl": "seg",
+        "src": "shell",
+        "opts": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+        ]
+    },
+    {
+        "tab": "General",
+        "group": "NOTIFICATIONS",
+        "key": "frameBars.menus.notifications.expansion",
+        "label": "Fill the edge",
+        "desc": "Stretch to the edge, or fit its content",
+        "ctl": "seg",
+        "src": "shell",
+        "opts": [
+            "always",
+            "never"
+        ]
+    },
+    {
+        "tab": "General",
+        "group": "NOTIFICATIONS",
+        "key": "frameBars.menus.notifications.minWidth",
+        "label": "Minimum width",
+        "desc": "How wide the notifications panel is at its narrowest",
+        "ctl": "step",
+        "src": "shell",
+        "lo": 200,
+        "hi": 1200,
+        "unit": "px"
+    },
+    {
         "tab": "Clipboard",
         "group": "LAYOUT",
         "key": "clipboard.widthPercent",

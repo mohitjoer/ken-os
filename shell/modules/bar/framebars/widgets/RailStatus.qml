@@ -97,7 +97,7 @@ Item {
             if (Audio.source && Audio.source.audio)
                 Audio.source.audio.muted = !Audio.source.audio.muted;
         } else if (statusId === "notifications") {
-            root.menuRequested("quick-settings#notifications", Qt.rect(0, 0, root.width, root.height));
+            root.menuRequested("notifications", Qt.rect(0, 0, root.width, root.height));
         } else if (statusId === "bluetooth") {
             root.menuRequested("bluetooth", Qt.rect(btn.x, btn.y, btn.width, btn.height));
         } else if (statusId === "battery") {

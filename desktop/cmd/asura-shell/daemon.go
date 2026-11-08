@@ -441,6 +441,7 @@ var surfaceCommands = map[string]string{
 	"visualizer-overlay": "visualizer-overlay",
 	"visualizer-place":   "visualizer-place",
 	"quicksettings":      "quick-settings",
+	"notifications":      "notifications",
 	"wallpaper-menu":     "wallpaper",
 	"clipboard":          "clipboard",
 	"stash":              "stash",

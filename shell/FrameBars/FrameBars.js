@@ -68,6 +68,7 @@ function defaultConfig(menuCatalog) {
             wallpaper: { anchor: "bottom", minWidth: 1400, expansion: "always", widgets: ["theme", "wallpaper"] },
             theme: { anchor: "right", minWidth: 320, expansion: "never", widgets: ["theme"] },
             weather: { anchor: "right", minWidth: 320, expansion: "never", widgets: ["weather"] },
+            notifications: { anchor: "right", minWidth: 410, expansion: "always", widgets: ["notifications"] }
         },
         surfaces: {
             stash: { anchor: "right", minWidth: 340, panes: ["stash"] },

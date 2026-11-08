@@ -8,113 +8,202 @@ import "../../../notifications"
 import qs.Ui.Singletons
 
 // Notification history panel (contract 07 sec 2.3/4.3): a DND toggle, a
-// "Notification History" title and a "Clear all" action, an "Empty" placeholder,
-// then every notification newest first as its own card. There is NO grouping by
-// app: the list is flat, ordered strictly by recency. Urgency has no visual or
-// timeout effect, and no app icon or image is drawn. Cards come from the shared
-// NotificationCard; the model is the flat Notifs.history.
+// "Notifications" title, count badge, and a "Clear all" action, an empty
+// placeholder when clean, then every notification newest first as its own card.
+// Cards come from the shared NotificationCard; the model is flat Notifs.history.
 Item {
     id: root
 
-    required property real s
-    required property bool open
+    property real s: 1
+    property real avail: 0
+    property bool open: false
     signal requestClose()
 
     readonly property var notifs: root.open ? (Notifs.history || []) : []
 
-    implicitWidth: 410 * s
-    implicitHeight: 560 * s
+    implicitWidth: 410 * root.s
+    implicitHeight: root.avail > 0 ? root.avail : (560 * root.s)
 
     Column {
-        id: col
-        width: root.width
+        id: headerCol
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
         spacing: 12 * root.s
 
-        // Header: DND toggle, title (fills), clear all.
+        // Top bar: title, count badge, DND toggle, clear all
         Item {
             id: header
             width: parent.width
-            height: Math.max(titleText.implicitHeight, clearBtn.implicitHeight, dndBtn.height)
+            height: 38 * root.s
 
-            Rectangle {
-                id: dndBtn
+            // Left: Title and optional unread count pill
+            Row {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                width: Theme.iconSm + Theme.paddingSm * 2
-                height: width
-                radius: Theme.radiusWidget
-                color: dndHov.hovered
-                    ? Qt.tint(Theme.surface, Qt.rgba(Theme.onSurface.r, Theme.onSurface.g, Theme.onSurface.b, 0.08))
-                    : "transparent"
+                spacing: 8 * root.s
 
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    text: Flags.dnd ? "do_not_disturb_on" : "notifications"
-                    font.pixelSize: Theme.iconSm
-                    color: Flags.dnd ? Theme.primary : (dndHov.hovered ? Theme.onSurface : Theme.onSurfaceVariant)
+                Text {
+                    id: titleText
+                    text: I18n.tr("Notifications")
+                    color: Theme.onSurface
+                    font.family: Theme.fontPrimary
+                    font.pixelSize: Theme.fontLg
+                    font.weight: Font.Bold
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Flags.dnd = !Flags.dnd
-                    HoverHandler { id: dndHov }
+                Rectangle {
+                    visible: root.notifs.length > 0
+                    height: 18 * root.s
+                    width: Math.max(18 * root.s, countLabel.implicitWidth + 10 * root.s)
+                    radius: height / 2
+                    color: Theme.surfaceRaised
+                    border.width: 1
+                    border.color: Theme.outline
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        id: countLabel
+                        anchors.centerIn: parent
+                        text: "" + root.notifs.length
+                        color: Theme.onSurface
+                        font.family: Theme.fontPrimary
+                        font.pixelSize: Theme.fontSm - 2
+                        font.weight: Font.DemiBold
+                    }
                 }
             }
 
-            Text {
-                id: titleText
-                anchors.left: dndBtn.right
-                anchors.leftMargin: Theme.paddingSm
-                anchors.right: clearBtn.left
-                anchors.rightMargin: Theme.paddingSm
-                anchors.verticalCenter: parent.verticalCenter
-                text: I18n.tr("Notification History")
-                color: Theme.onSurface
-                font.family: Theme.fontPrimary
-                font.pixelSize: Theme.fontMd
-                font.weight: Font.Bold
-                elide: Text.ElideRight
-            }
-
-            Text {
-                id: clearBtn
+            // Right: DND quick switch and Clear All
+            Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                text: I18n.tr("Clear all")
-                color: clearHov.hovered ? Theme.primary : Theme.onSurfaceVariant
-                font.family: Theme.fontPrimary
-                font.pixelSize: Theme.fontSm
-                HoverHandler { id: clearHov; cursorShape: Qt.PointingHandCursor }
-                TapHandler {
-                    onTapped: {
-                        Notifs.clearAll();
-                        root.requestClose();
+                spacing: 10 * root.s
+
+                // DND Toggle Button
+                Rectangle {
+                    id: dndBtn
+                    width: Theme.iconSm + Theme.paddingSm * 2
+                    height: width
+                    radius: Theme.radiusWidget
+                    color: Flags.dnd
+                        ? Theme.surfaceRaised
+                        : (dndHov.hovered
+                            ? Qt.tint(Theme.surface, Qt.rgba(Theme.onSurface.r, Theme.onSurface.g, Theme.onSurface.b, 0.08))
+                            : "transparent")
+                    border.width: Flags.dnd ? 1 : 0
+                    border.color: Theme.outline
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: Flags.dnd ? "do_not_disturb_on" : "notifications"
+                        font.pixelSize: Theme.iconSm
+                        color: Flags.dnd ? Theme.onSurface : (dndHov.hovered ? Theme.onSurface : Theme.onSurfaceVariant)
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Flags.dnd = !Flags.dnd
+                        HoverHandler { id: dndHov }
+                    }
+                }
+
+                // Clear All Button
+                Rectangle {
+                    id: clearBtnContainer
+                    visible: root.notifs.length > 0
+                    height: dndBtn.height
+                    width: clearText.implicitWidth + 16 * root.s
+                    radius: Theme.radiusWidget
+                    color: clearHov.hovered
+                        ? Qt.tint(Theme.surface, Qt.rgba(Theme.onSurface.r, Theme.onSurface.g, Theme.onSurface.b, 0.08))
+                        : "transparent"
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        id: clearText
+                        anchors.centerIn: parent
+                        text: I18n.tr("Clear all")
+                        color: clearHov.hovered ? Theme.onSurface : Theme.onSurfaceVariant
+                        font.family: Theme.fontPrimary
+                        font.pixelSize: Theme.fontSm
+                        font.weight: Font.Medium
+                    }
+
+                    HoverHandler { id: clearHov; cursorShape: Qt.PointingHandCursor }
+                    TapHandler {
+                        onTapped: {
+                            Notifs.clearAll();
+                            root.requestClose();
+                        }
                     }
                 }
             }
         }
 
-        // Empty placeholder.
-        Text {
+        // Clean divider line below header
+        Rectangle {
             width: parent.width
-            visible: root.notifs.length === 0
-            text: I18n.tr("Empty")
-            color: Theme.onSurfaceVariant
-            font.family: Theme.fontPrimary
-            font.pixelSize: Theme.fontMd
+            height: 1
+            color: Theme.outline
+            opacity: 0.35
         }
-
     }
 
+    // Empty state plate
+    Item {
+        anchors.top: headerCol.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        visible: root.notifs.length === 0
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 10 * root.s
+            width: parent.width * 0.85
+
+            MaterialIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "notifications_none"
+                font.pixelSize: 42 * root.s
+                color: Theme.onSurfaceVariant
+                opacity: 0.4
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: I18n.tr("No notifications")
+                color: Theme.onSurface
+                font.family: Theme.fontPrimary
+                font.pixelSize: Theme.fontMd
+                font.weight: Font.Medium
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: I18n.tr("You're all caught up")
+                color: Theme.onSurfaceVariant
+                font.family: Theme.fontPrimary
+                font.pixelSize: Theme.fontSm
+                opacity: 0.7
+            }
+        }
+    }
+
+    // Scrollable Notifications list
     ListView {
         id: notificationList
-        anchors.top: col.bottom
+        anchors.top: headerCol.bottom
         anchors.topMargin: 12 * root.s
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        visible: root.notifs.length > 0
         clip: true
         spacing: 10 * root.s
         model: root.notifs

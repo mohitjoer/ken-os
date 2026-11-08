@@ -451,6 +451,9 @@ ShellRoot {
         case "quicksettings":
             ShellState.requestSurfaceActive("quick-settings", undefined);
             break;
+        case "notifications":
+            ShellState.requestSurfaceActive("notifications", undefined);
+            break;
         case "wallpaper-menu":
             ShellState.requestSurfaceActive("wallpaper", undefined);
             break;
@@ -707,6 +710,11 @@ ShellRoot {
         onPressed: root.toggleSurface("quicksettings")
     }
     CustomShortcut {
+        name: "notifications"
+        description: I18n.tr("Open notifications on the active monitor")
+        onPressed: root.toggleSurface("notifications")
+    }
+    CustomShortcut {
         name: "wallpaper-menu"
         description: I18n.tr("Open the wallpaper and theme menu on the active monitor")
         onPressed: root.toggleSurface("wallpaper-menu")
@@ -767,6 +775,9 @@ ShellRoot {
                 break;
             case "quick":
                 root.toggleSurface("quicksettings");
+                break;
+            case "notifications":
+                root.toggleSurface("notifications");
                 break;
             case "sidebar":
                 root.toggleSurface("stash");

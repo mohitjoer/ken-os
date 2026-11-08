@@ -76,7 +76,7 @@ Item {
     Component { id: dividerComponent; MenuDivider { scale: root.scale } }
     Component { id: spacerComponent; MenuSpacer { scale: root.scale } }
     Component { id: clockComponent; MenuClock { width: root.width; s: root.scale; open: root.open } }
-    Component { id: notificationsComponent; MenuNotifications { width: root.width; height: implicitHeight; s: root.scale; open: root.open } }
+    Component { id: notificationsComponent; MenuNotifications { width: root.width; height: root.avail > 0 ? root.avail : implicitHeight; s: root.scale; open: root.open; avail: root.avail } }
     Component { id: networkComponent; MenuNetwork { width: root.width; s: root.scale; open: root.open } }
     Component { id: bluetoothComponent; MenuBluetooth { width: root.width; s: root.scale; open: root.open } }
     Component { id: audioInputComponent; MenuAudioInput { width: root.width; s: root.scale; open: root.open } }
