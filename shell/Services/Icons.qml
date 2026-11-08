@@ -53,6 +53,16 @@ Singleton {
             var hit = root.index[n];
             if (hit)
                 return "file://" + hit;
+            if (n === "asura-store") {
+                if (root._shellDir && root._shellDir.length > 0)
+                    return "file://" + root._shellDir + "/assets/asura-store.svg";
+                return "file:///usr/share/asura/shell/assets/asura-store.svg";
+            }
+            if (n === "asura-installer") {
+                if (root._shellDir && root._shellDir.length > 0)
+                    return "file://" + root._shellDir + "/assets/asura-installer.svg";
+                return "file:///usr/share/asura/shell/assets/asura-installer.svg";
+            }
         }
         if (fallback === true)
             return "";
@@ -72,6 +82,8 @@ Singleton {
             return true;
         if (n.indexOf("image://icon/") === 0)
             n = n.substring(13);
+        if (n === "asura-store" || n === "asura-installer")
+            return true;
         var hit = root.index[n];
         return hit !== undefined && hit !== "";
     }

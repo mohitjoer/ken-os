@@ -295,6 +295,43 @@ mkdir -p "$INCLUDE_DIR/usr/share/applications"
 if [ -d "$REPO_ROOT/session/applications" ]; then
 	cp "$REPO_ROOT/session/applications"/*.desktop "$INCLUDE_DIR/usr/share/applications/" 2>/dev/null || true
 fi
+
+# Stage core application desktop shortcuts and custom branding icons into ISO include
+mkdir -p "$INCLUDE_DIR/etc/skel/Desktop"
+mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps"
+mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/512x512/apps"
+mkdir -p "$INCLUDE_DIR/usr/share/pixmaps"
+
+# Asura Store desktop shortcut and store icon
+if [ -f "$REPO_ROOT/session/applications/asura-store.desktop" ]; then
+	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$INCLUDE_DIR/usr/share/applications/"
+	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$INCLUDE_DIR/etc/skel/Desktop/"
+	chmod 755 "$INCLUDE_DIR/etc/skel/Desktop/asura-store.desktop"
+fi
+if [ -f "$REPO_ROOT/shell/assets/asura-store.svg" ]; then
+	cp "$REPO_ROOT/shell/assets/asura-store.svg" "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps/"
+	cp "$REPO_ROOT/shell/assets/asura-store.svg" "$INCLUDE_DIR/usr/share/pixmaps/"
+fi
+if [ -f "$REPO_ROOT/shell/assets/asura-store.png" ]; then
+	cp "$REPO_ROOT/shell/assets/asura-store.png" "$INCLUDE_DIR/usr/share/icons/hicolor/512x512/apps/"
+	cp "$REPO_ROOT/shell/assets/asura-store.png" "$INCLUDE_DIR/usr/share/pixmaps/"
+fi
+
+# Asura Installer desktop shortcut and icon
+if [ -f "$REPO_ROOT/session/applications/asura-installer.desktop" ]; then
+	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$INCLUDE_DIR/usr/share/applications/"
+	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$INCLUDE_DIR/etc/skel/Desktop/"
+	chmod 755 "$INCLUDE_DIR/etc/skel/Desktop/asura-installer.desktop"
+fi
+if [ -f "$REPO_ROOT/shell/assets/asura-installer.svg" ]; then
+	cp "$REPO_ROOT/shell/assets/asura-installer.svg" "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps/"
+	cp "$REPO_ROOT/shell/assets/asura-installer.svg" "$INCLUDE_DIR/usr/share/pixmaps/"
+fi
+
+# Asura Sysmon desktop entry
+if [ -f "$REPO_ROOT/session/applications/asura-sysmon.desktop" ]; then
+	cp "$REPO_ROOT/session/applications/asura-sysmon.desktop" "$INCLUDE_DIR/usr/share/applications/"
+fi
 # Install Zed code editor desktop entry on ISO
 cat > "$INCLUDE_DIR/usr/share/applications/dev.zed.Zed.desktop" <<'EOF'
 [Desktop Entry]
@@ -914,49 +951,13 @@ mkdir -p "$ROOTFS/home/asura/.config/asura" "$ROOTFS/etc/skel/.config/asura" \
          "$ROOTFS/home/asura/Downloads" "$ROOTFS/home/asura/Music" \
          "$ROOTFS/home/asura/Pictures" "$ROOTFS/home/asura/Videos" \
          "$INCLUDE_DIR/etc/skel/Desktop"
-if [ -f "$REPO_ROOT/session/applications/asura-installer.desktop" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/share/applications"
-	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$INCLUDE_DIR/usr/share/applications/"
-	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$ROOTFS/usr/share/applications/" 2>/dev/null || true
-	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$ROOTFS/home/asura/Desktop/"
-	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$INCLUDE_DIR/etc/skel/Desktop/"
-	chmod 755 "$ROOTFS/home/asura/Desktop/asura-installer.desktop" 2>/dev/null || true
-	chmod 755 "$INCLUDE_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
-	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps" "$ROOTFS/usr/share/icons/hicolor/scalable/apps"
-	cp "$REPO_ROOT/shell/assets/asura-installer.svg" "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
-	cp "$REPO_ROOT/shell/assets/asura-installer.svg" "$ROOTFS/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
+# Ensure live user desktop shortcuts are deployed and executable
+mkdir -p "$ROOTFS/home/asura/Desktop"
+if [ -d "$ROOTFS/etc/skel/Desktop" ]; then
+	cp -a "$ROOTFS/etc/skel/Desktop"/* "$ROOTFS/home/asura/Desktop/" 2>/dev/null || true
 fi
-if [ -f "$REPO_ROOT/session/applications/asura-store.desktop" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/share/applications"
-	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$INCLUDE_DIR/usr/share/applications/"
-	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$ROOTFS/usr/share/applications/" 2>/dev/null || true
-	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$ROOTFS/home/asura/Desktop/"
-	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$INCLUDE_DIR/etc/skel/Desktop/"
-	chmod 755 "$ROOTFS/home/asura/Desktop/asura-store.desktop" 2>/dev/null || true
-	chmod 755 "$INCLUDE_DIR/etc/skel/Desktop/asura-store.desktop" 2>/dev/null || true
-	# Install custom Asura Store icon
-	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps" "$ROOTFS/usr/share/icons/hicolor/scalable/apps"
-	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/512x512/apps" "$ROOTFS/usr/share/icons/hicolor/512x512/apps"
-	cp "$REPO_ROOT/shell/assets/asura-store.svg" "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
-	cp "$REPO_ROOT/shell/assets/asura-store.svg" "$ROOTFS/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
-	cp "$REPO_ROOT/shell/assets/asura-store.png" "$INCLUDE_DIR/usr/share/icons/hicolor/512x512/apps/" 2>/dev/null || true
-	cp "$REPO_ROOT/shell/assets/asura-store.png" "$ROOTFS/usr/share/icons/hicolor/512x512/apps/" 2>/dev/null || true
-fi
-if [ -f "$REPO_ROOT/session/applications/asura-sysmon.desktop" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/share/applications"
-	cp "$REPO_ROOT/session/applications/asura-sysmon.desktop" "$INCLUDE_DIR/usr/share/applications/"
-	cp "$REPO_ROOT/session/applications/asura-sysmon.desktop" "$ROOTFS/usr/share/applications/" 2>/dev/null || true
-fi
-if [ -f "$REPO_ROOT/session/applications/opencode.desktop" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/share/applications"
-	cp "$REPO_ROOT/session/applications/opencode.desktop" "$INCLUDE_DIR/usr/share/applications/"
-	cp "$REPO_ROOT/session/applications/opencode.desktop" "$ROOTFS/usr/share/applications/" 2>/dev/null || true
-fi
-if [ -f "$REPO_ROOT/session/applications/thunar-bulk-rename.desktop" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/share/applications"
-	cp -f "$REPO_ROOT/session/applications/thunar-bulk-rename.desktop" "$INCLUDE_DIR/usr/share/applications/"
-	cp -f "$REPO_ROOT/session/applications/thunar-bulk-rename.desktop" "$ROOTFS/usr/share/applications/" 2>/dev/null || true
-fi
+chmod 755 "$ROOTFS/home/asura/Desktop"/*.desktop 2>/dev/null || true
+chown -R asura:asura "$ROOTFS/home/asura/Desktop" 2>/dev/null || true
 if [ -d "$ROOTFS/usr/share/asura" ]; then
 	cp -a "$ROOTFS/usr/share/asura"/* "$ROOTFS/home/asura/.config/asura/"
 	cp -a "$ROOTFS/usr/share/asura"/* "$ROOTFS/etc/skel/.config/asura/"
