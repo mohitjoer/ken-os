@@ -38,6 +38,12 @@ export XDG_CURRENT_DESKTOP=Asura
 export DESKTOP_SESSION=asura
 export XDG_SESSION_TYPE=wayland
 
+# Ensure UTF-8 locale environment across desktop and terminal clients
+if [ -z "${LANG:-}" ] || [ "$LANG" = "C" ] || [ "$LANG" = "POSIX" ]; then
+    export LANG="en_US.UTF-8"
+fi
+export LC_ALL="${LC_ALL:-$LANG}"
+
 # Detect virtualized GPU environment for desktop apps & Qt clients
 if [ -n "${ASURA_IS_VM:-}" ] || \
    grep -qa "VirtualBox\|VMware\|QEMU\|KVM" /sys/class/dmi/id/product_name 2>/dev/null || \

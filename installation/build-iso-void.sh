@@ -201,6 +201,13 @@ EOF
 
 
 
+# System locale configuration (enforce UTF-8 default across apps and terminals)
+mkdir -p "$INCLUDE_DIR/etc"
+cat > "$INCLUDE_DIR/etc/locale.conf" <<'LOCALECFG'
+LANG=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+LOCALECFG
+
 # Copy branding assets
 mkdir -p "$INCLUDE_DIR/usr/share/asura/branding"
 cp "$REPO_ROOT/public/asura-logo.svg" \
@@ -867,6 +874,18 @@ POSTSETUP_SCRIPT="$BUILD_DIR/postsetup.sh"
 cat >"$POSTSETUP_SCRIPT" <<'EOF'
 #!/bin/sh
 ROOTFS="$1"
+
+# Generate and enforce UTF-8 system locale
+mkdir -p "$ROOTFS/etc"
+echo "LANG=en_US.UTF-8" > "$ROOTFS/etc/locale.conf"
+echo "LC_ALL=en_US.UTF-8" >> "$ROOTFS/etc/locale.conf"
+if [ -f "$ROOTFS/etc/default/libc-locales" ]; then
+	sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' "$ROOTFS/etc/default/libc-locales"
+	chroot "$ROOTFS" xbps-reconfigure -f glibc-locales 2>/dev/null || true
+fi
+# Remove obsolete btop desktop entries
+rm -f "$ROOTFS/usr/share/applications/btop.desktop"
+rm -f "$ROOTFS/home/asura/Desktop/btop.desktop"
 
 # Enable core system runit services (Layer 1 seatd, Layer 3 scx-lavd, ananicy-cpp, zramen)
 mkdir -p "$ROOTFS/etc/runit/runsvdir/default"

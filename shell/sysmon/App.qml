@@ -300,38 +300,6 @@ Rectangle {
                 }
             }
 
-            // Quick btop launcher button
-            Rectangle {
-                height: 26
-                width: btopRow.implicitWidth + 16
-                radius: 6
-                color: btopHover.containsMouse ? "#222634" : "#141720"
-                border.color: btopHover.containsMouse ? "#4b5563" : "#242836"
-                border.width: 1
-
-                Row {
-                    id: btopRow
-                    anchors.centerIn: parent
-                    spacing: 5
-                    Text { text: "⚡"; color: "#9ca3af"; font.pixelSize: 9; anchors.verticalCenter: parent.verticalCenter }
-                    Text {
-                        text: "btop"
-                        color: "#ffffff"
-                        font.family: root.fontMono
-                        font.pixelSize: 10
-                        font.weight: Font.DemiBold
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: btopHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Quickshell.execDetached(["ghostty", "--title=btop", "-e", "btop"])
-                }
-            }
 
 
             Rectangle {

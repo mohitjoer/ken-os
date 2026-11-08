@@ -133,7 +133,6 @@ applications:
     - gvfs
     - tumbler
     - nano
-    - btop
     - xdg-user-dirs
 
 terminal-and-shell:
