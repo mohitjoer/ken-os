@@ -3,7 +3,7 @@ Name=Install Asura OS
 GenericName=System Installer
 Comment=Install Asura OS permanently to your laptop or desktop drive
 Exec=ghostty --title="Install Asura OS" -e asura install
-Icon=system-software-install
+Icon=asura-installer
 Terminal=false
 Type=Application
 Categories=System;

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Asura OS Guided System Installer
-# Installs Asura OS onto target drive.
+# Sleek, interactive system installer with automatic drive detection,
+# Btrfs/ext4 support, and hybrid UEFI/BIOS bootloader setup.
 set -eu
 
 DUAL_BOOT=0
@@ -14,10 +15,15 @@ BOLD=$(printf '\033[1m')
 DIM=$(printf '\033[2m')
 WHITE=$(printf '\033[1;37m')
 GREEN=$(printf '\033[1;32m')
+YELLOW=$(printf '\033[1;33m')
 RED=$(printf '\033[1;31m')
 RESET=$(printf '\033[0m')
+CYAN=$(printf '\033[1;36m')
 
-cleanup_err() {
+DISKS_FILE=$(mktemp 2>/dev/null || echo "/tmp/asura-disks.$$")
+
+cleanup_installer() {
+	rm -f "$DISKS_FILE" 2>/dev/null || true
 	code=$?
 	if [ "$code" -ne 0 ]; then
 		printf "\n${RED}${BOLD}Installation encountered an error (exit code %s).${RESET}\n" "$code"
@@ -25,45 +31,79 @@ cleanup_err() {
 		read -r _ 2>/dev/null || true
 	fi
 }
-trap cleanup_err EXIT
+trap cleanup_installer EXIT INT TERM
 
 clear 2>/dev/null || true
 
 cat <<EOF
-${WHITE}┌──────────────────────────────────────────────────────────┐
-│                         ${BOLD}ASURA OS${RESET}${WHITE}                         │
-│                 Guided System Installer                  │
-└──────────────────────────────────────────────────────────┘${RESET}
+${WHITE}╭──────────────────────────────────────────────────────────────╮
+│                           ${BOLD}ASURA OS${RESET}${WHITE}                           │
+│                   Guided System Installer                    │
+╰──────────────────────────────────────────────────────────────╯${RESET}
 
 EOF
 
 if [ "$(id -u)" -ne 0 ]; then
-	printf "${RED}asura-installer: must be run as root (e.g. sudo asura-installer or sudo asura install)${RESET}\n" >&2
+	printf "${RED}asura-installer: must be run as root (e.g. sudo asura install)${RESET}\n" >&2
 	exit 1
 fi
 
-# Pre-flight: Check UEFI firmware
+# Pre-flight: Check UEFI firmware vs Legacy BIOS
 if [ ! -d /sys/firmware/efi ]; then
-	printf "${DIM}Boot Mode: Legacy BIOS (Warning: Asura OS recommends UEFI for full Wayland power features)${RESET}\n\n"
+	printf "${YELLOW}● Boot Mode:${RESET} ${BOLD}Legacy BIOS${RESET} ${DIM}(MBR/BIOS bootloader will be installed)${RESET}\n\n"
 	IS_UEFI=0
 else
-	printf "${GREEN}Boot Mode: UEFI (Verified)${RESET}\n\n"
+	printf "${GREEN}● Boot Mode:${RESET} ${BOLD}UEFI (Verified)${RESET} ${DIM}(GRUB EFI 64-bit bootloader)${RESET}\n\n"
 	IS_UEFI=1
 fi
 
-# Disk Selection
-printf "${WHITE}${BOLD}Available Drives:${RESET}\n"
-printf "${DIM}──────────────────────────────────────────────────────────${RESET}\n"
-lsblk -d -n -o NAME,SIZE,MODEL,TRAN,TYPE | grep -E '\sdisk' | while read -r name size model tran type; do
-	printf "  ${BOLD}/dev/%-12s${RESET} %-8s %-24s [transport: %s]\n" "$name" "$size" "${model:-Disk}" "${tran:-internal}"
+# ── STEP 1: Interactive Drive Selection ─────────────────────────────────────
+printf "${WHITE}╭──────────────────────────────────────────────────────────────╮
+│  ${BOLD}[ STEP 1/4 ]  Target Drive Selection${RESET}${WHITE}                        │
+╰──────────────────────────────────────────────────────────────╯${RESET}\n"
+
+rm -f "$DISKS_FILE"
+touch "$DISKS_FILE"
+idx=1
+
+lsblk -d -n -o NAME,SIZE,MODEL | grep -v '^zram' | while read -r dname dsize dmodel; do
+	[ -z "$dname" ] && continue
+	case "$dname" in
+		zram*|loop*|sr*|dm-*) continue ;;
+	esac
+	echo "/dev/$dname" >> "$DISKS_FILE"
+	rec_tag=""
+	[ "$idx" -eq 1 ] && rec_tag="${DIM}[Recommended]${RESET}"
+	printf "  ${WHITE}[%d]${RESET} ${BOLD}/dev/%-10s${RESET} %-8s %-22s %s\n" "$idx" "$dname" "$dsize" "${dmodel:-Disk}" "$rec_tag"
+	idx=$((idx + 1))
 done
-printf "${DIM}──────────────────────────────────────────────────────────${RESET}\n\n"
+
+total_disks=$(wc -l < "$DISKS_FILE" | tr -d ' ')
+
+if [ "$total_disks" -eq 0 ]; then
+	printf "\n${RED}Error: No suitable install drives found.${RESET}\n" >&2
+	exit 1
+fi
 
 if [ $# -ge 1 ]; then
 	TARGET_DISK="$1"
 else
-	printf "${WHITE}Select target disk to install Asura OS to (e.g. /dev/nvme0n1 or /dev/vda):${RESET} "
-	read -r TARGET_DISK
+	printf "\n${WHITE}Select target drive [1-%d, or type path] (default: 1): ${RESET}" "$total_disks"
+	read -r DRIVE_CHOICE || DRIVE_CHOICE="1"
+	[ -z "$DRIVE_CHOICE" ] && DRIVE_CHOICE="1"
+
+	case "$DRIVE_CHOICE" in
+		[0-9]*)
+			if [ "$DRIVE_CHOICE" -ge 1 ] 2>/dev/null && [ "$DRIVE_CHOICE" -le "$total_disks" ] 2>/dev/null; then
+				TARGET_DISK=$(sed -n "${DRIVE_CHOICE}p" "$DISKS_FILE")
+			else
+				TARGET_DISK="$DRIVE_CHOICE"
+			fi
+			;;
+		*)
+			TARGET_DISK="$DRIVE_CHOICE"
+			;;
+	esac
 fi
 
 if [ ! -b "$TARGET_DISK" ]; then
@@ -71,83 +111,105 @@ if [ ! -b "$TARGET_DISK" ]; then
 	exit 1
 fi
 
-# Filesystem Selection
-printf "\n${WHITE}${BOLD}Select Filesystem:${RESET}\n"
-printf "  1) ${BOLD}Btrfs${RESET} ${DIM}(Recommended: zstd:1 compression, high-performance SSD storage)${RESET}\n"
-printf "  2) ${BOLD}ext4${RESET}  ${DIM}(Standard Linux journaling filesystem)${RESET}\n"
-printf "Choose filesystem [1/2] (default: 1): "
+printf "${GREEN}✓ Selected drive:${RESET} ${BOLD}%s${RESET}\n\n" "$TARGET_DISK"
+
+# ── STEP 2: Filesystem Selection ───────────────────────────────────────────
+printf "${WHITE}╭──────────────────────────────────────────────────────────────╮
+│  ${BOLD}[ STEP 2/4 ]  Select Root Filesystem${RESET}${WHITE}                        │
+╰──────────────────────────────────────────────────────────────╯${RESET}\n"
+printf "  ${WHITE}[1]${RESET} ${BOLD}Btrfs${RESET} ${DIM}(Recommended: subvolumes @, @home, @snapshots, zstd:1 compression)${RESET}\n"
+printf "  ${WHITE}[2]${RESET} ${BOLD}ext4${RESET}  ${DIM}(Standard Linux journaling filesystem)${RESET}\n\n"
+printf "${WHITE}Choose filesystem [1/2] (default: 1): ${RESET}"
 read -r FS_CHOICE || FS_CHOICE="1"
 [ -z "$FS_CHOICE" ] && FS_CHOICE="1"
 
-# Hostname & User Configuration
-printf "\n${WHITE}${BOLD}System Identity:${RESET}\n"
-printf "Enter hostname (default: asura-os): "
+# ── STEP 3: Identity & Configuration ───────────────────────────────────────
+printf "\n${WHITE}╭──────────────────────────────────────────────────────────────╮
+│  ${BOLD}[ STEP 3/4 ]  System Identity & User Setup${RESET}${WHITE}                  │
+╰──────────────────────────────────────────────────────────────╯${RESET}\n"
+printf "Enter system hostname [default: asura-os]: "
 read -r HOSTNAME_INPUT || HOSTNAME_INPUT="asura-os"
 [ -z "$HOSTNAME_INPUT" ] && HOSTNAME_INPUT="asura-os"
 
-
-printf "Enter default username (default: asura): "
+printf "Enter primary username [default: asura]: "
 read -r USERNAME_INPUT || USERNAME_INPUT="asura"
 [ -z "$USERNAME_INPUT" ] && USERNAME_INPUT="asura"
 
-# Installation Summary & Confirmation
-printf "\n${WHITE}┌──────────────────────────────────────────────────────────┐
-│                   INSTALLATION SUMMARY                   │
-├──────────────────────────────────────────────────────────┤${RESET}\n"
-printf "${WHITE}│${RESET} Target Disk:  ${BOLD}%-42s${RESET} ${WHITE}│${RESET}\n" "$TARGET_DISK"
-printf "${WHITE}│${RESET} Bootloader:   ${BOLD}%-42s${RESET} ${WHITE}│${RESET}\n" "GRUB EFI (UEFI 64-bit)"
-if [ "$FS_CHOICE" = "2" ]; then
-	printf "${WHITE}│${RESET} Filesystem:   ${BOLD}%-42s${RESET} ${WHITE}│${RESET}\n" "ext4 (defaults,noatime)"
-else
-	printf "${WHITE}│${RESET} Filesystem:   ${BOLD}%-42s${RESET} ${WHITE}│${RESET}\n" "Btrfs (compress=zstd:1,noatime)"
-fi
-printf "${WHITE}│${RESET} Hostname:     ${BOLD}%-42s${RESET} ${WHITE}│${RESET}\n" "$HOSTNAME_INPUT"
-printf "${WHITE}│${RESET} User Account: ${BOLD}%-42s${RESET} ${WHITE}│${RESET}\n" "$USERNAME_INPUT (sudoers)"
-printf "${WHITE}└──────────────────────────────────────────────────────────┘${RESET}\n\n"
+# ── STEP 4: Review & Final Confirmation ────────────────────────────────────
+FS_DISPLAY="Btrfs (compress=zstd:1, subvolumes)"
+[ "$FS_CHOICE" = "2" ] && FS_DISPLAY="ext4 (defaults, noatime)"
 
-printf "${RED}${BOLD}CRITICAL WARNING: ALL EXISTING DATA ON %s WILL BE DESTROYED!${RESET}\n" "$TARGET_DISK"
-printf "${WHITE}Type 'YES' to proceed with disk partitioning and installation:${RESET} "
+BOOT_DISPLAY="GRUB EFI (UEFI 64-bit)"
+[ "$IS_UEFI" -eq 0 ] && BOOT_DISPLAY="GRUB MBR (Legacy BIOS)"
+
+printf "\n${WHITE}╭──────────────────────────────────────────────────────────────╮
+│                   INSTALLATION SPECIFICATION                 │
+├──────────────────────────────────────────────────────────────┤${RESET}\n"
+printf "${WHITE}│${RESET} Target Disk:    ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$TARGET_DISK"
+printf "${WHITE}│${RESET} Bootloader:     ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$BOOT_DISPLAY"
+printf "${WHITE}│${RESET} Filesystem:     ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$FS_DISPLAY"
+printf "${WHITE}│${RESET} Hostname:       ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$HOSTNAME_INPUT"
+printf "${WHITE}│${RESET} User Account:   ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$USERNAME_INPUT (wheel, seatd, sudo)"
+printf "${WHITE}╰──────────────────────────────────────────────────────────────╯${RESET}\n\n"
+
+printf "${RED}${BOLD}⚠  CRITICAL WARNING: ALL EXISTING DATA ON %s WILL BE ERASED!${RESET}\n" "$TARGET_DISK"
+printf "${WHITE}Type ${BOLD}'YES'${RESET}${WHITE} to format disk and install Asura OS: ${RESET}"
 read -r CONFIRM
 if [ "$CONFIRM" != "YES" ]; then
-	printf "${DIM}Installation cancelled.${RESET}\n"
+	printf "\n${DIM}Installation cancelled by user.${RESET}\n"
 	exit 0
 fi
 
-printf "\n${WHITE}${BOLD}[1/6] Partitioning disk (%s)...${RESET}\n" "$TARGET_DISK"
-# Wipe existing partition table signatures
+# ── EXECUTION: Partitioning, Formatting, Deployment ────────────────────────
+printf "\n${WHITE}${BOLD}[1/5] Partitioning target disk (%s)...${RESET}\n" "$TARGET_DISK"
 wipefs -a "$TARGET_DISK" >/dev/null 2>&1 || true
 
-# Create GPT partition table:
-# Partition 1: 512MB EFI System Partition (ESP)
-# Partition 2: Remainder as Linux Root
-parted -s "$TARGET_DISK" mklabel gpt
-parted -s "$TARGET_DISK" mkpart "ESP" fat32 1MiB 513MiB
-parted -s "$TARGET_DISK" set 1 esp on
-parted -s "$TARGET_DISK" mkpart "AsuraRoot" 513MiB 100%
-
-# Resolve partition names (e.g. /dev/nvme0n1p1 vs /dev/vda1)
-if [ -b "${TARGET_DISK}p1" ]; then
-	PART_EFI="${TARGET_DISK}p1"
-	PART_ROOT="${TARGET_DISK}p2"
+if [ "$IS_UEFI" -eq 1 ]; then
+	parted -s "$TARGET_DISK" mklabel gpt
+	parted -s "$TARGET_DISK" mkpart "ESP" fat32 1MiB 513MiB
+	parted -s "$TARGET_DISK" set 1 esp on
+	parted -s "$TARGET_DISK" mkpart "AsuraRoot" 513MiB 100%
 else
-	PART_EFI="${TARGET_DISK}1"
-	PART_ROOT="${TARGET_DISK}2"
+	parted -s "$TARGET_DISK" mklabel msdos
+	parted -s "$TARGET_DISK" mkpart primary 1MiB 100%
+	parted -s "$TARGET_DISK" set 1 boot on
+fi
+
+# Resolve partition names
+if [ "$IS_UEFI" -eq 1 ]; then
+	if [ -b "${TARGET_DISK}p1" ]; then
+		PART_EFI="${TARGET_DISK}p1"
+		PART_ROOT="${TARGET_DISK}p2"
+	else
+		PART_EFI="${TARGET_DISK}1"
+		PART_ROOT="${TARGET_DISK}2"
+	fi
+else
+	if [ -b "${TARGET_DISK}p1" ]; then
+		PART_ROOT="${TARGET_DISK}p1"
+	else
+		PART_ROOT="${TARGET_DISK}1"
+	fi
+	PART_EFI=""
 fi
 
 sleep 2
+printf "${GREEN}✓ Partition table generated.${RESET}\n"
 
-printf "${WHITE}${BOLD}[2/6] Formatting partitions...${RESET}\n"
-if [ "$DUAL_BOOT" -eq 1 ]; then
-	printf "  Dual-boot mode: preserving existing EFI System Partition at %s\n" "$PART_EFI"
-else
-	mkfs.vfat -F 32 -n "ASURA_ESP" "$PART_EFI" >/dev/null
+printf "${WHITE}${BOLD}[2/5] Formatting filesystems...${RESET}\n"
+if [ "$IS_UEFI" -eq 1 ]; then
+	if [ "$DUAL_BOOT" -eq 1 ]; then
+		printf "  Dual-boot mode: preserving existing ESP at %s\n" "$PART_EFI"
+	else
+		mkfs.vfat -F 32 -n "ASURA_ESP" "$PART_EFI" >/dev/null
+	fi
 fi
 
 TARGET_DIR="/mnt/asura-target"
 mkdir -p "$TARGET_DIR"
 
 if [ "$FS_CHOICE" != "2" ] && command -v mkfs.btrfs >/dev/null 2>&1; then
-	printf "  Formatting root with Btrfs (compress=zstd:1)...\n"
+	printf "  Formatting root with Btrfs (zstd:1 compression)...\n"
 	mkfs.btrfs -f -L "ASURA_ROOT" "$PART_ROOT" >/dev/null
 	FS_TYPE="btrfs"
 	FS_OPTS="defaults,noatime,compress=zstd:1"
@@ -160,11 +222,13 @@ else
 	mount "$PART_ROOT" "$TARGET_DIR"
 fi
 
-printf "${WHITE}${BOLD}[3/6] Mounting target filesystems...${RESET}\n"
-mkdir -p "$TARGET_DIR/boot/efi"
-mount "$PART_EFI" "$TARGET_DIR/boot/efi"
+if [ "$IS_UEFI" -eq 1 ]; then
+	mkdir -p "$TARGET_DIR/boot/efi"
+	mount "$PART_EFI" "$TARGET_DIR/boot/efi"
+fi
+printf "${GREEN}✓ Filesystems ready and mounted.${RESET}\n"
 
-printf "${WHITE}${BOLD}[4/6] Copying system files (rootfs) to target...${RESET}\n"
+printf "${WHITE}${BOLD}[3/5] Deploying Asura OS system image (rootfs)...${RESET}\n"
 rsync -aAX --info=progress2 \
 	--exclude='/dev/*' \
 	--exclude='/proc/*' \
@@ -176,19 +240,28 @@ rsync -aAX --info=progress2 \
 	--exclude='/lost+found' \
 	--exclude='/var/cache/*' \
 	/ "$TARGET_DIR/"
+printf "${GREEN}✓ System image copied.${RESET}\n"
 
-printf "${WHITE}${BOLD}[5/6] Configuring host, services, and hardware optimizations...${RESET}\n"
+printf "${WHITE}${BOLD}[4/5] Configuring system services, fstab, and identity...${RESET}\n"
 ROOT_UUID=$(blkid -s UUID -o value "$PART_ROOT")
-EFI_UUID=$(blkid -s UUID -o value "$PART_EFI")
 
-cat >"$TARGET_DIR/etc/fstab" <<EOF
+if [ "$IS_UEFI" -eq 1 ]; then
+	EFI_UUID=$(blkid -s UUID -o value "$PART_EFI")
+	cat >"$TARGET_DIR/etc/fstab" <<EOF
 # /etc/fstab: static file system information for Asura OS
 UUID=$ROOT_UUID / $FS_TYPE $FS_OPTS 0 0
 UUID=$EFI_UUID /boot/efi vfat defaults,noatime,umask=0077 0 2
 tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
 EOF
+else
+	cat >"$TARGET_DIR/etc/fstab" <<EOF
+# /etc/fstab: static file system information for Asura OS
+UUID=$ROOT_UUID / $FS_TYPE $FS_OPTS 0 0
+tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
+EOF
+fi
 
-# Ensure live marker is removed on installed system so first-boot welcome tour triggers
+# Remove live session markers so first-boot welcome tour triggers
 rm -f "$TARGET_DIR/etc/asura-live"
 
 # Set hostname and OS identity
@@ -206,8 +279,7 @@ SUPPORT_URL="https://asuraos.dev/support"
 BUG_REPORT_URL="https://github.com/mohitjoer/ASURA-OS/issues"
 EOF
 
-# Clean up installer application and temporary live media files on target installation
-# The installer automatically deletes itself after setup so no installer residue exists on disk.
+# Automatically clean up installer artifacts on the installed drive
 rm -f "$TARGET_DIR/etc/asura-live"
 rm -f "$TARGET_DIR/usr/bin/asura-installer"
 rm -f "$TARGET_DIR/usr/bin/void-installer"
@@ -215,7 +287,7 @@ rm -f "$TARGET_DIR/usr/share/applications/asura-installer.desktop"
 rm -f "$TARGET_DIR/home"/*/Desktop/asura-installer.desktop 2>/dev/null || true
 rm -f "$TARGET_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
 
-# Ensure user account exists
+# User account creation
 if ! chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
 	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input "$USERNAME_INPUT" || true
 fi
@@ -236,12 +308,12 @@ export ZRAM_SIZE=50
 export ZRAM_PRIORITY=32767
 ZRAMCONF
 
-# Layer 3 Tuning: Configure global mimalloc lock-free allocator LD_PRELOAD
+# Layer 3 Tuning: Configure global mimalloc lock-free allocator
 if [ -f "$TARGET_DIR/usr/lib/libmimalloc.so.3" ]; then
 	echo "/usr/lib/libmimalloc.so.3" > "$TARGET_DIR/etc/ld.so.preload"
 fi
 
-# Configure GRUB bootloader identity and dual-boot detection
+# Configure GRUB bootloader identity
 mkdir -p "$TARGET_DIR/etc/default"
 cat >"$TARGET_DIR/etc/default/grub" <<'GRUBDEF'
 GRUB_DISTRIBUTOR="Asura OS"
@@ -250,42 +322,52 @@ GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 quiet splash"
 GRUB_DISABLE_OS_PROBER=false
 GRUBDEF
 
-printf "${WHITE}${BOLD}[6/6] Installing bootloader (GRUB EFI)...${RESET}\n"
-if [ "$IS_UEFI" -eq 1 ]; then
-	mount --bind /dev "$TARGET_DIR/dev"
-	mount --bind /proc "$TARGET_DIR/proc"
-	mount --bind /sys "$TARGET_DIR/sys"
+printf "${GREEN}✓ Host and services configured.${RESET}\n"
 
+printf "${WHITE}${BOLD}[5/5] Installing bootloader (%s)...${RESET}\n" "$BOOT_DISPLAY"
+mount --bind /dev "$TARGET_DIR/dev"
+mount --bind /proc "$TARGET_DIR/proc"
+mount --bind /sys "$TARGET_DIR/sys"
+
+if [ "$IS_UEFI" -eq 1 ]; then
 	chroot "$TARGET_DIR" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Asura --recheck >/dev/null 2>&1 || true
 	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || true
-
-	umount "$TARGET_DIR/sys" || true
-	umount "$TARGET_DIR/proc" || true
-	umount "$TARGET_DIR/dev" || true
+else
+	# Legacy BIOS / MBR installation (supports VirtualBox BIOS boot)
+	chroot "$TARGET_DIR" grub-install --target=i386-pc --recheck "$TARGET_DISK" >/dev/null 2>&1 || true
+	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || true
 fi
 
-# Unmount target partitions cleanly
-umount "$TARGET_DIR/boot/efi" || true
+umount "$TARGET_DIR/sys" || true
+umount "$TARGET_DIR/proc" || true
+umount "$TARGET_DIR/dev" || true
+
+if [ "$IS_UEFI" -eq 1 ]; then
+	umount "$TARGET_DIR/boot/efi" || true
+fi
 umount "$TARGET_DIR" || true
+
+printf "${GREEN}✓ Bootloader successfully installed.${RESET}\n"
 
 cat <<EOF
 
-${GREEN}┌──────────────────────────────────────────────────────────┐
-│               Installation Complete! [✓]                 │
-│                                                          │
-│   Asura OS is now installed on your system.              │
-│   The installer has been automatically removed.          │
-│   You can now reboot and remove the live USB media.      │
-└──────────────────────────────────────────────────────────┘${RESET}
+${GREEN}╭──────────────────────────────────────────────────────────────╮
+│              ✓ ASURA OS Successfully Installed!              │
+│                                                              │
+│   Asura OS has been deployed to your storage drive.          │
+│   The installer has been automatically deleted.              │
+│   You can now safely reboot into your new installation.      │
+╰──────────────────────────────────────────────────────────────╯${RESET}
 
 EOF
 
-printf "Would you like to reboot into Asura OS now? [y/N]: "
+printf "Would you like to reboot into Asura OS now? [Y/n]: "
+read -r REBOOT_CHOICE || REBOOT_CHOICE="y"
+[ -z "$REBOOT_CHOICE" ] && REBOOT_CHOICE="y"
 
-read -r REBOOT_CHOICE || REBOOT_CHOICE="n"
 case "$REBOOT_CHOICE" in
 	[yY]|[yY][eE][sS])
-		printf "\n${WHITE}Rebooting...${RESET}\n"
+		printf "\n${WHITE}Rebooting system...${RESET}\n"
 		reboot
 		;;
 	*)

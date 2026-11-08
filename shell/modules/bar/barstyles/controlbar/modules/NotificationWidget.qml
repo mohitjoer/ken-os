@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.Ui.Singletons
+import qs.Services
 
 Item {
     id: rootMod
@@ -56,6 +57,9 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onEntered: tip.show()
         onExited: { tip.hide() }
-        onClicked: { tip.hide(); root.notifVisible = !root.notifVisible }
+        onClicked: {
+            tip.hide()
+            ShellState.requestSurfaceActive("notifications", undefined)
+        }
     }
 }

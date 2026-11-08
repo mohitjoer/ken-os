@@ -924,6 +924,9 @@ if [ -f "$REPO_ROOT/session/applications/asura-installer.desktop" ]; then
 	cp "$REPO_ROOT/session/applications/asura-installer.desktop" "$INCLUDE_DIR/etc/skel/Desktop/"
 	chmod 755 "$ROOTFS/home/asura/Desktop/asura-installer.desktop" 2>/dev/null || true
 	chmod 755 "$INCLUDE_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
+	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps" "$ROOTFS/usr/share/icons/hicolor/scalable/apps"
+	cp "$REPO_ROOT/shell/assets/asura-installer.svg" "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
+	cp "$REPO_ROOT/shell/assets/asura-installer.svg" "$ROOTFS/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
 fi
 if [ -f "$REPO_ROOT/session/applications/asura-store.desktop" ]; then
 	mkdir -p "$INCLUDE_DIR/usr/share/applications"
@@ -933,6 +936,13 @@ if [ -f "$REPO_ROOT/session/applications/asura-store.desktop" ]; then
 	cp "$REPO_ROOT/session/applications/asura-store.desktop" "$INCLUDE_DIR/etc/skel/Desktop/"
 	chmod 755 "$ROOTFS/home/asura/Desktop/asura-store.desktop" 2>/dev/null || true
 	chmod 755 "$INCLUDE_DIR/etc/skel/Desktop/asura-store.desktop" 2>/dev/null || true
+	# Install custom Asura Store icon
+	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps" "$ROOTFS/usr/share/icons/hicolor/scalable/apps"
+	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor/512x512/apps" "$ROOTFS/usr/share/icons/hicolor/512x512/apps"
+	cp "$REPO_ROOT/shell/assets/asura-store.svg" "$INCLUDE_DIR/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
+	cp "$REPO_ROOT/shell/assets/asura-store.svg" "$ROOTFS/usr/share/icons/hicolor/scalable/apps/" 2>/dev/null || true
+	cp "$REPO_ROOT/shell/assets/asura-store.png" "$INCLUDE_DIR/usr/share/icons/hicolor/512x512/apps/" 2>/dev/null || true
+	cp "$REPO_ROOT/shell/assets/asura-store.png" "$ROOTFS/usr/share/icons/hicolor/512x512/apps/" 2>/dev/null || true
 fi
 if [ -f "$REPO_ROOT/session/applications/asura-sysmon.desktop" ]; then
 	mkdir -p "$INCLUDE_DIR/usr/share/applications"
