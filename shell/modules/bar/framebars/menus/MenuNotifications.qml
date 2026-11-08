@@ -159,7 +159,7 @@ Item {
         anchors.top: headerCol.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.bottom: calSection.top
         visible: root.notifs.length === 0
 
         Column {
@@ -202,7 +202,8 @@ Item {
         anchors.topMargin: 12 * root.s
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.bottom: calSection.top
+        anchors.bottomMargin: 8 * root.s
         visible: root.notifs.length > 0
         clip: true
         spacing: 10 * root.s
@@ -216,6 +217,33 @@ Item {
             width: notificationList.width
             notif: modelData
             onActionInvoked: root.requestClose()
+        }
+    }
+
+    // Calendar docked at bottom of the right panel
+    Item {
+        id: calSection
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: calEmbed.implicitHeight + 10 * root.s
+
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: Theme.outline
+            opacity: 0.25
+        }
+
+        QsCalendarEmbed {
+            id: calEmbed
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            s: root.s
+            open: root.open
         }
     }
 }

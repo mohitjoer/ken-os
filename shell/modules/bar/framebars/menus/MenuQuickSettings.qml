@@ -194,7 +194,8 @@ Item {
             break;
         case "calendar":
             root.showPage("");
-            root.switchToModule("home");
+            root.requestClose();
+            ShellState.requestSurfaceActive("notifications", undefined);
             break;
         default:
             root.showPage(root.initialPage);

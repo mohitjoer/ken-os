@@ -361,13 +361,6 @@ Item {
                 active: root.open
             }
 
-            Menus.QsSection { width: parent.width; label: I18n.tr("Calendar") }
-            Menus.QsCalendarEmbed {
-                width: parent.width
-                s: 1
-                open: root.open
-            }
-
             Menus.QsSection { width: parent.width; label: I18n.tr("System") }
             SysMonitor {
                 width: parent.width
