@@ -3401,7 +3401,14 @@ Item {
     }
     // ── Notification state ──
     property bool notifVisible: false
-    onNotifVisibleChanged: popupOpened("notifVisible")
+    onNotifVisibleChanged: {
+        if (notifVisible) {
+            notifVisible = false;
+            ShellState.requestSurfaceActive("notifications", undefined);
+        } else {
+            popupOpened("notifVisible");
+        }
+    }
     property int  notifCount:   0
     property real notifBarX:    0
 

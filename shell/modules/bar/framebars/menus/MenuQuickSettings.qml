@@ -73,6 +73,11 @@ Item {
     }
 
     function switchToModule(id) {
+        if (id === "notifications") {
+            root.requestClose();
+            ShellState.requestSurfaceActive("notifications", undefined);
+            return;
+        }
         if (!root.applyingInitial)
             root.navReady = true;
         if (!root.moduleEnabled(id))
@@ -176,6 +181,10 @@ Item {
         root.applyingInitial = true;
         switch (root.initialPage) {
         case "notifications":
+            root.showPage("");
+            root.requestClose();
+            ShellState.requestSurfaceActive("notifications", undefined);
+            break;
         case "weather":
         case "capture":
         case "media":
@@ -267,7 +276,14 @@ Item {
             height: parent.height
             modules: root.configuredModules
             activeModule: root.activeModule
-            onModuleActivated: moduleId => root.switchToModule(moduleId)
+            onModuleActivated: moduleId => {
+                if (moduleId === "notifications") {
+                    root.requestClose();
+                    ShellState.requestSurfaceActive("notifications", undefined);
+                    return;
+                }
+                root.switchToModule(moduleId);
+            }
             onRequestClose: root.requestClose()
         }
 
