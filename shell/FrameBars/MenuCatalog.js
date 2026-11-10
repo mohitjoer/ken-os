@@ -31,7 +31,7 @@ const menus = {
     wallpaper: { id: "wallpaper", anchor: "bottom", minWidth: 1400, expansion: "always", widgets: ["theme", "wallpaper"] },
     theme: { id: "theme", anchor: "right", minWidth: 320, expansion: "never", widgets: ["theme"] },
     weather: { id: "weather", anchor: "right", minWidth: 320, expansion: "never", widgets: ["weather"] },
-    notifications: { id: "notifications", anchor: "right", minWidth: 410, expansion: "always", widgets: ["notifications"] }
+    notifications: { id: "notifications", anchor: "top-right", minWidth: 410, expansion: "never", widgets: ["notifications"] }
 };
 const surfaces = {
     "stash": { id: "stash", anchor: "right", minWidth: 340, panes: ["stash"] },

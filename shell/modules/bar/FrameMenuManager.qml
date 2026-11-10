@@ -190,8 +190,8 @@ Item {
         NumberAnimation {
             duration: root.chromeSide
                 ? (root.chromeEntering ? Motion.sidebarEnter : Motion.sidebarExit)
-                : Motion.diagonal
-            easing.type: root.chromeSide ? Easing.BezierSpline : Motion.diagonalCurve
+                : (root.chromeEntering ? Motion.dur(240) : Motion.dur(180))
+            easing.type: root.chromeSide ? Easing.BezierSpline : (root.chromeEntering ? Easing.OutCubic : Easing.InQuad)
             easing.bezierCurve: root.chromeEntering
                 ? Motion.sidebarEnterCurve : Motion.sidebarExitCurve
         }
@@ -199,9 +199,10 @@ Item {
     property real chromeOpacity: 0
     Behavior on chromeOpacity {
         NumberAnimation {
-            duration: !root.chromeSide ? 0
-                : Math.round((root.chromeEntering ? Motion.sidebarEnter : Motion.sidebarExit) * 0.7)
-            easing.type: Easing.BezierSpline
+            duration: root.chromeSide
+                ? Math.round((root.chromeEntering ? Motion.sidebarEnter : Motion.sidebarExit) * 0.7)
+                : (root.chromeEntering ? Motion.dur(180) : Motion.dur(140))
+            easing.type: root.chromeSide ? Easing.BezierSpline : Easing.InOutQuad
             easing.bezierCurve: root.chromeEntering
                 ? Motion.sidebarFadeInCurve : Motion.sidebarFadeOutCurve
         }
@@ -285,12 +286,12 @@ Item {
             return { anchor: a, x: r.x + (root.width - r.x) * (1 - p), y: r.y, w: r.w, h: r.h };
         if (a === "left")         return { anchor: a, x: r.x,         y: r.y,     w: wp, h: r.h };
         if (a === "right")        return { anchor: a, x: rr - wp,     y: r.y,     w: wp, h: r.h };
-        if (a === "top")          return { anchor: a, x: cx - wp / 2, y: r.y,     w: wp, h: hp };
-        if (a === "bottom")       return { anchor: a, x: cx - wp / 2, y: rb - hp, w: wp, h: hp };
-        if (a === "top-left")     return { anchor: a, x: r.x,         y: r.y,     w: wp, h: hp };
-        if (a === "top-right")    return { anchor: a, x: rr - wp,     y: r.y,     w: wp, h: hp };
-        if (a === "bottom-left")  return { anchor: a, x: r.x,         y: rb - hp, w: wp, h: hp };
-        if (a === "bottom-right") return { anchor: a, x: rr - wp,     y: rb - hp, w: wp, h: hp };
+        if (a === "top")          return { anchor: a, x: cx - wp / 2, y: r.y - 12 * (1 - p),     w: wp, h: hp };
+        if (a === "bottom")       return { anchor: a, x: cx - wp / 2, y: rb - hp + 12 * (1 - p), w: wp, h: hp };
+        if (a === "top-left")     return { anchor: a, x: r.x,         y: r.y - 12 * (1 - p),     w: wp, h: hp };
+        if (a === "top-right")    return { anchor: a, x: rr - wp,     y: r.y - 12 * (1 - p),     w: wp, h: hp };
+        if (a === "bottom-left")  return { anchor: a, x: r.x,         y: rb - hp + 12 * (1 - p), w: wp, h: hp };
+        if (a === "bottom-right") return { anchor: a, x: rr - wp,     y: rb - hp + 12 * (1 - p), w: wp, h: hp };
         return { anchor: "", x: r.x, y: r.y, w: 0, h: 0 };
     }
 

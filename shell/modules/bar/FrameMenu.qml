@@ -191,7 +191,7 @@ Item {
             color: Theme.surface
             border.width: Theme.borderWidth
             border.color: Theme.outline
-            opacity: Theme.windowOpacity
+            opacity: Theme.windowOpacity * (root.manager ? root.manager.chromeOpacity : 1)
         }
 
         Loader {
@@ -212,7 +212,7 @@ Item {
             opacity: menuBody.status === Loader.Ready
                 ? ((root.sideMenu && root.manager)
                     ? root.manager.chromeOpacity * (root.stableSidePanel ? root.bodyReveal : 1)
-                    : root.bodyReveal)
+                    : (root.manager ? root.manager.chromeOpacity * root.bodyReveal : root.bodyReveal))
                 : 0
             sourceComponent: menuColumnBody
         }

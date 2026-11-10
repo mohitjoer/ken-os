@@ -387,8 +387,8 @@ Scope {
                     bottom: overlay.railClearance("bottom"),
                     right: overlay.railClearance("right")
                 }) : (overlay.qsBarEdge === "bottom"
-                    ? ({ top: 0, left: 0, bottom: 52, right: 0 })
-                    : ({ top: 52, left: 0, bottom: 0, right: 0 }))
+                    ? ({ top: 0, left: Math.round(6 * overlay.s), bottom: Math.round(38 * overlay.s), right: Math.round(6 * overlay.s) })
+                    : ({ top: Math.round(38 * overlay.s), left: Math.round(6 * overlay.s), bottom: 0, right: Math.round(6 * overlay.s) }))
                 active: !overlay.monFullscreen
                 onSurfaceClosed: (id, context) => surfaceLifecycle.handleClosed(id, context)
 
