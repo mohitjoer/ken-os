@@ -41,7 +41,22 @@ else
     fail_count=$((prev_fail + 1))
     printf "status=degraded\nlast_check=%s\nfailed_count=%d\nkernel=%s\n" \
         "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$fail_count" "$(uname -r)" > "$STATUS_FILE"
-    echo "asura-boot-guard: WARNING: core services (seatd/asura-sysd) failed health check"
+    echo "asura-boot-guard: WARNING: core services (seatd/asura-sysd) failed health check (failures: $fail_count)"
+
+    # Trigger recovery action if failure threshold reached (3 consecutive failures)
+    if [ "$fail_count" -ge 3 ]; then
+        echo "asura-boot-guard: CRITICAL: 3 consecutive failed boots detected. Triggering recovery rollback..."
+        # 1. Bootloader rollback: fall back to previous GRUB boot entry
+        if command -v grub-reboot >/dev/null 2>&1; then
+            echo "asura-boot-guard: setting GRUB fallback boot entry..."
+            grub-reboot 1 2>/dev/null || true
+        fi
+        # 2. Btrfs snapshot recovery marker
+        if [ -d "/.snapshots" ] && command -v btrfs >/dev/null 2>&1; then
+            echo "asura-boot-guard: creating Btrfs rollback marker in /var/lib/asura/..."
+            touch "$STATUS_DIR/rollback-requested" 2>/dev/null || true
+        fi
+    fi
 fi
 
 if command -v pause >/dev/null 2>&1; then

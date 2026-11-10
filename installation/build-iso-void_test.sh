@@ -95,8 +95,8 @@ grep -Fq 'turnstile' "$MANIFEST"
 grep -Fq 'btrfs-progs' "$MANIFEST"
 ! grep -Fq 'gamemode' "$MANIFEST"
 grep -Fq 'zramen' "$MANIFEST"
-grep -Fq 'scx' "$MANIFEST"
-grep -Fq 'scx-loader' "$MANIFEST"
+! grep -Fq 'scx' "$MANIFEST"
+! grep -Fq 'scx-loader' "$MANIFEST"
 grep -Fq 'mimalloc' "$MANIFEST"
 grep -Fq 'podman' "$MANIFEST"
 
@@ -232,6 +232,11 @@ fi
 grep -Fq '"nice": 10' "$REPO_ROOT/system/ananicy/00-asura-types.types"
 grep -Fq 'compinit -C' "$REPO_ROOT/apps/zsh/asura.zsh"
 grep -Fq '_asura_cache_eval' "$REPO_ROOT/apps/zsh/asura.zsh"
+
+# STAGE 6: Kernel and CI Verifications
+grep -Fq 'grub-reboot' "$REPO_ROOT/system/runit/services/asura-boot-guard/run"
+grep -Fq 'rollback-requested' "$REPO_ROOT/system/runit/services/asura-boot-guard/run"
+grep -Fq 'qemu64' "$REPO_ROOT/.github/workflows/ci.yml"
 
 echo "build-iso-void_test: ok"
 

@@ -195,8 +195,6 @@ power-and-hardware-services:
     - network-manager-applet
     - wpa_supplicant
     - zramen
-    - scx
-    - scx-loader
     - mimalloc
     - podman
 
