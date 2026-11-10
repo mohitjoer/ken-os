@@ -478,7 +478,12 @@ for hpkg in $HYPR_PKGS; do
 		}
 	fi
 	verify_checksum "$HYPR_CACHE/$hpkg"
+	tar -xf "$HYPR_CACHE/$hpkg" -C "$INCLUDE_DIR"
 done
+rm -f "$INCLUDE_DIR/props.plist" "$INCLUDE_DIR/files.plist"
+if [ -f "$INCLUDE_DIR/usr/libexec/xdg-desktop-portal-hyprland" ]; then
+	cp "$INCLUDE_DIR/usr/libexec/xdg-desktop-portal-hyprland" "$INCLUDE_DIR/usr/bin/xdg-desktop-portal-hyprland" 2>/dev/null || true
+fi
 
 echo "build-iso-void: indexing local Hyprland package repository..."
 xbps-rindex -a "$HYPR_CACHE"/*.xbps
@@ -784,7 +789,9 @@ for group, body in manifest.items():
 
 filtered = [p for p in packages if p != "base-system"]
 all_requested = sorted(dict.fromkeys(str(p) for p in filtered))
-print(" ".join(all_requested))
+custom_pkgs = {"hyprland", "xdg-desktop-portal-hyprland", "hypridle", "hyprlock"}
+out = [p for p in all_requested if p not in custom_pkgs]
+print(" ".join(out))
 PY
 )
 
@@ -1065,6 +1072,50 @@ rm -f "$ROOTFS/etc/ld.so.preload"
 if [ -f "$ROOTFS/usr/libexec/xdg-desktop-portal-hyprland" ] && [ ! -f "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" ]; then
 	ln -sf /usr/libexec/xdg-desktop-portal-hyprland "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" 2>/dev/null || true
 fi
+
+# Register custom Hyprland packages into ROOTFS pkgdb so xbps-query -l tracks them
+python3 - "$ROOTFS" "$HYPR_CACHE" <<'PY'
+import sys, os, plistlib, tarfile
+
+rootfs, hypr_cache = sys.argv[1], sys.argv[2]
+pkgdb_path = os.path.join(rootfs, "var/db/xbps/pkgdb-0.38.plist")
+pkgdb = {}
+if os.path.exists(pkgdb_path):
+    try:
+        with open(pkgdb_path, "rb") as f:
+            pkgdb = plistlib.load(f)
+    except Exception:
+        pass
+
+for fname in os.listdir(hypr_cache):
+    if not fname.endswith(".xbps"):
+        continue
+    fpath = os.path.join(hypr_cache, fname)
+    try:
+        with tarfile.open(fpath, "r:*") as tar:
+            props_file = None
+            files_file = None
+            for m in tar.getmembers():
+                if m.name in ("./props.plist", "props.plist"):
+                    props_file = tar.extractfile(m)
+                elif m.name in ("./files.plist", "files.plist"):
+                    files_file = tar.extractfile(m)
+            if props_file:
+                pkg_props = plistlib.load(props_file)
+                pkgver = pkg_props.get("pkgver", fname.replace(".xbps", ""))
+                pkg_props["state"] = "installed"
+                pkgdb[pkgver] = pkg_props
+                if files_file:
+                    dest_files = os.path.join(rootfs, f"var/db/xbps/{pkgver}-files.plist")
+                    with open(dest_files, "wb") as out_f:
+                        out_f.write(files_file.read())
+    except Exception as e:
+        print(f"postsetup: warning registering {fname}: {e}", file=sys.stderr)
+
+os.makedirs(os.path.dirname(pkgdb_path), exist_ok=True)
+with open(pkgdb_path, "wb") as f:
+    plistlib.dump(pkgdb, f)
+PY
 
 # Overwrite OS identity inside ROOTFS
 cat >"$ROOTFS/etc/os-release" <<'OSREL'

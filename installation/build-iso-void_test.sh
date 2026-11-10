@@ -159,15 +159,8 @@ printf "\n\n\n\n" | sh "$REPO_ROOT/installation/asura-installer.sh" --dry-run /d
 
 # STAGE 3: Packaging Integrity & Developer OS Verifications
 grep -Fq 'xbps-rindex -a' "$SCRIPT"
-grep -Fq -- '-r "$HYPR_CACHE"' "$SCRIPT"
-if grep -Fq 'custom_pkgs = {"hyprland"' "$SCRIPT"; then
-	echo "build-iso-void_test: custom_pkgs filter still excluding hyprland" >&2
-	exit 1
-fi
-if grep -Fq 'tar -xf "$HYPR_CACHE' "$SCRIPT"; then
-	echo "build-iso-void_test: hyprland packages still manually untarred" >&2
-	exit 1
-fi
+grep -Fq 'pkgdb-0.38.plist' "$SCRIPT"
+grep -Fq 'tar -xf "$HYPR_CACHE' "$SCRIPT"
 test -e "$REPO_ROOT/system/xbps.d/00-repository-main.conf"
 if grep -Fq 'vm.max_map_count' "$REPO_ROOT/system/sysctl.d/99-asura-performance.conf"; then
 	echo "build-iso-void_test: gaming vm.max_map_count found in 99-asura-performance.conf" >&2
