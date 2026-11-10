@@ -896,9 +896,14 @@ fi
 
 # Post-setup script to configure users and seat permissions inside ROOTFS
 POSTSETUP_SCRIPT="$BUILD_DIR/postsetup.sh"
-cat >"$POSTSETUP_SCRIPT" <<'EOF'
+cat >"$POSTSETUP_SCRIPT" <<EOF
 #!/bin/sh
-ROOTFS="$1"
+ROOTFS="\$1"
+HYPR_CACHE="$HYPR_CACHE"
+REPO_ROOT="$REPO_ROOT"
+INCLUDE_DIR="$INCLUDE_DIR"
+EOF
+cat >>"$POSTSETUP_SCRIPT" <<'EOF'
 
 # Generate and enforce UTF-8 system locale
 mkdir -p "$ROOTFS/etc"
@@ -1077,7 +1082,12 @@ fi
 python3 - "$ROOTFS" "$HYPR_CACHE" <<'PY'
 import sys, os, plistlib, tarfile
 
-rootfs, hypr_cache = sys.argv[1], sys.argv[2]
+rootfs = sys.argv[1] if len(sys.argv) > 1 else ""
+hypr_cache = sys.argv[2] if len(sys.argv) > 2 else ""
+
+if not hypr_cache or not os.path.isdir(hypr_cache):
+    sys.exit(0)
+
 pkgdb_path = os.path.join(rootfs, "var/db/xbps/pkgdb-0.38.plist")
 pkgdb = {}
 if os.path.exists(pkgdb_path):
