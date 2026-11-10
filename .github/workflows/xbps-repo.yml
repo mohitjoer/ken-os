@@ -31,10 +31,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: desktop/go.mod
           cache-dependency-path: |
@@ -59,7 +59,7 @@ jobs:
           sudo chmod -R a+rwX build/xbps-repo
 
       - name: Upload XBPS repository artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: asura-xbps-repo
           path: build/xbps-repo/
