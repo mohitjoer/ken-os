@@ -1,4 +1,3 @@
 {"type": "compiler", "nice": 19, "ioclass": "idle"}
 {"type": "scanner", "nice": 19, "ioclass": "idle"}
 {"type": "gui", "nice": -10, "latency": true}
-{"type": "game", "nice": -10, "latency": true}

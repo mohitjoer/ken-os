@@ -452,6 +452,17 @@ fi
 cp -r "$REPO_ROOT/shell"/* "$INCLUDE_DIR/usr/share/asura/shell/"
 cp -r "$REPO_ROOT/system/runit/user-services"/* "$INCLUDE_DIR/usr/share/asura/runit/services/"
 
+# Ensure XBPS tools are available (if running on a non-Void host, fetch xbps-static)
+if ! command -v xbps-rindex >/dev/null 2>&1 || ! command -v xbps-install >/dev/null 2>&1; then
+	echo "build-iso-void: xbps tools not found on host, setting up xbps-static..."
+	XBPS_STATIC_DIR="$BUILD_DIR/xbps-static"
+	if [ ! -x "$XBPS_STATIC_DIR/usr/bin/xbps-install" ] || [ ! -x "$XBPS_STATIC_DIR/usr/bin/xbps-rindex" ]; then
+		mkdir -p "$XBPS_STATIC_DIR"
+		curl -sSL "https://repo-fastly.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz" | tar -xJ -C "$XBPS_STATIC_DIR"
+	fi
+	export PATH="$XBPS_STATIC_DIR/usr/bin:$PATH"
+fi
+
 # Stage native Void Linux Hyprland compositor stack and libraries
 echo "build-iso-void: staging native Void Linux Hyprland stack..."
 HYPR_CACHE="$BUILD_DIR/hyprland-pkgs"
@@ -467,12 +478,11 @@ for hpkg in $HYPR_PKGS; do
 		}
 	fi
 	verify_checksum "$HYPR_CACHE/$hpkg"
-	tar -xf "$HYPR_CACHE/$hpkg" -C "$INCLUDE_DIR"
 done
-rm -f "$INCLUDE_DIR/props.plist" "$INCLUDE_DIR/files.plist"
-if [ -f "$INCLUDE_DIR/usr/libexec/xdg-desktop-portal-hyprland" ]; then
-	cp "$INCLUDE_DIR/usr/libexec/xdg-desktop-portal-hyprland" "$INCLUDE_DIR/usr/bin/xdg-desktop-portal-hyprland" 2>/dev/null || true
-fi
+
+echo "build-iso-void: indexing local Hyprland package repository..."
+xbps-rindex -a "$HYPR_CACHE"/*.xbps
+
 # Compatibility soname symlinks for Void libraries with newer ABI bumps
 mkdir -p "$INCLUDE_DIR/usr/lib"
 ln -sf libdisplay-info.so.3 "$INCLUDE_DIR/usr/lib/libdisplay-info.so.2"
@@ -520,6 +530,7 @@ fi
 cp "$REPO_ROOT/system/sysctl.d/99-asura-performance.conf" "$INCLUDE_DIR/etc/sysctl.d/99-asura-performance.conf"
 cp "$REPO_ROOT/session/turnstile/turnstile.conf" "$INCLUDE_DIR/etc/turnstile/turnstile.conf"
 cp "$REPO_ROOT/system/xbps.d/asura.conf" "$INCLUDE_DIR/etc/xbps.d/asura.conf"
+cp "$REPO_ROOT/system/xbps.d/asura.conf" "$INCLUDE_DIR/etc/xbps.d/00-repository-main.conf"
 
 # Default environment for seatd & Wayland
 cat >"$INCLUDE_DIR/etc/environment" <<'EOF'
@@ -767,9 +778,7 @@ for group, body in manifest.items():
 
 filtered = [p for p in packages if p != "base-system"]
 all_requested = sorted(dict.fromkeys(str(p) for p in filtered))
-custom_pkgs = {"hyprland", "xdg-desktop-portal-hyprland"}
-out = [p for p in all_requested if p not in custom_pkgs]
-print(" ".join(out))
+print(" ".join(all_requested))
 PY
 )
 
@@ -779,6 +788,10 @@ if [ ! -d "$MKLIVE_DIR" ]; then
 	echo "build-iso-void: cloning void-mklive..."
 	git clone --depth 1 https://github.com/void-linux/void-mklive.git "$MKLIVE_DIR"
 fi
+
+# Pre-trust custom package repository keys in void-mklive keys directory
+mkdir -p "$MKLIVE_DIR/keys"
+cp "$INCLUDE_DIR/var/db/xbps/keys"/*.plist "$MKLIVE_DIR/keys/" 2>/dev/null || true
 
 # Overwrite upstream mklive issue, motd, and splash data files to eliminate upstream branding
 if [ -d "$MKLIVE_DIR/data" ]; then
@@ -866,17 +879,6 @@ fi
 # Prune cluttered extra speech and nogfx entries from GRUB configuration
 if [ -f "$MKLIVE_DIR/grub/grub_void.cfg.pre" ]; then
 	sed -i 's/timeout=15/timeout=3/g' "$MKLIVE_DIR/grub/grub_void.cfg.pre"
-fi
-
-# Ensure XBPS tools are available (if running on a non-Void host, fetch xbps-static)
-if ! command -v xbps-install >/dev/null 2>&1; then
-	echo "build-iso-void: xbps-install not found on host, setting up xbps-static..."
-	XBPS_STATIC_DIR="$BUILD_DIR/xbps-static"
-	if [ ! -x "$XBPS_STATIC_DIR/usr/bin/xbps-install" ]; then
-		mkdir -p "$XBPS_STATIC_DIR"
-		curl -sSL "https://repo-fastly.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz" | tar -xJ -C "$XBPS_STATIC_DIR"
-	fi
-	export PATH="$XBPS_STATIC_DIR/usr/bin:$PATH"
 fi
 
 # Post-setup script to configure users and seat permissions inside ROOTFS
@@ -1042,6 +1044,12 @@ fi
 
 mkdir -p "$ROOTFS/etc/xbps.d"
 cp "$REPO_ROOT/system/xbps.d/asura.conf" "$ROOTFS/etc/xbps.d/asura.conf" 2>/dev/null || true
+cp "$REPO_ROOT/system/xbps.d/asura.conf" "$ROOTFS/etc/xbps.d/00-repository-main.conf" 2>/dev/null || true
+
+# Ensure portal executable symlink is available in /usr/bin if installed in /usr/libexec
+if [ -f "$ROOTFS/usr/libexec/xdg-desktop-portal-hyprland" ] && [ ! -f "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" ]; then
+	ln -sf /usr/libexec/xdg-desktop-portal-hyprland "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" 2>/dev/null || true
+fi
 
 # Overwrite OS identity inside ROOTFS
 cat >"$ROOTFS/etc/os-release" <<'OSREL'
@@ -1219,6 +1227,7 @@ echo "build-iso-void: generating ISO with void-mklive..."
 		-a "$ARCH" \
 		-b base-system \
 		-k linux \
+		-r "$HYPR_CACHE" \
 		-r "$MIRROR" \
 		-p "$PACKAGES" \
 		-I "$INCLUDE_DIR" \

@@ -93,7 +93,7 @@ grep -Fq 'seatd' "$MANIFEST"
 grep -Fq 'turnstile' "$MANIFEST"
 grep -Fq 'tlp' "$MANIFEST"
 grep -Fq 'btrfs-progs' "$MANIFEST"
-grep -Fq 'gamemode' "$MANIFEST"
+! grep -Fq 'gamemode' "$MANIFEST"
 grep -Fq 'zramen' "$MANIFEST"
 grep -Fq 'scx' "$MANIFEST"
 grep -Fq 'scx-loader' "$MANIFEST"
@@ -155,6 +155,27 @@ grep -Fq 'rsync' "$MANIFEST"
 grep -Fq 'grub' "$MANIFEST"
 grep -Fq 'grub-x86_64-efi' "$MANIFEST"
 printf "\n\n\n\n" | sh "$REPO_ROOT/installation/asura-installer.sh" --dry-run /dev/sda >/dev/null
+
+# STAGE 3: Packaging Integrity & Developer OS Verifications
+grep -Fq 'xbps-rindex -a' "$SCRIPT"
+grep -Fq -- '-r "$HYPR_CACHE"' "$SCRIPT"
+if grep -Fq 'custom_pkgs = {"hyprland"' "$SCRIPT"; then
+	echo "build-iso-void_test: custom_pkgs filter still excluding hyprland" >&2
+	exit 1
+fi
+if grep -Fq 'tar -xf "$HYPR_CACHE' "$SCRIPT"; then
+	echo "build-iso-void_test: hyprland packages still manually untarred" >&2
+	exit 1
+fi
+test -e "$REPO_ROOT/system/xbps.d/00-repository-main.conf"
+if grep -Fq 'vm.max_map_count' "$REPO_ROOT/system/sysctl.d/99-asura-performance.conf"; then
+	echo "build-iso-void_test: gaming vm.max_map_count found in 99-asura-performance.conf" >&2
+	exit 1
+fi
+if grep -Fq 'steam' "$REPO_ROOT/system/ananicy/00-asura-rules.rules"; then
+	echo "build-iso-void_test: gaming steam rule found in 00-asura-rules.rules" >&2
+	exit 1
+fi
 
 echo "build-iso-void_test: ok"
 

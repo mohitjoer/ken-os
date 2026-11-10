@@ -182,7 +182,6 @@ power-and-hardware-services:
     - NetworkManager
     - network-manager-applet
     - wpa_supplicant
-    - gamemode
     - zramen
     - scx
     - scx-loader

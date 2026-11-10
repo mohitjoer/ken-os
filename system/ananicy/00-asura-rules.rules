@@ -1,4 +1,4 @@
-# Asura OS Auto-Nice Rules for Compilers, Scanners, UI, and Games
+# Asura OS Auto-Nice Rules for Compilers, Scanners, and UI
 
 # Background compilers: low priority (nice 19, idle I/O)
 {"name": "gcc", "type": "compiler"}
@@ -25,10 +25,3 @@
 {"name": "Hyprland", "type": "gui"}
 {"name": "quickshell", "type": "gui"}
 {"name": "asura-shell", "type": "gui"}
-
-# Gaming & Real-time: high priority
-{"name": "steam", "type": "game"}
-{"name": "gamescope", "type": "game"}
-{"name": "wine", "type": "game"}
-{"name": "wineserver", "type": "game"}
-{"name": "gamemoded", "type": "game"}
