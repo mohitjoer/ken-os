@@ -2,7 +2,7 @@
 # Asura user-level process supervisor for Void Linux / runit.
 #
 # Supervises: pipewire, wireplumber, xdg-desktop-portal-hyprland,
-# xdg-desktop-portal, quickshell, asura-hubd, asura-wallpaper, swayidle.
+# xdg-desktop-portal, quickshell, asura-hubd, asura-wallpaper, hypridle.
 #
 # Usage:
 #   asura-user-services start    # starts user runsvdir or spawns services

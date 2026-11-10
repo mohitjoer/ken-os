@@ -1,0 +1,9 @@
+#!/bin/sh
+# with-mimalloc: opt-in runner for mimalloc allocator
+if [ -f /usr/lib/libmimalloc.so.3 ]; then
+	LD_PRELOAD="/usr/lib/libmimalloc.so.3${LD_PRELOAD:+:$LD_PRELOAD}" exec "$@"
+elif [ -f /usr/lib/libmimalloc.so ]; then
+	LD_PRELOAD="/usr/lib/libmimalloc.so${LD_PRELOAD:+:$LD_PRELOAD}" exec "$@"
+else
+	exec "$@"
+fi

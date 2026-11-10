@@ -18,3 +18,5 @@ d264dbdbd16b600ff1722d068a79506583265df8b33d29a9a61012d86139535c  sdbus-cpp-2.1.
 d2dc5b19c6860a8279949b86eb1dc1afaace9391a3a2fe21acbd9afd2aa5dda8  hyprland-0.49.0_1.x86_64.xbps
 99c2aaccd54fd1a90dd8b9ae68eb736aafd1b12924a62a42e35b1266fc51e3bb  xdg-desktop-portal-hyprland-1.3.9_2.x86_64.xbps
 227a2464e9f604dead2fa4b85e4eaeab6f6dd67f427db31e562f52ae4f087130  hyprland-qtutils-0.1.4_1.x86_64.xbps
+6febb74cfdc6c40900718072ee6d5b2aa2adf3be184f376e42392e2fbd556fe7  hypridle-0.1.6_2.x86_64.xbps
+9f3b9190e566ca078d4fe6d4d2e06b5fd3788c52b53eaf527ff49dab35293863  hyprlock-0.8.2_1.x86_64.xbps

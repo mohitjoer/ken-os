@@ -20,7 +20,6 @@ essential:
     - runit-void
     - dbus
     - polkit
-    - elogind
     - seatd
     - libseat
     - eudev
@@ -65,7 +64,6 @@ desktop:
     - xdg-desktop-portal
     - xdg-desktop-portal-hyprland
     - xdg-desktop-portal-gtk
-    - xdg-desktop-portal-lxqt
     - wl-clipboard
     - wlr-randr
     - grim
@@ -126,8 +124,8 @@ session:
     - turnstile
     - sddm
     - wlogout
-    - swayidle
-    - swaylock
+    - hypridle
+    - hyprlock
 
 applications:
   packages:

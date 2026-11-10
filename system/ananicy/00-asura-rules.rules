@@ -1,6 +1,6 @@
 # Asura OS Auto-Nice Rules for Compilers, Scanners, and UI
 
-# Background compilers: low priority (nice 19, idle I/O)
+# Background compilers: moderate priority (nice 10, normal I/O)
 {"name": "gcc", "type": "compiler"}
 {"name": "g++", "type": "compiler"}
 {"name": "clang", "type": "compiler"}
@@ -13,13 +13,11 @@
 {"name": "cc1plus", "type": "compiler"}
 
 # Background scanners & indexers: lowest priority (nice 19, idle I/O)
+# Note: Interactive developer tools (git, rg, fzf) are excluded so commands stay snappy
 {"name": "updatedb", "type": "scanner"}
 {"name": "tracker-miner-fs-3", "type": "scanner"}
 {"name": "tracker-miner-fs", "type": "scanner"}
 {"name": "baloo_file", "type": "scanner"}
-{"name": "fzf", "type": "scanner"}
-{"name": "rg", "type": "scanner"}
-{"name": "git", "type": "scanner"}
 
 # Desktop UI & Compositor: real-time priority (nice -10, low latency)
 {"name": "Hyprland", "type": "gui"}

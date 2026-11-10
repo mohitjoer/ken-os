@@ -506,6 +506,9 @@ for svc in dbus seatd udevd NetworkManager acpid turnstiled zramen scx-lavd anan
 	fi
 done
 
+# Ensure wpa_supplicant does not run as a standalone service (managed by NetworkManager)
+rm -f "$TARGET_DIR/etc/runit/runsvdir/default/wpa_supplicant" "$TARGET_DIR/var/service/wpa_supplicant"
+
 # Layer 3 Tuning: Configure zramen zstd compression
 mkdir -p "$TARGET_DIR/etc/sv/zramen"
 cat >"$TARGET_DIR/etc/sv/zramen/conf" <<'ZRAMCONF'
@@ -514,10 +517,8 @@ export ZRAM_SIZE=50
 export ZRAM_PRIORITY=32767
 ZRAMCONF
 
-# Layer 3 Tuning: Configure global mimalloc lock-free allocator
-if [ -f "$TARGET_DIR/usr/lib/libmimalloc.so.3" ]; then
-	echo "/usr/lib/libmimalloc.so.3" > "$TARGET_DIR/etc/ld.so.preload"
-fi
+# Layer 3 Tuning: Avoid global ld.so.preload (opt-in runner /usr/bin/with-mimalloc provided)
+rm -f "$TARGET_DIR/etc/ld.so.preload"
 
 # Configure GRUB bootloader identity
 mkdir -p "$TARGET_DIR/etc/default"

@@ -468,7 +468,7 @@ echo "build-iso-void: staging native Void Linux Hyprland stack..."
 HYPR_CACHE="$BUILD_DIR/hyprland-pkgs"
 mkdir -p "$HYPR_CACHE"
 
-HYPR_PKGS="tomlplusplus-3.4.0_1.x86_64.xbps hyprutils-0.7.1_1.x86_64.xbps aquamarine-0.8.0_2.x86_64.xbps hyprlang-0.6.3_1.x86_64.xbps hyprcursor-0.1.12_1.x86_64.xbps hyprgraphics-0.1.3_2.x86_64.xbps libspng-0.7.4_1.x86_64.xbps sdbus-cpp-2.1.0_1.x86_64.xbps hyprland-0.49.0_1.x86_64.xbps xdg-desktop-portal-hyprland-1.3.9_2.x86_64.xbps hyprland-qtutils-0.1.4_1.x86_64.xbps"
+HYPR_PKGS="tomlplusplus-3.4.0_1.x86_64.xbps hyprutils-0.7.1_1.x86_64.xbps aquamarine-0.8.0_2.x86_64.xbps hyprlang-0.6.3_1.x86_64.xbps hyprcursor-0.1.12_1.x86_64.xbps hyprgraphics-0.1.3_2.x86_64.xbps libspng-0.7.4_1.x86_64.xbps sdbus-cpp-2.1.0_1.x86_64.xbps hyprland-0.49.0_1.x86_64.xbps xdg-desktop-portal-hyprland-1.3.9_2.x86_64.xbps hyprland-qtutils-0.1.4_1.x86_64.xbps hypridle-0.1.6_2.x86_64.xbps hyprlock-0.8.2_1.x86_64.xbps"
 for hpkg in $HYPR_PKGS; do
 	if [ ! -f "$HYPR_CACHE/$hpkg" ]; then
 		echo "build-iso-void: downloading $hpkg..."
@@ -752,8 +752,10 @@ export ZRAM_SIZE=50
 export ZRAM_PRIORITY=32767
 EOF
 
-# Stage Layer 3: mimalloc global lock-free allocator preload
-echo "/usr/lib/libmimalloc.so.3" > "$INCLUDE_DIR/etc/ld.so.preload"
+# Stage Layer 3: mimalloc opt-in runner helper (avoid global ld.so.preload)
+cp "$REPO_ROOT/system/helpers/with-mimalloc" "$INCLUDE_DIR/usr/bin/with-mimalloc"
+chmod 0755 "$INCLUDE_DIR/usr/bin/with-mimalloc"
+rm -f "$INCLUDE_DIR/etc/ld.so.preload"
 
 # Stage Layer 3: ananicy-cpp auto-nice rules for compilers, scanners, UI, and games
 mkdir -p "$INCLUDE_DIR/etc/ananicy.d" "$INCLUDE_DIR/etc/ananicy-cpp"
@@ -1054,6 +1056,10 @@ if [ -d "$REPO_ROOT/system/modules-load.d" ]; then
 	mkdir -p "$ROOTFS/etc/modules-load.d"
 	cp "$REPO_ROOT/system/modules-load.d"/*.conf "$ROOTFS/etc/modules-load.d/" 2>/dev/null || true
 fi
+
+# Ensure wpa_supplicant does not run as a standalone runit service (managed by NetworkManager)
+rm -f "$ROOTFS/etc/runit/runsvdir/default/wpa_supplicant" "$ROOTFS/var/service/wpa_supplicant"
+rm -f "$ROOTFS/etc/ld.so.preload"
 
 # Ensure portal executable symlink is available in /usr/bin if installed in /usr/libexec
 if [ -f "$ROOTFS/usr/libexec/xdg-desktop-portal-hyprland" ] && [ ! -f "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" ]; then

@@ -29,11 +29,9 @@ if [ -x /usr/share/asura/session/asura-idle ]; then
 	exec /usr/share/asura/session/asura-idle start
 fi
 
-LOCK_CMD="hyprlock"
-if command -v asura-screen-lock >/dev/null 2>&1; then
-	LOCK_CMD="asura-screen-lock"
+if [ -f "$HOME/.config/asura/hyprland/hypridle.conf" ]; then
+	exec hypridle -c "$HOME/.config/asura/hyprland/hypridle.conf"
+elif [ -f /usr/share/asura/hyprland/hypridle.conf ]; then
+	exec hypridle -c /usr/share/asura/hyprland/hypridle.conf
 fi
-exec swayidle -w \
-	timeout 300 "$LOCK_CMD" \
-	timeout 600 'hyprctl dispatch dpms off' \
-	resume 'hyprctl dispatch dpms on'
+exec hypridle

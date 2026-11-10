@@ -122,8 +122,9 @@ grep -Fq 'ananicy-cpp' "$REPO_ROOT/system/runit/services/ananicy-cpp/run"
 grep -Fq 'ananicy-cpp' "$SCRIPT"
 grep -Fq 'compiler' "$REPO_ROOT/system/ananicy/00-asura-rules.rules"
 grep -Fq 'scanner' "$REPO_ROOT/system/ananicy/00-asura-rules.rules"
-grep -Fq 'libmimalloc.so.3' "$SCRIPT"
-grep -Fq 'libmimalloc.so.3' "$REPO_ROOT/installation/asura-installer.sh"
+test -x "$REPO_ROOT/system/helpers/with-mimalloc"
+! grep -Fq 'echo "/usr/lib/libmimalloc.so.3" > "$INCLUDE_DIR/etc/ld.so.preload"' "$SCRIPT"
+! grep -Fq 'echo "/usr/lib/libmimalloc.so.3" > "$TARGET_DIR/etc/ld.so.preload"' "$REPO_ROOT/installation/asura-installer.sh"
 grep -Fq 'ZRAM_COMP_ALGORITHM=zstd' "$SCRIPT"
 grep -Fq 'ZRAM_COMP_ALGORITHM=zstd' "$REPO_ROOT/installation/asura-installer.sh"
 grep -Fq 'compress=zstd:1' "$REPO_ROOT/installation/asura-installer.sh"
@@ -202,6 +203,35 @@ grep -Fq 'gcc' "$MANIFEST"
 grep -Fq 'make' "$MANIFEST"
 grep -Fq 'cmake' "$MANIFEST"
 grep -Fq 'zed --wait' "$REPO_ROOT/apps/zsh/asura.zsh"
+
+# STAGE 5: Performance & Light Cleanup Verifications
+if grep -Fq 'xdg-desktop-portal-lxqt' "$MANIFEST"; then
+	echo "build-iso-void_test: lxqt portal found in manifest" >&2
+	exit 1
+fi
+grep -Fq 'xdg-desktop-portal-hyprland' "$MANIFEST"
+grep -Fq 'xdg-desktop-portal-gtk' "$MANIFEST"
+if grep -Fq 'elogind' "$MANIFEST"; then
+	echo "build-iso-void_test: elogind found in manifest" >&2
+	exit 1
+fi
+grep -Fq 'seatd' "$MANIFEST"
+grep -Fq 'turnstile' "$MANIFEST"
+if grep -Fq 'swayidle' "$MANIFEST" || grep -Fq 'swaylock' "$MANIFEST"; then
+	echo "build-iso-void_test: swayidle/swaylock found in manifest" >&2
+	exit 1
+fi
+grep -Fq 'hypridle' "$MANIFEST"
+grep -Fq 'hyprlock' "$MANIFEST"
+if grep -Fq '"name": "git"' "$REPO_ROOT/system/ananicy/00-asura-rules.rules" || \
+   grep -Fq '"name": "fzf"' "$REPO_ROOT/system/ananicy/00-asura-rules.rules" || \
+   grep -Fq '"name": "rg"' "$REPO_ROOT/system/ananicy/00-asura-rules.rules"; then
+	echo "build-iso-void_test: interactive tools still in ananicy scanner class" >&2
+	exit 1
+fi
+grep -Fq '"nice": 10' "$REPO_ROOT/system/ananicy/00-asura-types.types"
+grep -Fq 'compinit -C' "$REPO_ROOT/apps/zsh/asura.zsh"
+grep -Fq '_asura_cache_eval' "$REPO_ROOT/apps/zsh/asura.zsh"
 
 echo "build-iso-void_test: ok"
 
