@@ -42,7 +42,7 @@ grep -Fq 'asura-user-services' "$SCRIPT"
 grep -Fq 'asura-sysd' "$SCRIPT"
 grep -Fq 'asura-userd' "$SCRIPT"
 grep -Fq 'etc/sv/asura-sysd' "$SCRIPT"
-grep -Fq 'NVreg_DynamicPowerManagement=0x02' "$SCRIPT"
+! grep -Fq 'NVreg_DynamicPowerManagement=0x02' "$SCRIPT"
 grep -Fq '99-asura-power.rules' "$SCRIPT"
 grep -Fq '99-asura-performance.conf' "$SCRIPT"
 grep -Fq 'turnstile.conf' "$SCRIPT"
@@ -91,7 +91,7 @@ grep -Fq 'pipewire' "$MANIFEST"
 grep -Fq 'wireplumber' "$MANIFEST"
 grep -Fq 'seatd' "$MANIFEST"
 grep -Fq 'turnstile' "$MANIFEST"
-grep -Fq 'tlp' "$MANIFEST"
+! grep -Fq 'tlp' "$MANIFEST"
 grep -Fq 'btrfs-progs' "$MANIFEST"
 ! grep -Fq 'gamemode' "$MANIFEST"
 grep -Fq 'zramen' "$MANIFEST"
@@ -176,6 +176,32 @@ if grep -Fq 'steam' "$REPO_ROOT/system/ananicy/00-asura-rules.rules"; then
 	echo "build-iso-void_test: gaming steam rule found in 00-asura-rules.rules" >&2
 	exit 1
 fi
+
+# STAGE 4: Config Bug Fixes Verifications
+grep -Fq 'NVreg_DynamicPowerManagement=0x02' "$REPO_ROOT/system/modprobe.d/nvidia.conf"
+grep -Fq 'tcp_bbr' "$REPO_ROOT/system/modules-load.d/bbr.conf"
+grep -Fq 'system/modules-load.d' "$SCRIPT"
+grep -Fq 'performable:copy_to_clipboard' "$REPO_ROOT/apps/ghostty/config"
+grep -Fq 'ATTR{type}=="Mains"' "$REPO_ROOT/system/udev/99-asura-power.rules"
+test -x "$REPO_ROOT/system/runit/services/asura-sysd/log/run"
+grep -Fq 'svlogd' "$REPO_ROOT/system/runit/services/asura-sysd/log/run"
+grep -Fq 'sddm' "$MANIFEST"
+if grep -Fq 'greetd' "$MANIFEST"; then
+	echo "build-iso-void_test: greetd found in manifest" >&2
+	exit 1
+fi
+grep -Fq 'zoxide' "$MANIFEST"
+grep -Fq 'fzf' "$MANIFEST"
+grep -Fq 'neovim' "$MANIFEST"
+grep -Fq 'zsh-autosuggestions' "$MANIFEST"
+grep -Fq 'zsh-syntax-highlighting' "$MANIFEST"
+grep -Fq 'eza' "$MANIFEST"
+grep -Fq 'atuin' "$MANIFEST"
+grep -Fq 'mise' "$MANIFEST"
+grep -Fq 'gcc' "$MANIFEST"
+grep -Fq 'make' "$MANIFEST"
+grep -Fq 'cmake' "$MANIFEST"
+grep -Fq 'zed --wait' "$REPO_ROOT/apps/zsh/asura.zsh"
 
 echo "build-iso-void_test: ok"
 

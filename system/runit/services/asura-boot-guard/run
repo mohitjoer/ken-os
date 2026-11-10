@@ -44,5 +44,9 @@ else
     echo "asura-boot-guard: WARNING: core services (seatd/asura-sysd) failed health check"
 fi
 
-exec pause 2>/dev/null || exec sleep infinity
+if command -v pause >/dev/null 2>&1; then
+    exec pause
+else
+    exec sleep infinity
+fi
 

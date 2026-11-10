@@ -124,7 +124,7 @@ session:
   packages:
     - pam
     - turnstile
-    - greetd
+    - sddm
     - wlogout
     - swayidle
     - swaylock
@@ -147,6 +147,18 @@ terminal-and-shell:
     - zsh
     - starship
     - fastfetch
+    - zoxide
+    - fzf
+    - zsh-autosuggestions
+    - zsh-history-substring-search
+    - zsh-syntax-highlighting
+    - atuin
+    - eza
+    - mise
+    - ripgrep
+    - fd
+    - bat
+    - neovim
   exclude:
     - kitty: Kitty is strictly forbidden in Asura per agent rules
 
@@ -156,6 +168,9 @@ languages:
     - python3
     - python3-yaml
     - git
+    - make
+    - gcc
+    - cmake
 
 graphics-and-media:
   packages:
@@ -175,7 +190,6 @@ graphics-and-media:
 power-and-hardware-services:
   packages:
     - upower
-    - tlp
     - acpid
     - brightnessctl
     - bluez

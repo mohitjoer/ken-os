@@ -527,6 +527,10 @@ cp "$REPO_ROOT/system/udev"/*.rules "$INCLUDE_DIR/etc/udev/rules.d/"
 if [ -d "$REPO_ROOT/system/modprobe.d" ]; then
 	cp "$REPO_ROOT/system/modprobe.d"/*.conf "$INCLUDE_DIR/etc/modprobe.d/"
 fi
+if [ -d "$REPO_ROOT/system/modules-load.d" ]; then
+	mkdir -p "$INCLUDE_DIR/etc/modules-load.d"
+	cp "$REPO_ROOT/system/modules-load.d"/*.conf "$INCLUDE_DIR/etc/modules-load.d/"
+fi
 cp "$REPO_ROOT/system/sysctl.d/99-asura-performance.conf" "$INCLUDE_DIR/etc/sysctl.d/99-asura-performance.conf"
 cp "$REPO_ROOT/session/turnstile/turnstile.conf" "$INCLUDE_DIR/etc/turnstile/turnstile.conf"
 cp "$REPO_ROOT/system/xbps.d/asura.conf" "$INCLUDE_DIR/etc/xbps.d/asura.conf"
@@ -1046,6 +1050,11 @@ mkdir -p "$ROOTFS/etc/xbps.d"
 cp "$REPO_ROOT/system/xbps.d/asura.conf" "$ROOTFS/etc/xbps.d/asura.conf" 2>/dev/null || true
 cp "$REPO_ROOT/system/xbps.d/asura.conf" "$ROOTFS/etc/xbps.d/00-repository-main.conf" 2>/dev/null || true
 
+if [ -d "$REPO_ROOT/system/modules-load.d" ]; then
+	mkdir -p "$ROOTFS/etc/modules-load.d"
+	cp "$REPO_ROOT/system/modules-load.d"/*.conf "$ROOTFS/etc/modules-load.d/" 2>/dev/null || true
+fi
+
 # Ensure portal executable symlink is available in /usr/bin if installed in /usr/libexec
 if [ -f "$ROOTFS/usr/libexec/xdg-desktop-portal-hyprland" ] && [ ! -f "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" ]; then
 	ln -sf /usr/libexec/xdg-desktop-portal-hyprland "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" 2>/dev/null || true
@@ -1234,7 +1243,7 @@ echo "build-iso-void: generating ISO with void-mklive..."
 		-i gzip \
 		-s zstd \
 		-S "dbus seatd NetworkManager zramen" \
-		-C "loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 live.user=asura live.autologin nvidia-drm.modeset=1 nvidia-drm.fbdev=1 NVreg_DynamicPowerManagement=0x02 nowatchdog mitigations=off preempt=full" \
+		-C "loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 live.user=asura live.autologin nowatchdog mitigations=off preempt=full" \
 		-x "$POSTSETUP_SCRIPT" \
 		-T "$ISO_TITLE" \
 		-o "$FINAL_ISO"

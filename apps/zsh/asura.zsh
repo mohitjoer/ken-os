@@ -19,7 +19,19 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
   }
 fi
 
-export EDITOR="${EDITOR:-zed}" VISUAL="${VISUAL:-zed}"
+# Editor selection: use GUI zed --wait when available in a display session,
+# falling back cleanly to terminal editors (nvim, nano, vi) on TTY, SSH, or headless
+if [[ -n "$DISPLAY" || -n "$WAYLAND_DISPLAY" ]] && command -v zed >/dev/null 2>&1; then
+  export EDITOR="${EDITOR:-zed --wait}" VISUAL="${VISUAL:-zed --wait}"
+else
+  for _editor in nvim nano vi; do
+    if command -v "$_editor" >/dev/null 2>&1; then
+      export EDITOR="${EDITOR:-$_editor}" VISUAL="${VISUAL:-$_editor}"
+      break
+    fi
+  done
+  export EDITOR="${EDITOR:-nano}" VISUAL="${VISUAL:-nano}"
+fi
 
 [[ -o interactive ]] || return
 

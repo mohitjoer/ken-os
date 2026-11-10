@@ -32,8 +32,11 @@ window-theme = ghostty
 command = /usr/bin/zsh
 shell-integration = detect
 
-# Copy when text is selected, interrupt otherwise
-keybind = ctrl+c=copy_to_clipboard
+# Copy when text is selected, send SIGINT otherwise
+keybind = ctrl+c=performable:copy_to_clipboard
+keybind = ctrl+v=performable:paste_from_clipboard
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
 keybind = ctrl+kp_add=increase_font_size:1
 keybind = ctrl+kp_subtract=decrease_font_size:1
 keybind = ctrl+kp_0=reset_font_size
