@@ -42,6 +42,12 @@ essential:
     - iptables
     - iproute2
     - btrfs-progs
+    - e2fsprogs
+    - dosfstools
+    - parted
+    - rsync
+    - grub
+    - grub-x86_64-efi
     - openssh
     - pciutils
     - usbutils

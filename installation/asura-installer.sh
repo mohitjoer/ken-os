@@ -1,13 +1,27 @@
 #!/bin/sh
 # Asura OS Guided System Installer
 # Sleek, interactive system installer with automatic drive detection,
-# Btrfs/ext4 support, and hybrid UEFI/BIOS bootloader setup.
+# Btrfs/ext4 support, subvolume setup, and hybrid UEFI/BIOS bootloader.
 set -eu
 
 DUAL_BOOT=0
+DRY_RUN=0
+TARGET_DISK_ARG=""
+
 for arg in "$@"; do
 	case "$arg" in
 		--dual-boot) DUAL_BOOT=1 ;;
+		--dry-run) DRY_RUN=1 ;;
+		-*)
+			echo "Unknown option: $arg" >&2
+			echo "Usage: asura-installer [--dual-boot] [--dry-run] [TARGET_DISK]" >&2
+			exit 1
+			;;
+		*)
+			if [ -z "$TARGET_DISK_ARG" ]; then
+				TARGET_DISK_ARG="$arg"
+			fi
+			;;
 	esac
 done
 
@@ -21,12 +35,25 @@ RESET=$(printf '\033[0m')
 CYAN=$(printf '\033[1;36m')
 
 DISKS_FILE=$(mktemp 2>/dev/null || echo "/tmp/asura-disks.$$")
+TARGET_DIR="/mnt/asura-target"
 
 cleanup_installer() {
+	exit_code=$?
 	rm -f "$DISKS_FILE" 2>/dev/null || true
-	code=$?
-	if [ "$code" -ne 0 ]; then
-		printf "\n${RED}${BOLD}Installation encountered an error (exit code %s).${RESET}\n" "$code"
+	if [ -d "$TARGET_DIR" ]; then
+		# Unmount in reverse order
+		umount "$TARGET_DIR/boot/efi" 2>/dev/null || true
+		umount "$TARGET_DIR/sys" 2>/dev/null || true
+		umount "$TARGET_DIR/proc" 2>/dev/null || true
+		umount "$TARGET_DIR/dev/pts" 2>/dev/null || true
+		umount "$TARGET_DIR/dev" 2>/dev/null || true
+		umount "$TARGET_DIR/home" 2>/dev/null || true
+		umount "$TARGET_DIR/.snapshots" 2>/dev/null || true
+		umount "$TARGET_DIR" 2>/dev/null || true
+		rmdir "$TARGET_DIR" 2>/dev/null || true
+	fi
+	if [ "$exit_code" -ne 0 ] && [ "$DRY_RUN" -eq 0 ]; then
+		printf "\n${RED}${BOLD}Installation failed (exit code %s). Cleaned up mounts.${RESET}\n" "$exit_code"
 		printf "${WHITE}Press Enter to close...${RESET}"
 		read -r _ 2>/dev/null || true
 	fi
@@ -43,8 +70,25 @@ ${WHITE}╭───────────────────────
 
 EOF
 
-if [ "$(id -u)" -ne 0 ]; then
+if [ "$DRY_RUN" -eq 1 ]; then
+	printf "${YELLOW}${BOLD}● DRY RUN MODE ACTIVE${RESET} ${DIM}(No disks will be partitioned or modified)${RESET}\n\n"
+fi
+
+if [ "$(id -u)" -ne 0 ] && [ "$DRY_RUN" -eq 0 ]; then
 	printf "${RED}asura-installer: must be run as root (e.g. sudo asura install)${RESET}\n" >&2
+	exit 1
+fi
+
+# Pre-flight dependency check
+REQUIRED_TOOLS="rsync parted mkfs.vfat mkfs.ext4 grub-install grub-mkconfig blkid"
+MISSING_TOOLS=""
+for tool in $REQUIRED_TOOLS; do
+	if ! command -v "$tool" >/dev/null 2>&1; then
+		MISSING_TOOLS="$MISSING_TOOLS $tool"
+	fi
+done
+if [ -n "$MISSING_TOOLS" ] && [ "$DRY_RUN" -eq 0 ]; then
+	printf "${RED}Pre-flight error: required installer tool(s) missing:${BOLD}%s${RESET}\n" "$MISSING_TOOLS" >&2
 	exit 1
 fi
 
@@ -66,7 +110,7 @@ rm -f "$DISKS_FILE"
 touch "$DISKS_FILE"
 idx=1
 
-lsblk -d -n -o NAME,SIZE,MODEL | grep -v '^zram' | while read -r dname dsize dmodel; do
+lsblk -d -n -o NAME,SIZE,MODEL 2>/dev/null | grep -v '^zram' | while read -r dname dsize dmodel; do
 	[ -z "$dname" ] && continue
 	case "$dname" in
 		zram*|loop*|sr*|dm-*) continue ;;
@@ -78,16 +122,16 @@ lsblk -d -n -o NAME,SIZE,MODEL | grep -v '^zram' | while read -r dname dsize dmo
 	idx=$((idx + 1))
 done
 
-total_disks=$(wc -l < "$DISKS_FILE" | tr -d ' ')
+total_disks=$(wc -l < "$DISKS_FILE" 2>/dev/null | tr -d ' ' || echo 0)
 
-if [ "$total_disks" -eq 0 ]; then
+if [ "$total_disks" -eq 0 ] && [ -z "$TARGET_DISK_ARG" ] && [ "$DRY_RUN" -eq 0 ]; then
 	printf "\n${RED}Error: No suitable install drives found.${RESET}\n" >&2
 	exit 1
 fi
 
-if [ $# -ge 1 ]; then
-	TARGET_DISK="$1"
-else
+if [ -n "$TARGET_DISK_ARG" ]; then
+	TARGET_DISK="$TARGET_DISK_ARG"
+elif [ "$total_disks" -gt 0 ]; then
 	printf "\n${WHITE}Select target drive [1-%d, or type path] (default: 1): ${RESET}" "$total_disks"
 	read -r DRIVE_CHOICE || DRIVE_CHOICE="1"
 	[ -z "$DRIVE_CHOICE" ] && DRIVE_CHOICE="1"
@@ -104,9 +148,11 @@ else
 			TARGET_DISK="$DRIVE_CHOICE"
 			;;
 	esac
+else
+	TARGET_DISK="/dev/sda"
 fi
 
-if [ ! -b "$TARGET_DISK" ]; then
+if [ ! -b "$TARGET_DISK" ] && [ "$DRY_RUN" -eq 0 ]; then
 	printf "${RED}Error: %s is not a valid block device.${RESET}\n" "$TARGET_DISK" >&2
 	exit 1
 fi
@@ -143,6 +189,10 @@ while true; do
 	stty echo 2>/dev/null || true
 	printf "\n"
 	if [ -z "$USER_PASS" ]; then
+		if [ "$DRY_RUN" -eq 1 ]; then
+			USER_PASS="dryrunpass"
+			break
+		fi
 		printf "${RED}Password cannot be empty. Please enter a valid password.${RESET}\n"
 		continue
 	fi
@@ -172,6 +222,10 @@ case "$LOCK_ROOT_INPUT" in
 			stty echo 2>/dev/null || true
 			printf "\n"
 			if [ -z "$ROOT_PASS" ]; then
+				if [ "$DRY_RUN" -eq 1 ]; then
+					ROOT_PASS="dryrunroot"
+					break
+				fi
 				printf "${RED}Root password cannot be empty.${RESET}\n"
 				continue
 			fi
@@ -192,11 +246,14 @@ case "$LOCK_ROOT_INPUT" in
 esac
 
 # ── STEP 4: Review & Final Confirmation ────────────────────────────────────
-FS_DISPLAY="Btrfs (compress=zstd:1, subvolumes)"
+FS_DISPLAY="Btrfs (subvolumes @, @home, @snapshots, compress=zstd:1)"
 [ "$FS_CHOICE" = "2" ] && FS_DISPLAY="ext4 (defaults, noatime)"
 
 BOOT_DISPLAY="GRUB EFI (UEFI 64-bit)"
 [ "$IS_UEFI" -eq 0 ] && BOOT_DISPLAY="GRUB MBR (Legacy BIOS)"
+
+ROOT_STATUS="Locked (sudo only via wheel group)"
+[ -n "$ROOT_PASS" ] && ROOT_STATUS="Password set"
 
 printf "\n${WHITE}╭──────────────────────────────────────────────────────────────╮
 │                   INSTALLATION SPECIFICATION                 │
@@ -205,8 +262,25 @@ printf "${WHITE}│${RESET} Target Disk:    ${BOLD}%-44s${RESET} ${WHITE}│${RE
 printf "${WHITE}│${RESET} Bootloader:     ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$BOOT_DISPLAY"
 printf "${WHITE}│${RESET} Filesystem:     ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$FS_DISPLAY"
 printf "${WHITE}│${RESET} Hostname:       ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$HOSTNAME_INPUT"
-printf "${WHITE}│${RESET} User Account:   ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$USERNAME_INPUT (wheel, seatd, sudo)"
+printf "${WHITE}│${RESET} User Account:   ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$USERNAME_INPUT (wheel, asura-hw)"
+printf "${WHITE}│${RESET} Root Account:   ${BOLD}%-44s${RESET} ${WHITE}│${RESET}\n" "$ROOT_STATUS"
 printf "${WHITE}╰──────────────────────────────────────────────────────────────╯${RESET}\n\n"
+
+if [ "$DRY_RUN" -eq 1 ]; then
+	printf "${YELLOW}${BOLD}DRY RUN SUMMARY:${RESET}\n"
+	printf "  1. Partition %s (GPT for UEFI with 512MB ESP, or MBR for BIOS)\n" "$TARGET_DISK"
+	printf "  2. Format with %s\n" "$FS_DISPLAY"
+	if [ "$FS_CHOICE" != "2" ]; then
+		printf "     Create Btrfs subvolumes: @ -> /, @home -> /home, @snapshots -> /.snapshots\n"
+	fi
+	printf "  3. Deploy rootfs via rsync to /mnt/asura-target\n"
+	printf "  4. Configure fstab with persistent UUIDs, regenerate initramfs, install GRUB\n"
+	printf "  5. Set credentials: user '%s' password, root: %s\n" "$USERNAME_INPUT" "$ROOT_STATUS"
+	printf "  6. Remove live-only configs (agetty autologin, NOPASSWD, live session files)\n"
+	printf "  7. Run post-installation verification check.\n\n"
+	printf "${GREEN}Dry-run completed successfully.${RESET}\n"
+	exit 0
+fi
 
 printf "${RED}${BOLD}⚠  CRITICAL WARNING: ALL EXISTING DATA ON %s WILL BE ERASED!${RESET}\n" "$TARGET_DISK"
 printf "${WHITE}Type ${BOLD}'YES'${RESET}${WHITE} to format disk and install Asura OS: ${RESET}"
@@ -218,7 +292,7 @@ fi
 
 # ── EXECUTION: Partitioning, Formatting, Deployment ────────────────────────
 printf "\n${WHITE}${BOLD}[1/5] Partitioning target disk (%s)...${RESET}\n" "$TARGET_DISK"
-wipefs -a "$TARGET_DISK" >/dev/null 2>&1 || true
+wipefs -a "$TARGET_DISK"
 
 if [ "$IS_UEFI" -eq 1 ]; then
 	parted -s "$TARGET_DISK" mklabel gpt
@@ -249,7 +323,7 @@ else
 	PART_EFI=""
 fi
 
-sleep 2
+sleep 1
 printf "${GREEN}✓ Partition table generated.${RESET}\n"
 
 printf "${WHITE}${BOLD}[2/5] Formatting filesystems...${RESET}\n"
@@ -257,25 +331,38 @@ if [ "$IS_UEFI" -eq 1 ]; then
 	if [ "$DUAL_BOOT" -eq 1 ]; then
 		printf "  Dual-boot mode: preserving existing ESP at %s\n" "$PART_EFI"
 	else
-		mkfs.vfat -F 32 -n "ASURA_ESP" "$PART_EFI" >/dev/null
+		mkfs.vfat -F 32 -n "ASURA_ESP" "$PART_EFI"
 	fi
 fi
 
-TARGET_DIR="/mnt/asura-target"
 mkdir -p "$TARGET_DIR"
 
 if [ "$FS_CHOICE" != "2" ] && command -v mkfs.btrfs >/dev/null 2>&1; then
-	printf "  Formatting root with Btrfs (zstd:1 compression)...\n"
-	mkfs.btrfs -f -L "ASURA_ROOT" "$PART_ROOT" >/dev/null
+	printf "  Formatting root with Btrfs and creating subvolumes (@, @home, @snapshots)...\n"
+	mkfs.btrfs -f -L "ASURA_ROOT" "$PART_ROOT"
 	FS_TYPE="btrfs"
-	FS_OPTS="defaults,noatime,compress=zstd:1"
-	mount -o "$FS_OPTS" "$PART_ROOT" "$TARGET_DIR"
+	BTRFS_BASE_OPTS="defaults,noatime,compress=zstd:1"
+	
+	# Temporary mount to create subvolumes
+	TMP_BTRFS="/mnt/asura-subvols.$$"
+	mkdir -p "$TMP_BTRFS"
+	mount -t btrfs "$PART_ROOT" "$TMP_BTRFS"
+	btrfs subvolume create "$TMP_BTRFS/@"
+	btrfs subvolume create "$TMP_BTRFS/@home"
+	btrfs subvolume create "$TMP_BTRFS/@snapshots"
+	umount "$TMP_BTRFS"
+	rmdir "$TMP_BTRFS"
+
+	# Mount subvolumes into target tree
+	mount -t btrfs -o "$BTRFS_BASE_OPTS,subvol=@" "$PART_ROOT" "$TARGET_DIR"
+	mkdir -p "$TARGET_DIR/home" "$TARGET_DIR/.snapshots"
+	mount -t btrfs -o "$BTRFS_BASE_OPTS,subvol=@home" "$PART_ROOT" "$TARGET_DIR/home"
+	mount -t btrfs -o "$BTRFS_BASE_OPTS,subvol=@snapshots" "$PART_ROOT" "$TARGET_DIR/.snapshots"
 else
 	printf "  Formatting root with ext4...\n"
-	mkfs.ext4 -F -L "ASURA_ROOT" "$PART_ROOT" >/dev/null
+	mkfs.ext4 -F -L "ASURA_ROOT" "$PART_ROOT"
 	FS_TYPE="ext4"
-	FS_OPTS="defaults,noatime"
-	mount "$PART_ROOT" "$TARGET_DIR"
+	mount -t ext4 -o defaults,noatime "$PART_ROOT" "$TARGET_DIR"
 fi
 
 if [ "$IS_UEFI" -eq 1 ]; then
@@ -300,25 +387,51 @@ printf "${GREEN}✓ System image copied.${RESET}\n"
 
 printf "${WHITE}${BOLD}[4/5] Configuring system services, fstab, and identity...${RESET}\n"
 ROOT_UUID=$(blkid -s UUID -o value "$PART_ROOT")
+if [ -z "$ROOT_UUID" ]; then
+	echo "ERROR: Failed to retrieve UUID for $PART_ROOT" >&2
+	exit 1
+fi
 
 if [ "$IS_UEFI" -eq 1 ]; then
 	EFI_UUID=$(blkid -s UUID -o value "$PART_EFI")
-	cat >"$TARGET_DIR/etc/fstab" <<EOF
+	if [ -z "$EFI_UUID" ]; then
+		echo "ERROR: Failed to retrieve UUID for $PART_EFI" >&2
+		exit 1
+	fi
+	if [ "$FS_TYPE" = "btrfs" ]; then
+		cat >"$TARGET_DIR/etc/fstab" <<EOF
 # /etc/fstab: static file system information for Asura OS
-UUID=$ROOT_UUID / $FS_TYPE $FS_OPTS 0 0
+UUID=$ROOT_UUID / btrfs defaults,noatime,compress=zstd:1,subvol=@ 0 0
+UUID=$ROOT_UUID /home btrfs defaults,noatime,compress=zstd:1,subvol=@home 0 0
+UUID=$ROOT_UUID /.snapshots btrfs defaults,noatime,compress=zstd:1,subvol=@snapshots 0 0
 UUID=$EFI_UUID /boot/efi vfat defaults,noatime,umask=0077 0 2
 tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
 EOF
-else
-	cat >"$TARGET_DIR/etc/fstab" <<EOF
+	else
+		cat >"$TARGET_DIR/etc/fstab" <<EOF
 # /etc/fstab: static file system information for Asura OS
-UUID=$ROOT_UUID / $FS_TYPE $FS_OPTS 0 0
+UUID=$ROOT_UUID / ext4 defaults,noatime 0 1
+UUID=$EFI_UUID /boot/efi vfat defaults,noatime,umask=0077 0 2
 tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
 EOF
+	fi
+else
+	if [ "$FS_TYPE" = "btrfs" ]; then
+		cat >"$TARGET_DIR/etc/fstab" <<EOF
+# /etc/fstab: static file system information for Asura OS
+UUID=$ROOT_UUID / btrfs defaults,noatime,compress=zstd:1,subvol=@ 0 0
+UUID=$ROOT_UUID /home btrfs defaults,noatime,compress=zstd:1,subvol=@home 0 0
+UUID=$ROOT_UUID /.snapshots btrfs defaults,noatime,compress=zstd:1,subvol=@snapshots 0 0
+tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
+EOF
+	else
+		cat >"$TARGET_DIR/etc/fstab" <<EOF
+# /etc/fstab: static file system information for Asura OS
+UUID=$ROOT_UUID / ext4 defaults,noatime 0 1
+tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
+EOF
+	fi
 fi
-
-# Remove live session markers so first-boot welcome tour triggers
-rm -f "$TARGET_DIR/etc/asura-live"
 
 # Set hostname and OS identity
 printf '%s\n' "$HOSTNAME_INPUT" > "$TARGET_DIR/etc/hostname"
@@ -335,7 +448,7 @@ SUPPORT_URL="https://asuraos.dev/support"
 BUG_REPORT_URL="https://github.com/mohitjoer/ASURA-OS/issues"
 EOF
 
-# Automatically clean up installer artifacts on the installed drive
+# Purge live installer artifacts and markers
 rm -f "$TARGET_DIR/etc/asura-live"
 rm -f "$TARGET_DIR/usr/bin/asura-installer"
 rm -f "$TARGET_DIR/usr/bin/void-installer"
@@ -344,13 +457,13 @@ rm -f "$TARGET_DIR/home"/*/Desktop/asura-installer.desktop 2>/dev/null || true
 rm -f "$TARGET_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
 
 # Ensure dedicated hardware group exists on target
-chroot "$TARGET_DIR" getent group asura-hw >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r asura-hw || true
+chroot "$TARGET_DIR" getent group asura-hw >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r asura-hw
 
 # User account creation / reconfiguration
 if ! chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
-	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT" || true
+	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT"
 else
-	chroot "$TARGET_DIR" usermod -aG wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT" || true
+	chroot "$TARGET_DIR" usermod -aG wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT"
 fi
 
 # Set password for primary user
@@ -360,7 +473,7 @@ echo "$USERNAME_INPUT:$USER_PASS" | chroot "$TARGET_DIR" chpasswd
 if [ -n "$ROOT_PASS" ]; then
 	echo "root:$ROOT_PASS" | chroot "$TARGET_DIR" chpasswd
 else
-	chroot "$TARGET_DIR" passwd -l root 2>/dev/null || true
+	chroot "$TARGET_DIR" passwd -l root
 fi
 
 # Remove default live user account if different from primary user
@@ -374,6 +487,7 @@ rm -f "$TARGET_DIR/etc/sv/agetty-tty1/conf"
 rm -f "$TARGET_DIR/etc/profile.d/asura-autologin.sh"
 rm -f "$TARGET_DIR/home/$USERNAME_INPUT/.hushlogin" 2>/dev/null || true
 rm -f "$TARGET_DIR/etc/skel/.hushlogin" 2>/dev/null || true
+rm -rf "$TARGET_DIR/tmp"/* "$TARGET_DIR/var/tmp"/*
 
 # Strict sudoers configuration: require password for wheel group (NO NOPASSWD)
 mkdir -p "$TARGET_DIR/etc/sudoers.d"
@@ -414,32 +528,102 @@ GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 quiet splash"
 GRUB_DISABLE_OS_PROBER=false
 GRUBDEF
 
-printf "${GREEN}✓ Host and services configured.${RESET}\n"
+printf "${GREEN}✓ Host, services, and accounts configured.${RESET}\n"
 
-printf "${WHITE}${BOLD}[5/5] Installing bootloader (%s)...${RESET}\n" "$BOOT_DISPLAY"
+# Bind mounts for chroot maintenance
 mount --bind /dev "$TARGET_DIR/dev"
 mount --bind /proc "$TARGET_DIR/proc"
 mount --bind /sys "$TARGET_DIR/sys"
 
+printf "${WHITE}${BOLD}[4.5/5] Regenerating initramfs for installed kernel...${RESET}\n"
+KERNEL_PKG=$(chroot "$TARGET_DIR" xbps-query -l 2>/dev/null | grep -E '^ii linux[0-9]' | awk '{print $2}' | cut -d- -f1 | head -n1 || echo "linux")
+[ -z "$KERNEL_PKG" ] && KERNEL_PKG="linux"
+
+if chroot "$TARGET_DIR" xbps-reconfigure -f "$KERNEL_PKG" >/dev/null 2>&1; then
+	printf "  Regenerated initramfs via xbps-reconfigure.\n"
+elif chroot "$TARGET_DIR" dracut --force >/dev/null 2>&1; then
+	printf "  Regenerated initramfs via dracut.\n"
+fi
+
+# Verify kernel and initramfs exist
+KERNEL_IMG=$(ls "$TARGET_DIR/boot"/vmlinuz* 2>/dev/null | head -n1 || true)
+INITRD_IMG=$(ls "$TARGET_DIR/boot"/initramfs* 2>/dev/null | head -n1 || true)
+if [ -z "$KERNEL_IMG" ] || [ -z "$INITRD_IMG" ]; then
+	echo "ERROR: Kernel image or initramfs not found in $TARGET_DIR/boot after regeneration!" >&2
+	exit 1
+fi
+printf "${GREEN}✓ Kernel and initramfs verified in /boot.${RESET}\n"
+
+printf "${WHITE}${BOLD}[5/5] Installing bootloader (%s)...${RESET}\n" "$BOOT_DISPLAY"
+
 if [ "$IS_UEFI" -eq 1 ]; then
-	chroot "$TARGET_DIR" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Asura --recheck >/dev/null 2>&1 || true
-	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || true
+	chroot "$TARGET_DIR" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Asura --recheck
+	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg
 else
-	# Legacy BIOS / MBR installation (supports VirtualBox BIOS boot)
-	chroot "$TARGET_DIR" grub-install --target=i386-pc --recheck "$TARGET_DISK" >/dev/null 2>&1 || true
-	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || true
+	chroot "$TARGET_DIR" grub-install --target=i386-pc --recheck "$TARGET_DISK"
+	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg
 fi
-
-umount "$TARGET_DIR/sys" || true
-umount "$TARGET_DIR/proc" || true
-umount "$TARGET_DIR/dev" || true
-
-if [ "$IS_UEFI" -eq 1 ]; then
-	umount "$TARGET_DIR/boot/efi" || true
-fi
-umount "$TARGET_DIR" || true
 
 printf "${GREEN}✓ Bootloader successfully installed.${RESET}\n"
+
+# ── POST-INSTALLATION VERIFICATION ─────────────────────────────────────────
+printf "\n${WHITE}╭──────────────────────────────────────────────────────────────╮
+│                POST-INSTALLATION VERIFICATION                │
+├──────────────────────────────────────────────────────────────┤${RESET}\n"
+
+V_FSTAB="FAIL"
+if grep -q "UUID=" "$TARGET_DIR/etc/fstab" && ! grep -q "UUID= " "$TARGET_DIR/etc/fstab"; then
+	V_FSTAB="PASS"
+fi
+
+V_GRUB="FAIL"
+if [ -s "$TARGET_DIR/boot/grub/grub.cfg" ]; then
+	V_GRUB="PASS"
+fi
+
+V_KERNEL="FAIL"
+if [ -n "$KERNEL_IMG" ] && [ -n "$INITRD_IMG" ]; then
+	V_KERNEL="PASS"
+fi
+
+V_USER="FAIL"
+if chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
+	V_USER="PASS"
+fi
+
+V_SERVICES="FAIL"
+if [ -L "$TARGET_DIR/etc/runit/runsvdir/default/dbus" ] && [ -L "$TARGET_DIR/etc/runit/runsvdir/default/seatd" ]; then
+	V_SERVICES="PASS"
+fi
+
+printf "${WHITE}│${RESET} [1] /etc/fstab UUIDs:       ${BOLD}%-33s${RESET} ${WHITE}│${RESET}\n" "$V_FSTAB"
+printf "${WHITE}│${RESET} [2] /boot/grub/grub.cfg:    ${BOLD}%-33s${RESET} ${WHITE}│${RESET}\n" "$V_GRUB"
+printf "${WHITE}│${RESET} [3] Kernel & Initramfs:     ${BOLD}%-33s${RESET} ${WHITE}│${RESET}\n" "$V_KERNEL"
+printf "${WHITE}│${RESET} [4] Primary User Created:   ${BOLD}%-33s${RESET} ${WHITE}│${RESET}\n" "$V_USER ($USERNAME_INPUT)"
+printf "${WHITE}│${RESET} [5] Runit Services Linked:  ${BOLD}%-33s${RESET} ${WHITE}│${RESET}\n" "$V_SERVICES"
+printf "${WHITE}╰──────────────────────────────────────────────────────────────╯${RESET}\n\n"
+
+if [ "$V_FSTAB" != "PASS" ] || [ "$V_GRUB" != "PASS" ] || [ "$V_KERNEL" != "PASS" ] || [ "$V_USER" != "PASS" ] || [ "$V_SERVICES" != "PASS" ]; then
+	printf "${RED}${BOLD}Verification failed. Aborting installation.${RESET}\n" >&2
+	exit 1
+fi
+
+printf "${GREEN}${BOLD}All post-installation verification checks passed.${RESET}\n"
+
+# Unmount cleanly
+umount "$TARGET_DIR/sys"
+umount "$TARGET_DIR/proc"
+umount "$TARGET_DIR/dev"
+
+if [ "$IS_UEFI" -eq 1 ]; then
+	umount "$TARGET_DIR/boot/efi"
+fi
+
+if [ "$FS_TYPE" = "btrfs" ]; then
+	umount "$TARGET_DIR/home"
+	umount "$TARGET_DIR/.snapshots"
+fi
+umount "$TARGET_DIR"
 
 cat <<EOF
 

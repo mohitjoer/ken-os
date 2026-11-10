@@ -143,6 +143,19 @@ grep -Fq 'asura-hw' "$REPO_ROOT/installation/asura-installer.sh"
 grep -Fq 'chpasswd' "$REPO_ROOT/installation/asura-installer.sh"
 grep -Fq '%wheel ALL=(ALL:ALL) ALL' "$REPO_ROOT/installation/asura-installer.sh"
 
+# STAGE 2: Installer Reliability Verifications
+grep -Fq 'subvol=@' "$REPO_ROOT/installation/asura-installer.sh"
+grep -Fq 'subvol=@home' "$REPO_ROOT/installation/asura-installer.sh"
+grep -Fq 'POST-INSTALLATION VERIFICATION' "$REPO_ROOT/installation/asura-installer.sh"
+grep -Fq -- '--dry-run' "$REPO_ROOT/installation/asura-installer.sh"
+grep -Fq 'parted' "$MANIFEST"
+grep -Fq 'dosfstools' "$MANIFEST"
+grep -Fq 'e2fsprogs' "$MANIFEST"
+grep -Fq 'rsync' "$MANIFEST"
+grep -Fq 'grub' "$MANIFEST"
+grep -Fq 'grub-x86_64-efi' "$MANIFEST"
+printf "\n\n\n\n" | sh "$REPO_ROOT/installation/asura-installer.sh" --dry-run /dev/sda >/dev/null
+
 echo "build-iso-void_test: ok"
 
 
