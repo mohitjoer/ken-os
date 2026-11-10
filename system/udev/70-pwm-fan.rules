@@ -3,11 +3,11 @@
 # Layer 2 Tuning: Grants unprivileged session power daemons direct sysfs control
 # over PWM fan speed curves, target RPMs, and platform thermal profiles.
 
-# Hardware Monitor (hwmon) PWM fan speed & target controls
-ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{pwm[0-9]*}!="", RUN+="/bin/chmod 0666 %S%p/pwm*"
-ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{pwm[0-9]*_enable}!="", RUN+="/bin/chmod 0666 %S%p/pwm*_enable"
-ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{fan[0-9]*_target}!="", RUN+="/bin/chmod 0666 %S%p/fan*_target"
+# Hardware Monitor (hwmon) PWM fan speed & target controls (restricted to asura-hw group)
+ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{pwm[0-9]*}!="", RUN+="/bin/sh -c 'chgrp asura-hw %S%p/pwm* 2>/dev/null && chmod 0664 %S%p/pwm* 2>/dev/null || true'"
+ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{pwm[0-9]*_enable}!="", RUN+="/bin/sh -c 'chgrp asura-hw %S%p/pwm*_enable 2>/dev/null && chmod 0664 %S%p/pwm*_enable 2>/dev/null || true'"
+ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{fan[0-9]*_target}!="", RUN+="/bin/sh -c 'chgrp asura-hw %S%p/fan*_target 2>/dev/null && chmod 0664 %S%p/fan*_target 2>/dev/null || true'"
 
 # ACPI platform profile & ASUS notebook WMI thermal policy direct sysfs access
-ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="asus-nb-wmi", ATTR{throttle_thermal_policy}!="", MODE="0666"
-ACTION=="add|change", SUBSYSTEM=="acpi", ATTR{platform_profile}!="", MODE="0666"
+ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="asus-nb-wmi", ATTR{throttle_thermal_policy}!="", GROUP="asura-hw", MODE="0664"
+ACTION=="add|change", SUBSYSTEM=="acpi", ATTR{platform_profile}!="", GROUP="asura-hw", MODE="0664"

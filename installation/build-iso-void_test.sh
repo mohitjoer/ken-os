@@ -130,6 +130,19 @@ grep -Fq 'compress=zstd:1' "$REPO_ROOT/installation/asura-installer.sh"
 grep -Fq 'kyber' "$REPO_ROOT/system/udev/60-io-schedulers.rules"
 grep -Fq 'bfq' "$REPO_ROOT/system/udev/60-io-schedulers.rules"
 
+# STAGE 1: Security Verifications
+test -s "$REPO_ROOT/installation/binary-checksums.txt"
+grep -Fq 'verify_checksum' "$SCRIPT"
+grep -Fq 'asura-hw' "$REPO_ROOT/system/udev/70-pwm-fan.rules"
+if grep -Fq '0666' "$REPO_ROOT/system/udev/70-pwm-fan.rules"; then
+	echo "build-iso-void_test: 0666 found in 70-pwm-fan.rules" >&2
+	exit 1
+fi
+grep -Fq 'asura-hw' "$SCRIPT"
+grep -Fq 'asura-hw' "$REPO_ROOT/installation/asura-installer.sh"
+grep -Fq 'chpasswd' "$REPO_ROOT/installation/asura-installer.sh"
+grep -Fq '%wheel ALL=(ALL:ALL) ALL' "$REPO_ROOT/installation/asura-installer.sh"
+
 echo "build-iso-void_test: ok"
 
 

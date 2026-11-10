@@ -135,6 +135,62 @@ printf "Enter primary username [default: asura]: "
 read -r USERNAME_INPUT || USERNAME_INPUT="asura"
 [ -z "$USERNAME_INPUT" ] && USERNAME_INPUT="asura"
 
+# Prompt for password for primary user
+while true; do
+	printf "Enter password for %s: " "$USERNAME_INPUT"
+	stty -echo 2>/dev/null || true
+	read -r USER_PASS || USER_PASS=""
+	stty echo 2>/dev/null || true
+	printf "\n"
+	if [ -z "$USER_PASS" ]; then
+		printf "${RED}Password cannot be empty. Please enter a valid password.${RESET}\n"
+		continue
+	fi
+	printf "Confirm password for %s: " "$USERNAME_INPUT"
+	stty -echo 2>/dev/null || true
+	read -r USER_PASS_CONFIRM || USER_PASS_CONFIRM=""
+	stty echo 2>/dev/null || true
+	printf "\n"
+	if [ "$USER_PASS" = "$USER_PASS_CONFIRM" ]; then
+		break
+	fi
+	printf "${RED}Passwords do not match. Please try again.${RESET}\n"
+done
+
+# Root account setup (lock or set password)
+printf "Lock root account (recommended for sudo setups)? [Y/n]: "
+read -r LOCK_ROOT_INPUT || LOCK_ROOT_INPUT="Y"
+[ -z "$LOCK_ROOT_INPUT" ] && LOCK_ROOT_INPUT="Y"
+
+ROOT_PASS=""
+case "$LOCK_ROOT_INPUT" in
+	[nN]|[nN][oO])
+		while true; do
+			printf "Enter root password: "
+			stty -echo 2>/dev/null || true
+			read -r ROOT_PASS || ROOT_PASS=""
+			stty echo 2>/dev/null || true
+			printf "\n"
+			if [ -z "$ROOT_PASS" ]; then
+				printf "${RED}Root password cannot be empty.${RESET}\n"
+				continue
+			fi
+			printf "Confirm root password: "
+			stty -echo 2>/dev/null || true
+			read -r ROOT_PASS_CONFIRM || ROOT_PASS_CONFIRM=""
+			stty echo 2>/dev/null || true
+			printf "\n"
+			if [ "$ROOT_PASS" = "$ROOT_PASS_CONFIRM" ]; then
+				break
+			fi
+			printf "${RED}Passwords do not match. Please try again.${RESET}\n"
+		done
+		;;
+	*)
+		ROOT_PASS=""
+		;;
+esac
+
 # ── STEP 4: Review & Final Confirmation ────────────────────────────────────
 FS_DISPLAY="Btrfs (compress=zstd:1, subvolumes)"
 [ "$FS_CHOICE" = "2" ] && FS_DISPLAY="ext4 (defaults, noatime)"
@@ -287,9 +343,45 @@ rm -f "$TARGET_DIR/usr/share/applications/asura-installer.desktop"
 rm -f "$TARGET_DIR/home"/*/Desktop/asura-installer.desktop 2>/dev/null || true
 rm -f "$TARGET_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
 
-# User account creation
+# Ensure dedicated hardware group exists on target
+chroot "$TARGET_DIR" getent group asura-hw >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r asura-hw || true
+
+# User account creation / reconfiguration
 if ! chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
-	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input "$USERNAME_INPUT" || true
+	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT" || true
+else
+	chroot "$TARGET_DIR" usermod -aG wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT" || true
+fi
+
+# Set password for primary user
+echo "$USERNAME_INPUT:$USER_PASS" | chroot "$TARGET_DIR" chpasswd
+
+# Configure root password or lock root account
+if [ -n "$ROOT_PASS" ]; then
+	echo "root:$ROOT_PASS" | chroot "$TARGET_DIR" chpasswd
+else
+	chroot "$TARGET_DIR" passwd -l root 2>/dev/null || true
+fi
+
+# Remove default live user account if different from primary user
+if [ "$USERNAME_INPUT" != "asura" ]; then
+	chroot "$TARGET_DIR" userdel -r asura 2>/dev/null || true
+	rm -rf "$TARGET_DIR/home/asura"
+fi
+
+# Purge live-only configurations and autologin from installed system
+rm -f "$TARGET_DIR/etc/sv/agetty-tty1/conf"
+rm -f "$TARGET_DIR/etc/profile.d/asura-autologin.sh"
+rm -f "$TARGET_DIR/home/$USERNAME_INPUT/.hushlogin" 2>/dev/null || true
+rm -f "$TARGET_DIR/etc/skel/.hushlogin" 2>/dev/null || true
+
+# Strict sudoers configuration: require password for wheel group (NO NOPASSWD)
+mkdir -p "$TARGET_DIR/etc/sudoers.d"
+chmod 0750 "$TARGET_DIR/etc/sudoers.d"
+echo '%wheel ALL=(ALL:ALL) ALL' > "$TARGET_DIR/etc/sudoers.d/wheel"
+chmod 0440 "$TARGET_DIR/etc/sudoers.d/wheel"
+if [ -f "$TARGET_DIR/etc/sudoers" ]; then
+	sed -i '/NOPASSWD/d' "$TARGET_DIR/etc/sudoers"
 fi
 
 # Enable core system runit services

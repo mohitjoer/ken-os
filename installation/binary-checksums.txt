@@ -1,0 +1,20 @@
+# Known SHA-256 checksums for external binary downloads pinned in build-iso-void.sh
+
+# Zed Editor (v1.27.0 - verified from GitHub Releases API asset sha256 digest)
+719f6bf649ea8d87961adbf728e178561bac3f598d72d7949558d1150cfc43dd  zed-linux-x86_64.tar.gz
+
+# OpenCode CLI (v2.2.6 - verified from official npm registry dist metadata)
+dfcd69f1d511ae10ed626768b41d84b8100cc4aa64cecb69da38ba7a29d33551  opencode-v2.2.6-linux-x64.tgz
+
+# Hyprland Void Linux packages from Makrennel (verified from repository-x86_64-glibc/x86_64-repodata index.plist)
+70a604b5a43ff09ea346063ef3d9c72e244834d79d1aedac0f26895cbcfd6265  tomlplusplus-3.4.0_1.x86_64.xbps
+904020801798fadf121b5ecd35517ba8d3f9f15b8b34024b70d114c2eb5e97a3  hyprutils-0.7.1_1.x86_64.xbps
+a37b9e9a1589ff166baa0e7a54fe2232cc02ace90077f5e63d2f615a458006bb  aquamarine-0.8.0_2.x86_64.xbps
+c45d0d3321781b7693013c98295e97281c9e36e5655b1db39260cdb0a1395e2c  hyprlang-0.6.3_1.x86_64.xbps
+3d0b61ba8248c6490be8a06526cd3917a8ff30d6994f4e1885cd757fd970b4eb  hyprcursor-0.1.12_1.x86_64.xbps
+0a1adb4d55225a4b59f237525f8c19ab3c6e8de6fe7a14440abc510de311db7e  hyprgraphics-0.1.3_2.x86_64.xbps
+e5dae6554a7ab1fb1d9e4035e372f25ef3778c542319a46dd9aa6f6157d199ce  libspng-0.7.4_1.x86_64.xbps
+d264dbdbd16b600ff1722d068a79506583265df8b33d29a9a61012d86139535c  sdbus-cpp-2.1.0_1.x86_64.xbps
+d2dc5b19c6860a8279949b86eb1dc1afaace9391a3a2fe21acbd9afd2aa5dda8  hyprland-0.49.0_1.x86_64.xbps
+99c2aaccd54fd1a90dd8b9ae68eb736aafd1b12924a62a42e35b1266fc51e3bb  xdg-desktop-portal-hyprland-1.3.9_2.x86_64.xbps
+227a2464e9f604dead2fa4b85e4eaeab6f6dd67f427db31e562f52ae4f087130  hyprland-qtutils-0.1.4_1.x86_64.xbps

@@ -13,6 +13,29 @@ ISO_NAME=asura-os-x86_64
 ISO_TITLE="Asura OS x86_64"
 export GOWORK=off
 
+# Pinned binary versions and checksum verification file
+ZED_VERSION="v1.27.0"
+OPENCODE_VERSION="2.2.6"
+CHECKSUMS_FILE="$REPO_ROOT/installation/binary-checksums.txt"
+
+verify_checksum() {
+	_file="$1"
+	_name=$(basename "$_file")
+	_expected=$(awk -v n="$_name" '$2 == n {print $1}' "$CHECKSUMS_FILE")
+	if [ -z "$_expected" ]; then
+		echo "build-iso-void: ERROR: No pinned SHA-256 checksum found for $_name in $CHECKSUMS_FILE" >&2
+		exit 1
+	fi
+	_actual=$(sha256sum "$_file" | awk '{print $1}')
+	if [ "$_actual" != "$_expected" ]; then
+		echo "build-iso-void: ERROR: Checksum mismatch for $_name!" >&2
+		echo "  Expected: $_expected" >&2
+		echo "  Actual:   $_actual" >&2
+		exit 1
+	fi
+	echo "build-iso-void: verified SHA-256 for $_name ($_actual)"
+}
+
 for tool in python3 git curl; do
 	if ! command -v "$tool" >/dev/null 2>&1; then
 		echo "build-iso-void: required tool not found: $tool" >&2
@@ -358,37 +381,40 @@ EOF
 # Download and install official standalone Zed binary if not already cached
 ZED_CACHE="$BUILD_DIR/zed"
 mkdir -p "$ZED_CACHE"
-if [ ! -f "$ZED_CACHE/zed-linux-x86_64.tar.gz" ]; then
-	echo "build-iso-void: downloading Zed editor..."
-	curl -sSL -o "$ZED_CACHE/zed-linux-x86_64.tar.gz" "https://github.com/zed-industries/zed/releases/latest/download/zed-linux-x86_64.tar.gz" || true
+ZED_ARCHIVE="$ZED_CACHE/zed-linux-x86_64.tar.gz"
+if [ ! -f "$ZED_ARCHIVE" ]; then
+	echo "build-iso-void: downloading Zed editor $ZED_VERSION..."
+	curl -sSL -f -o "$ZED_ARCHIVE" "https://github.com/zed-industries/zed/releases/download/${ZED_VERSION}/zed-linux-x86_64.tar.gz" || {
+		echo "build-iso-void: failed to download Zed $ZED_VERSION" >&2
+		exit 1
+	}
 fi
-if [ -f "$ZED_CACHE/zed-linux-x86_64.tar.gz" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/lib/zed" "$INCLUDE_DIR/usr/bin"
-	tar -xzf "$ZED_CACHE/zed-linux-x86_64.tar.gz" --strip-components=1 -C "$INCLUDE_DIR/usr/lib/zed" 2>/dev/null || true
-	if [ -x "$INCLUDE_DIR/usr/lib/zed/bin/zed" ]; then
-		ln -sf /usr/lib/zed/bin/zed "$INCLUDE_DIR/usr/bin/zed"
-		mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor"
-		if [ -d "$INCLUDE_DIR/usr/lib/zed/share/icons/hicolor" ]; then
-			cp -rn "$INCLUDE_DIR/usr/lib/zed/share/icons/hicolor"/* "$INCLUDE_DIR/usr/share/icons/hicolor/" 2>/dev/null || true
-		fi
+verify_checksum "$ZED_ARCHIVE"
+mkdir -p "$INCLUDE_DIR/usr/lib/zed" "$INCLUDE_DIR/usr/bin"
+tar -xzf "$ZED_ARCHIVE" --strip-components=1 -C "$INCLUDE_DIR/usr/lib/zed"
+if [ -x "$INCLUDE_DIR/usr/lib/zed/bin/zed" ]; then
+	ln -sf /usr/lib/zed/bin/zed "$INCLUDE_DIR/usr/bin/zed"
+	mkdir -p "$INCLUDE_DIR/usr/share/icons/hicolor"
+	if [ -d "$INCLUDE_DIR/usr/lib/zed/share/icons/hicolor" ]; then
+		cp -rn "$INCLUDE_DIR/usr/lib/zed/share/icons/hicolor"/* "$INCLUDE_DIR/usr/share/icons/hicolor/" 2>/dev/null || true
 	fi
 fi
 
 # Download and install official standalone OpenCode CLI (v2) binary if not already cached
 OPENCODE_CACHE="$BUILD_DIR/opencode"
 mkdir -p "$OPENCODE_CACHE"
-OPENCODE_VER=$(curl -fsSL https://opencode.ai/update/api/latest/cli/npm 2>/dev/null | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')
-[ -z "$OPENCODE_VER" ] && OPENCODE_VER="2.2.6"
-
-if [ ! -f "$OPENCODE_CACHE/opencode-v${OPENCODE_VER}-linux-x64.tgz" ]; then
-	echo "build-iso-void: downloading OpenCode CLI v${OPENCODE_VER}..."
-	curl -sSL -o "$OPENCODE_CACHE/opencode-v${OPENCODE_VER}-linux-x64.tgz" "https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-${OPENCODE_VER}.tgz" || true
+OPENCODE_ARCHIVE="$OPENCODE_CACHE/opencode-v${OPENCODE_VERSION}-linux-x64.tgz"
+if [ ! -f "$OPENCODE_ARCHIVE" ]; then
+	echo "build-iso-void: downloading OpenCode CLI v${OPENCODE_VERSION}..."
+	curl -sSL -f -o "$OPENCODE_ARCHIVE" "https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-${OPENCODE_VERSION}.tgz" || {
+		echo "build-iso-void: failed to download OpenCode CLI v${OPENCODE_VERSION}" >&2
+		exit 1
+	}
 fi
-if [ -f "$OPENCODE_CACHE/opencode-v${OPENCODE_VER}-linux-x64.tgz" ]; then
-	mkdir -p "$INCLUDE_DIR/usr/bin"
-	tar -xzf "$OPENCODE_CACHE/opencode-v${OPENCODE_VER}-linux-x64.tgz" -O package/bin/opencode > "$INCLUDE_DIR/usr/bin/opencode" 2>/dev/null || true
-	chmod 755 "$INCLUDE_DIR/usr/bin/opencode" 2>/dev/null || true
-fi
+verify_checksum "$OPENCODE_ARCHIVE"
+mkdir -p "$INCLUDE_DIR/usr/bin"
+tar -xzf "$OPENCODE_ARCHIVE" -O package/bin/opencode > "$INCLUDE_DIR/usr/bin/opencode"
+chmod 755 "$INCLUDE_DIR/usr/bin/opencode"
 if [ -d "$REPO_ROOT/apps/mimeapps" ]; then
 	cp "$REPO_ROOT/apps/mimeapps"/asura-mimeapps.list "$INCLUDE_DIR/usr/share/applications/" 2>/dev/null || true
 fi
@@ -431,33 +457,17 @@ echo "build-iso-void: staging native Void Linux Hyprland stack..."
 HYPR_CACHE="$BUILD_DIR/hyprland-pkgs"
 mkdir -p "$HYPR_CACHE"
 
-# Dynamically resolve latest Makrennel package filenames from repo metadata to prevent version drift
-RESOLVED_PKGS=$(python3 - <<'PY' 2>/dev/null || true
-import urllib.request, plistlib, subprocess
-wanted = ['tomlplusplus', 'hyprutils', 'aquamarine', 'hyprlang', 'hyprcursor', 'hyprgraphics', 'libspng', 'sdbus-cpp', 'hyprland', 'xdg-desktop-portal-hyprland', 'hyprland-qtutils']
-url = 'https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc/x86_64-repodata'
-try:
-    req = urllib.request.Request(url, headers={'User-Agent': 'Asura-ISO-Builder'})
-    data = urllib.request.urlopen(req, timeout=10).read()
-    p = subprocess.Popen(['tar', '--zstd', '-xO', 'index.plist'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    plist_bytes, _ = p.communicate(data)
-    plist = plistlib.loads(plist_bytes)
-    res = [f"{plist[pkg]['pkgver']}.x86_64.xbps" for pkg in wanted if pkg in plist]
-    if len(res) == len(wanted):
-        print(" ".join(res))
-except Exception:
-    pass
-PY
-)
-
-HYPR_PKGS="${RESOLVED_PKGS:-tomlplusplus-3.4.0_1.x86_64.xbps hyprutils-0.7.1_1.x86_64.xbps aquamarine-0.8.0_2.x86_64.xbps hyprlang-0.6.3_1.x86_64.xbps hyprcursor-0.1.12_1.x86_64.xbps hyprgraphics-0.1.3_2.x86_64.xbps libspng-0.7.4_1.x86_64.xbps sdbus-cpp-2.1.0_1.x86_64.xbps hyprland-0.49.0_1.x86_64.xbps xdg-desktop-portal-hyprland-1.3.9_2.x86_64.xbps hyprland-qtutils-0.1.4_1.x86_64.xbps}"
+HYPR_PKGS="tomlplusplus-3.4.0_1.x86_64.xbps hyprutils-0.7.1_1.x86_64.xbps aquamarine-0.8.0_2.x86_64.xbps hyprlang-0.6.3_1.x86_64.xbps hyprcursor-0.1.12_1.x86_64.xbps hyprgraphics-0.1.3_2.x86_64.xbps libspng-0.7.4_1.x86_64.xbps sdbus-cpp-2.1.0_1.x86_64.xbps hyprland-0.49.0_1.x86_64.xbps xdg-desktop-portal-hyprland-1.3.9_2.x86_64.xbps hyprland-qtutils-0.1.4_1.x86_64.xbps"
 for hpkg in $HYPR_PKGS; do
 	if [ ! -f "$HYPR_CACHE/$hpkg" ]; then
-		curl -sSL -o "$HYPR_CACHE/$hpkg" "https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc/$hpkg" || true
+		echo "build-iso-void: downloading $hpkg..."
+		curl -sSL -f -o "$HYPR_CACHE/$hpkg" "https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc/$hpkg" || {
+			echo "build-iso-void: failed to download $hpkg" >&2
+			exit 1
+		}
 	fi
-	if [ -f "$HYPR_CACHE/$hpkg" ]; then
-		tar -xf "$HYPR_CACHE/$hpkg" -C "$INCLUDE_DIR" 2>/dev/null || true
-	fi
+	verify_checksum "$HYPR_CACHE/$hpkg"
+	tar -xf "$HYPR_CACHE/$hpkg" -C "$INCLUDE_DIR"
 done
 rm -f "$INCLUDE_DIR/props.plist" "$INCLUDE_DIR/files.plist"
 if [ -f "$INCLUDE_DIR/usr/libexec/xdg-desktop-portal-hyprland" ]; then
@@ -793,10 +803,10 @@ if [ -f "$MKLIVE_DIR/lib.sh" ]; then
 	sed -i "s|https://repo-default.voidlinux.org/current|$MIRROR|g" "$MKLIVE_DIR/lib.sh"
 fi
 
-# Patch dracut vmklive module to use asura-os hostname, asura user, and include _seatd/input groups
+# Patch dracut vmklive module to use asura-os hostname, asura user, and include _seatd/input/asura-hw groups
 if [ -f "$MKLIVE_DIR/dracut/vmklive/adduser.sh" ]; then
 	sed -i 's/echo void-live >/echo asura-os >/g' "$MKLIVE_DIR/dracut/vmklive/adduser.sh"
-	sed -i 's/-G audio,video,wheel/-G audio,video,wheel,_seatd,input,tty,storage,network/g' "$MKLIVE_DIR/dracut/vmklive/adduser.sh"
+	sed -i 's/-G audio,video,wheel/-G audio,video,wheel,_seatd,input,tty,storage,network,asura-hw/g' "$MKLIVE_DIR/dracut/vmklive/adduser.sh"
 	sed -i 's/USERNAME=anon/USERNAME=asura/g' "$MKLIVE_DIR/dracut/vmklive/adduser.sh"
 	sed -i 's/voidlinux/asura/g' "$MKLIVE_DIR/dracut/vmklive/adduser.sh"
 	sed -i 's/99-void-live/99-asura-live/g' "$MKLIVE_DIR/dracut/vmklive/adduser.sh"
@@ -914,17 +924,18 @@ if [ -f "$ROOTFS/etc/pam.d/system-login" ] && ! grep -q 'pam_turnstile.so' "$ROO
 fi
 
 # Configure seat permissions and groups for default user
+chroot "$ROOTFS" getent group asura-hw >/dev/null 2>&1 || chroot "$ROOTFS" groupadd -r asura-hw || true
 for user in anon asura; do
 	if chroot "$ROOTFS" id "$user" >/dev/null 2>&1; then
-		chroot "$ROOTFS" usermod -aG _seatd,video,audio,input,wheel,storage,network "$user" || true
+		chroot "$ROOTFS" usermod -aG _seatd,video,audio,input,wheel,storage,network,asura-hw "$user" || true
 	fi
 done
 
 # Ensure user asura exists with zsh login shell and configure autologin
 if ! chroot "$ROOTFS" id asura >/dev/null 2>&1; then
-	chroot "$ROOTFS" useradd -m -s /bin/zsh -U -G _seatd,video,audio,input,wheel,storage,network asura || true
+	chroot "$ROOTFS" useradd -m -s /bin/zsh -U -G _seatd,video,audio,input,wheel,storage,network,asura-hw asura || true
 else
-	chroot "$ROOTFS" usermod -s /bin/zsh asura || true
+	chroot "$ROOTFS" usermod -aG asura-hw -s /bin/zsh asura || true
 fi
 echo "asura:asura" | chroot "$ROOTFS" chpasswd 2>/dev/null || true
 
