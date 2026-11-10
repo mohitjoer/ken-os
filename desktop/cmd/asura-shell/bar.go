@@ -131,9 +131,9 @@ type pluginState struct {
 func shippedLayout() barLayout {
 	return barLayout{
 		Version: 1,
-		Left:    []string{"launcher", "workspaces", "status", "cpu", "volume", "memory", "ai"},
+		Left:    []string{"launcher", "workspaces"},
 		Center:  []string{"clock"},
-		Right:   []string{"media", "quick", "network", "power", "battery", "brightness", "cputemp", "storage", "gpu", "bluetooth", "layout"},
+		Right:   []string{"media", "ai", "cpu", "cputemp", "memory", "storage", "gpu", "volume", "brightness", "network", "bluetooth", "battery", "power", "status", "quick", "layout"},
 	}
 }
 

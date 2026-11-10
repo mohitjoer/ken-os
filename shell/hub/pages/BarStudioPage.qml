@@ -32,9 +32,9 @@ Item {
         if (l && l.left !== undefined) return l;
         return {
             version: 1,
-            left: ["launcher", "workspaces", "status", "cpu", "volume", "memory", "ai"],
+            left: ["launcher", "workspaces"],
             center: ["clock"],
-            right: ["media", "network", "power", "battery", "brightness", "cputemp", "storage", "gpu", "bluetooth"]
+            right: ["media", "ai", "cpu", "cputemp", "memory", "storage", "gpu", "volume", "brightness", "network", "bluetooth", "battery", "power", "status", "quick", "layout"]
         };
     }
 
@@ -62,9 +62,9 @@ Item {
     function resetLayout() {
         var def = {
             version: 1,
-            left: ["launcher", "workspaces", "status", "cpu", "volume", "memory", "ai"],
+            left: ["launcher", "workspaces"],
             center: ["clock"],
-            right: ["media", "network", "power", "battery", "brightness", "cputemp", "storage", "gpu", "bluetooth"]
+            right: ["media", "ai", "cpu", "cputemp", "memory", "storage", "gpu", "volume", "brightness", "network", "bluetooth", "battery", "power", "status", "quick", "layout"]
         };
         if (pg.hub) pg.hub.stageLive("qsbar.layout", def);
         else Settings.patch("qsbar.layout", def);

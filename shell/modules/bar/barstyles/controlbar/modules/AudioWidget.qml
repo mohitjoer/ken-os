@@ -11,7 +11,13 @@ Item {
     AudioData { id: audio; poll: true }
     readonly property int    volume:   audio.volume
     readonly property bool   muted:    audio.muted
-    readonly property string volumeIcon: "graphic_eq"
+    readonly property string volumeIcon: muted || volume === 0
+        ? "volume_off"
+        : volume < 33
+        ? "volume_mute"
+        : volume < 66
+        ? "volume_down"
+        : "volume_up"
     readonly property color contentColor: root.widgetContentColor("G6", root.widgetIconColor)
 
     readonly property string tooltipText: muted

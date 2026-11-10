@@ -768,12 +768,11 @@ PanelWindow {
     // keyed by widget id. This BarSlot renders it through the same slot machinery
     // it always had: base slots first, then extras, empties dropped. The retired
     // ~/.cache/quickshell_barorder_v2 is migrated once by Theme on first load.
-    readonly property int leftBaseSlotCount: 10
+    readonly property int leftBaseSlotCount: 2
     readonly property int centerBaseSlotCount: 1
-    readonly property int rightBaseSlotCount: 7
-    // Both side regions can reach the same total capacity. The right side has
-    // fewer built-in groups, so it receives three more optional slots.
-    readonly property int sideSlotCapacity: 13
+    readonly property int rightBaseSlotCount: 16
+    // Both side regions can reach the same total capacity.
+    readonly property int sideSlotCapacity: 20
     readonly property int leftExtraSlotLimit: sideSlotCapacity - leftBaseSlotCount
     readonly property int rightExtraSlotLimit: sideSlotCapacity - rightBaseSlotCount
     readonly property int centerExtraSlotLimit: 3
@@ -2108,19 +2107,17 @@ PanelWindow {
         // ── region models (physical L→R order) ──
         ListModel {
             id: leftModel
-            ListElement { gid: "G1"; extra: false } ListElement { gid: "G2"; extra: false } ListElement { gid: "G3"; extra: false }
-            ListElement { gid: ""; extra: false }   ListElement { gid: "G5"; extra: false } ListElement { gid: "G6"; extra: false }
-            ListElement { gid: "G4"; extra: false } ListElement { gid: "G7"; extra: false } ListElement { gid: ""; extra: false }
-            ListElement { gid: ""; extra: false }
+            ListElement { gid: "G1"; extra: false } ListElement { gid: "G2"; extra: false }
         }
         ListModel { id: centerModel; ListElement { gid: "G8"; extra: false } }
         ListModel {
             id: rightModel
-            ListElement { gid: "G9"; extra: false }  ListElement { gid: "G10"; extra: false } ListElement { gid: "G11"; extra: false }
-            ListElement { gid: "G14"; extra: false } ListElement { gid: "G12"; extra: false } ListElement { gid: "G13"; extra: false }
-            ListElement { gid: "G16"; extra: false } ListElement { gid: "G18"; extra: true }  ListElement { gid: "G17"; extra: true }
-            ListElement { gid: "G15"; extra: true }  ListElement { gid: "G19"; extra: true }     ListElement { gid: ""; extra: true }
-            ListElement { gid: ""; extra: true }
+            ListElement { gid: "G9"; extra: false }  ListElement { gid: "G7"; extra: false }  ListElement { gid: "G5"; extra: false }
+            ListElement { gid: "G16"; extra: false } ListElement { gid: "G4"; extra: false }  ListElement { gid: "G18"; extra: false }
+            ListElement { gid: "G17"; extra: false } ListElement { gid: "G6"; extra: false }  ListElement { gid: "G13"; extra: false }
+            ListElement { gid: "G11"; extra: false } ListElement { gid: "G15"; extra: false } ListElement { gid: "G12"; extra: false }
+            ListElement { gid: "G14"; extra: false } ListElement { gid: "G3"; extra: false }  ListElement { gid: "G10"; extra: false }
+            ListElement { gid: "G19"; extra: false }
         }
 
         SlotRow {

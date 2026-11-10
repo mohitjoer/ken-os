@@ -13,10 +13,11 @@ Bar configuration lives in `~/.config/asura/shell.json` under the `qsbar` namesp
 "qsbar": {
   "layout": {
     "version": 1,
-    "left":   ["launcher", "workspaces", "status", "cpu", "volume", "memory", "ai"],
+    "left":   ["launcher", "workspaces"],
     "center": ["clock"],
-    "right":  ["media", "network", "power", "battery", "brightness",
-               "cputemp", "storage", "gpu", "bluetooth"]
+    "right":  ["media", "ai", "cpu", "cputemp", "memory", "storage", "gpu",
+               "volume", "brightness", "network", "bluetooth", "battery",
+               "power", "status", "quick", "layout"]
   },
   "widgets": {
     "status": true,
