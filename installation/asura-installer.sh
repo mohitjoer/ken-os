@@ -456,14 +456,15 @@ rm -f "$TARGET_DIR/usr/share/applications/asura-installer.desktop"
 rm -f "$TARGET_DIR/home"/*/Desktop/asura-installer.desktop 2>/dev/null || true
 rm -f "$TARGET_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
 
-# Ensure dedicated hardware group exists on target
+# Ensure dedicated hardware and docker groups exist on target
 chroot "$TARGET_DIR" getent group asura-hw >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r asura-hw
+chroot "$TARGET_DIR" getent group docker >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r docker || true
 
 # User account creation / reconfiguration
 if ! chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
-	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT"
+	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input,storage,network,asura-hw,docker "$USERNAME_INPUT"
 else
-	chroot "$TARGET_DIR" usermod -aG wheel,_seatd,video,audio,input,storage,network,asura-hw "$USERNAME_INPUT"
+	chroot "$TARGET_DIR" usermod -aG wheel,_seatd,video,audio,input,storage,network,asura-hw,docker "$USERNAME_INPUT"
 fi
 
 # Set password for primary user
@@ -500,7 +501,7 @@ fi
 
 # Enable core system runit services
 mkdir -p "$TARGET_DIR/etc/runit/runsvdir/default"
-for svc in dbus seatd udevd NetworkManager acpid turnstiled zramen ananicy-cpp asura-sysd asura-boot-guard; do
+for svc in dbus seatd udevd NetworkManager acpid turnstiled zramen ananicy-cpp asura-sysd asura-boot-guard docker; do
 	if [ -d "$TARGET_DIR/etc/sv/$svc" ]; then
 		ln -sf "/etc/sv/$svc" "$TARGET_DIR/etc/runit/runsvdir/default/$svc"
 	fi

@@ -1,0 +1,274 @@
+#!/bin/sh
+# Asura OS systemctl compatibility bridge for runit
+# Translates standard systemd commands and unit files into runit services.
+
+set -e
+
+SHOW_HELP=0
+NOW=0
+USER_MODE=0
+ACTION=""
+UNIT=""
+
+# Parse flags and arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --now)
+            NOW=1
+            shift
+            ;;
+        --user)
+            USER_MODE=1
+            shift
+            ;;
+        --help|-h)
+            SHOW_HELP=1
+            shift
+            ;;
+        --version)
+            echo "systemd 255 (Asura OS runit compatibility bridge)"
+            exit 0
+            ;;
+        daemon-reload)
+            echo "[asura-systemctl] daemon-reload intercepted: runit monitors dynamically"
+            exit 0
+            ;;
+        start|stop|restart|status|enable|disable|is-active|is-enabled|reload)
+            ACTION="$1"
+            shift
+            ;;
+        *)
+            if [ -z "$UNIT" ]; then
+                UNIT="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [ "$SHOW_HELP" -eq 1 ] || [ -z "$ACTION" ]; then
+    cat <<'EOF'
+systemctl [OPTIONS...] COMMAND [UNIT...]
+
+Asura OS runit compatibility shim. Supported commands:
+  start <unit>         Start (activate) service via runit
+  stop <unit>          Stop (deactivate) service via runit
+  restart <unit>       Restart service
+  status <unit>        Show service status
+  enable <unit>        Enable service (auto-generates runit service from .service if needed)
+  disable <unit>       Disable service
+  is-active <unit>     Check if service is active
+  is-enabled <unit>    Check if service is enabled
+  daemon-reload        No-op compatibility acknowledgment
+EOF
+    exit 0
+fi
+
+# Clean unit name (remove .service suffix if passed)
+SVC="$(echo "$UNIT" | sed 's/\.service$//')"
+
+find_unit_file() {
+    local target="$1"
+    for d in /etc/systemd/system /usr/lib/systemd/system /lib/systemd/system /usr/local/lib/systemd/system; do
+        if [ -f "$d/$target.service" ]; then
+            echo "$d/$target.service"
+            return 0
+        fi
+        if [ -f "$d/$target" ]; then
+            echo "$d/$target"
+            return 0
+        fi
+    done
+    return 1
+}
+
+generate_runit_from_service() {
+    local ufile="$1"
+    local sname="$2"
+    local svdir="/etc/sv/$sname"
+
+    local execstart
+    local user
+    local group
+    local workdir
+    local envfile
+
+    execstart="$(grep -E '^[[:space:]]*ExecStart=' "$ufile" 2>/dev/null | sed 's/^[[:space:]]*ExecStart=[[:space:]]*//' | tail -n 1)"
+    user="$(grep -E '^[[:space:]]*User=' "$ufile" 2>/dev/null | sed 's/^[[:space:]]*User=[[:space:]]*//' | tail -n 1)"
+    group="$(grep -E '^[[:space:]]*Group=' "$ufile" 2>/dev/null | sed 's/^[[:space:]]*Group=[[:space:]]*//' | tail -n 1)"
+    workdir="$(grep -E '^[[:space:]]*WorkingDirectory=' "$ufile" 2>/dev/null | sed 's/^[[:space:]]*WorkingDirectory=[[:space:]]*//' | tail -n 1)"
+    envfile="$(grep -E '^[[:space:]]*EnvironmentFile=' "$ufile" 2>/dev/null | sed -E 's/^[[:space:]]*EnvironmentFile=-?[[:space:]]*//' | tail -n 1)"
+
+    if [ -z "$execstart" ]; then
+        echo "[asura-systemctl] error: no ExecStart found in $ufile" >&2
+        return 1
+    fi
+
+    echo "[asura-systemctl] generating runit service for $sname from $ufile"
+    mkdir -p "$svdir" "$svdir/log"
+
+    cat >"$svdir/run" <<RUNEOF
+#!/bin/sh
+exec 2>&1
+${workdir:+cd "$workdir" 2>/dev/null || true}
+${envfile:+[ -f "$envfile" ] && . "$envfile"}
+RUNEOF
+
+    # Environment variables
+    grep -E '^[[:space:]]*Environment=' "$ufile" 2>/dev/null | sed 's/^[[:space:]]*Environment=[[:space:]]*//' | while read -r envline; do
+        # Strip outer quotes if any
+        clean_env="$(echo "$envline" | sed -e 's/^"//' -e 's/"$//')"
+        echo "export $clean_env" >> "$svdir/run"
+    done
+
+    if [ -n "$user" ]; then
+        if command -v chpst >/dev/null 2>&1; then
+            echo "exec chpst -u \"$user${group:+:$group}\" $execstart" >> "$svdir/run"
+        else
+            echo "exec su -s /bin/sh -c \"$execstart\" $user" >> "$svdir/run"
+        fi
+    else
+        echo "exec $execstart" >> "$svdir/run"
+    fi
+    chmod 0755 "$svdir/run"
+
+    # Set up svlogd logger
+    cat >"$svdir/log/run" <<LOGEOF
+#!/bin/sh
+mkdir -p /var/log/$sname
+exec svlogd -tt /var/log/$sname
+LOGEOF
+    chmod 0755 "$svdir/log/run"
+}
+
+case "$ACTION" in
+    enable)
+        if [ -z "$SVC" ]; then
+            echo "[asura-systemctl] error: no unit specified" >&2
+            exit 1
+        fi
+        if [ ! -d "/etc/sv/$SVC" ]; then
+            UFILE="$(find_unit_file "$SVC" || true)"
+            if [ -n "$UFILE" ]; then
+                generate_runit_from_service "$UFILE" "$SVC"
+            else
+                echo "[asura-systemctl] error: service $SVC not found in /etc/sv or systemd paths" >&2
+                exit 1
+            fi
+        fi
+        mkdir -p /var/service
+        ln -sf "/etc/sv/$SVC" "/var/service/$SVC"
+        echo "[asura-systemctl] enabled service $SVC (/var/service/$SVC -> /etc/sv/$SVC)"
+        if [ "$NOW" -eq 1 ]; then
+            sv up "$SVC" 2>/dev/null || true
+        fi
+        exit 0
+        ;;
+
+    disable)
+        if [ -z "$SVC" ]; then
+            echo "[asura-systemctl] error: no unit specified" >&2
+            exit 1
+        fi
+        if [ "$NOW" -eq 1 ] && [ -L "/var/service/$SVC" ]; then
+            sv down "$SVC" 2>/dev/null || true
+        fi
+        rm -f "/var/service/$SVC"
+        echo "[asura-systemctl] disabled service $SVC"
+        exit 0
+        ;;
+
+    start)
+        if [ -z "$SVC" ]; then
+            echo "[asura-systemctl] error: no unit specified" >&2
+            exit 1
+        fi
+        if [ ! -d "/etc/sv/$SVC" ]; then
+            UFILE="$(find_unit_file "$SVC" || true)"
+            if [ -n "$UFILE" ]; then
+                generate_runit_from_service "$UFILE" "$SVC"
+            fi
+        fi
+        if [ ! -L "/var/service/$SVC" ] && [ -d "/etc/sv/$SVC" ]; then
+            mkdir -p /var/service
+            ln -sf "/etc/sv/$SVC" "/var/service/$SVC"
+        fi
+        exec sv up "$SVC"
+        ;;
+
+    stop)
+        if [ -z "$SVC" ]; then
+            echo "[asura-systemctl] error: no unit specified" >&2
+            exit 1
+        fi
+        exec sv down "$SVC"
+        ;;
+
+    restart)
+        if [ -z "$SVC" ]; then
+            echo "[asura-systemctl] error: no unit specified" >&2
+            exit 1
+        fi
+        exec sv restart "$SVC"
+        ;;
+
+    status)
+        if [ -z "$SVC" ]; then
+            echo "[asura-systemctl] error: no unit specified" >&2
+            exit 1
+        fi
+        if [ -L "/var/service/$SVC" ]; then
+            exec sv status "$SVC"
+        else
+            echo "● $SVC.service - inactive (disabled)"
+            exit 3
+        fi
+        ;;
+
+    is-active)
+        if [ -z "$SVC" ]; then
+            exit 3
+        fi
+        if [ -L "/var/service/$SVC" ]; then
+            status_out="$(sv status "$SVC" 2>/dev/null || true)"
+            case "$status_out" in
+                run:*)
+                    echo "active"
+                    exit 0
+                    ;;
+                *)
+                    echo "inactive"
+                    exit 3
+                    ;;
+            esac
+        else
+            echo "inactive"
+            exit 3
+        fi
+        ;;
+
+    is-enabled)
+        if [ -z "$SVC" ]; then
+            exit 1
+        fi
+        if [ -L "/var/service/$SVC" ]; then
+            echo "enabled"
+            exit 0
+        else
+            echo "disabled"
+            exit 1
+        fi
+        ;;
+
+    reload)
+        if [ -z "$SVC" ]; then
+            exit 0
+        fi
+        exec sv hup "$SVC" 2>/dev/null || true
+        ;;
+
+    *)
+        echo "[asura-systemctl] unsupported action: $ACTION" >&2
+        exit 0
+        ;;
+esac

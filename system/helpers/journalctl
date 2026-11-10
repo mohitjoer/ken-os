@@ -1,0 +1,66 @@
+#!/bin/sh
+# Asura OS journalctl compatibility bridge for runit/svlogd
+
+UNIT=""
+FOLLOW=0
+LINES=100
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -u|--unit)
+            shift
+            UNIT="$(echo "$1" | sed 's/\.service$//')"
+            shift
+            ;;
+        -f|--follow)
+            FOLLOW=1
+            shift
+            ;;
+        -n|--lines)
+            shift
+            LINES="$1"
+            shift
+            ;;
+        -xeu)
+            shift
+            UNIT="$(echo "$1" | sed 's/\.service$//')"
+            shift
+            ;;
+        --help|-h)
+            echo "journalctl [OPTIONS...] (Asura OS runit/svlogd compatibility shim)"
+            echo "  -u, --unit <name>    Show logs for specified service"
+            echo "  -f, --follow         Follow log output in real time"
+            echo "  -n, --lines <num>    Number of journal entries to show (default: 100)"
+            exit 0
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+if [ -n "$UNIT" ]; then
+    LOG_FILE="/var/log/$UNIT/current"
+    if [ -f "$LOG_FILE" ]; then
+        if [ "$FOLLOW" -eq 1 ]; then
+            exec tail -f -n "$LINES" "$LOG_FILE"
+        else
+            exec tail -n "$LINES" "$LOG_FILE"
+        fi
+    else
+        # Fall back to runit service status if log file does not exist yet
+        sv status "$UNIT" 2>/dev/null || echo "[asura-journalctl] no log stream found at $LOG_FILE"
+        exit 0
+    fi
+else
+    # Global messages fallback
+    if [ -f "/var/log/messages" ]; then
+        if [ "$FOLLOW" -eq 1 ]; then
+            exec tail -f -n "$LINES" "/var/log/messages"
+        else
+            exec tail -n "$LINES" "/var/log/messages"
+        fi
+    else
+        dmesg | tail -n "$LINES"
+    fi
+fi

@@ -99,6 +99,10 @@ grep -Fq 'zramen' "$MANIFEST"
 ! grep -Fq 'scx-loader' "$MANIFEST"
 grep -Fq 'mimalloc' "$MANIFEST"
 grep -Fq 'podman' "$MANIFEST"
+grep -Fq 'docker' "$MANIFEST"
+test -x "$REPO_ROOT/system/helpers/systemctl"
+test -x "$REPO_ROOT/system/helpers/journalctl"
+grep -Fq 'systemctl' "$SCRIPT"
 
 # LAYER 2: Verify Compiler, Kernel & Direct Hardware sysfs/udev
 grep -Fq 'CONFIG_SCHED_BORE=y' "$REPO_ROOT/system/kernel/x86_64-dotconfig-asura"

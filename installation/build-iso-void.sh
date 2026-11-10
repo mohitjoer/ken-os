@@ -310,6 +310,10 @@ for hdir in audio display input perf pkg; do
 done
 cp "$REPO_ROOT/system/helpers/prime-run" "$INCLUDE_DIR/usr/bin/prime-run"
 cp "$REPO_ROOT/system/helpers/fan-profile" "$INCLUDE_DIR/usr/bin/fan-profile"
+cp "$REPO_ROOT/system/helpers/systemctl" "$INCLUDE_DIR/usr/bin/systemctl"
+chmod 755 "$INCLUDE_DIR/usr/bin/systemctl"
+cp "$REPO_ROOT/system/helpers/journalctl" "$INCLUDE_DIR/usr/bin/journalctl"
+chmod 755 "$INCLUDE_DIR/usr/bin/journalctl"
 cp "$REPO_ROOT/installation/asura-installer.sh" "$INCLUDE_DIR/usr/bin/asura-installer"
 chmod 755 "$INCLUDE_DIR/usr/bin/asura-installer"
 touch "$INCLUDE_DIR/etc/asura-live"
@@ -917,9 +921,9 @@ fi
 rm -f "$ROOTFS/usr/share/applications/btop.desktop"
 rm -f "$ROOTFS/home/asura/Desktop/btop.desktop"
 
-# Enable core system runit services (Layer 1 seatd, Layer 3 scx-lavd, ananicy-cpp, zramen)
+# Enable core system runit services (Layer 1 seatd, Layer 3 scx-lavd, ananicy-cpp, zramen, docker)
 mkdir -p "$ROOTFS/etc/runit/runsvdir/default"
-for svc in dbus seatd udevd NetworkManager acpid turnstiled tlp zramen asura-sysd asura-boot-guard; do
+for svc in dbus seatd udevd NetworkManager acpid turnstiled tlp zramen asura-sysd asura-boot-guard docker; do
 	if [ -d "$ROOTFS/etc/sv/$svc" ]; then
 		ln -sf "/etc/sv/$svc" "$ROOTFS/etc/runit/runsvdir/default/$svc"
 	fi
@@ -945,17 +949,18 @@ fi
 
 # Configure seat permissions and groups for default user
 chroot "$ROOTFS" getent group asura-hw >/dev/null 2>&1 || chroot "$ROOTFS" groupadd -r asura-hw || true
+chroot "$ROOTFS" getent group docker >/dev/null 2>&1 || chroot "$ROOTFS" groupadd -r docker || true
 for user in anon asura; do
 	if chroot "$ROOTFS" id "$user" >/dev/null 2>&1; then
-		chroot "$ROOTFS" usermod -aG _seatd,video,audio,input,wheel,storage,network,asura-hw "$user" || true
+		chroot "$ROOTFS" usermod -aG _seatd,video,audio,input,wheel,storage,network,asura-hw,docker "$user" || true
 	fi
 done
 
 # Ensure user asura exists with zsh login shell and configure autologin
 if ! chroot "$ROOTFS" id asura >/dev/null 2>&1; then
-	chroot "$ROOTFS" useradd -m -s /bin/zsh -U -G _seatd,video,audio,input,wheel,storage,network,asura-hw asura || true
+	chroot "$ROOTFS" useradd -m -s /bin/zsh -U -G _seatd,video,audio,input,wheel,storage,network,asura-hw,docker asura || true
 else
-	chroot "$ROOTFS" usermod -aG asura-hw -s /bin/zsh asura || true
+	chroot "$ROOTFS" usermod -aG asura-hw,docker -s /bin/zsh asura || true
 fi
 echo "asura:asura" | chroot "$ROOTFS" chpasswd 2>/dev/null || true
 
@@ -1072,6 +1077,13 @@ fi
 # Ensure wpa_supplicant does not run as a standalone runit service (managed by NetworkManager)
 rm -f "$ROOTFS/etc/runit/runsvdir/default/wpa_supplicant" "$ROOTFS/var/service/wpa_supplicant"
 rm -f "$ROOTFS/etc/ld.so.preload"
+
+# Deploy systemctl and journalctl compatibility bridge into ROOTFS
+mkdir -p "$ROOTFS/usr/bin"
+cp "$REPO_ROOT/system/helpers/systemctl" "$ROOTFS/usr/bin/systemctl" 2>/dev/null || true
+chmod 755 "$ROOTFS/usr/bin/systemctl" 2>/dev/null || true
+cp "$REPO_ROOT/system/helpers/journalctl" "$ROOTFS/usr/bin/journalctl" 2>/dev/null || true
+chmod 755 "$ROOTFS/usr/bin/journalctl" 2>/dev/null || true
 
 # Ensure portal executable symlink is available in /usr/bin if installed in /usr/libexec
 if [ -f "$ROOTFS/usr/libexec/xdg-desktop-portal-hyprland" ] && [ ! -f "$ROOTFS/usr/bin/xdg-desktop-portal-hyprland" ]; then
