@@ -18,6 +18,7 @@ mkdir -p \
 	"$STAGE/usr/bin" \
 	"$STAGE/usr/share/asura/session" \
 	"$STAGE/usr/share/asura/runit/services" \
+	"$STAGE/usr/share/asura/shell/agent/skills/asura" \
 	"$STAGE/usr/share/applications" \
 	"$STAGE/usr/share/wayland-sessions" \
 	"$STAGE/usr/lib/udev/rules.d" \
@@ -30,14 +31,14 @@ if [ ! -f "$BIN_DIR/asura" ]; then
 	mkdir -p "$BIN_DIR"
 	(
 		cd "$REPO_ROOT/desktop"
-		for cmd in asura asura-sysd asura-userd asura-hubd asura-shell asura-wallpaper apm; do
+		for cmd in asura asura-agent asura-sysd asura-userd asura-hubd asura-shell asura-wallpaper apm; do
 			CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$BIN_DIR/$cmd" "./cmd/$cmd"
 		done
 	)
 fi
 
 # Install Go control plane daemons and utilities
-for cmd in asura asura-sysd asura-userd asura-hubd asura-shell asura-wallpaper apm; do
+for cmd in asura asura-agent asura-sysd asura-userd asura-hubd asura-shell asura-wallpaper apm; do
 	install -m 755 "$BIN_DIR/$cmd" "$STAGE/usr/bin/$cmd"
 done
 
@@ -55,6 +56,11 @@ install -m 644 "$REPO_ROOT/session/asura.desktop" "$STAGE/usr/share/wayland-sess
 # Install user-level runit service templates
 cp -r "$REPO_ROOT/system/runit/user-services/"* "$STAGE/usr/share/asura/runit/services/"
 find "$STAGE/usr/share/asura/runit/services" -name "run" -exec chmod 755 {} +
+
+# Install local coding agent skills
+mkdir -p "$STAGE/usr/share/asura/shell/agent/skills/asura"
+cp -r "$REPO_ROOT/shell/agent/skills/asura/"* "$STAGE/usr/share/asura/shell/agent/skills/asura/"
+chmod -R 644 "$STAGE/usr/share/asura/shell/agent/skills/asura/"*
 
 # Install system runit services (asura-sysd, scx-lavd, ananicy-cpp)
 for svc_dir in "$REPO_ROOT/system/runit/services"/*; do

@@ -1,15 +1,13 @@
-# The QS Bar and the dock
+# The QS Bar and Dock Architecture
 
-The default Asura bar is **QS Bar** (`qsbar`), a full-colour top bar. It is data,
-not code: its layout lives in `~/.config/asura/shell.json` under `qsbar.layout`,
-and every built-in widget and every installed plugin is an entry in the same
-list. Drive it with `asura-shell bar ...`; the shell daemon is the only writer of
-`shell.json`, so never hand-edit the layout.
+The Asura desktop bar is the **QS Bar** (`qsbar`), rendered by Quickshell. It is driven by data
+and reactive event streaming, never by polling subprocesses.
 
-(The other style, Sumi, is the monochrome frame rail; it has its own frame-bar
-model and is not covered here. `barStyle` in `shell.json` picks the style.)
+---
 
-## The layout model
+## Layout Model & Storage
+
+Bar configuration lives in `~/.config/asura/shell.json` under the `qsbar` namespace:
 
 ```json
 "qsbar": {
@@ -20,129 +18,108 @@ model and is not covered here. `barStyle` in `shell.json` picks the style.)
     "right":  ["media", "network", "power", "battery", "brightness",
                "cputemp", "storage", "gpu", "bluetooth"]
   },
-  "widgets": { "status": true, "memory": true }
+  "widgets": {
+    "status": true,
+    "memory": true,
+    "battery": true
+  }
 }
 ```
 
-- An entry is a **widget id**: a built-in from the catalogue, or an installed
-  plugin's manifest id. Order within a section is the order on the bar.
-- **Placement and visibility are separate.** `qsbar.layout` holds only order and
-  section. Whether a built-in renders is `qsbar.widgets[<visKey>]` (a widget with
-  no visibility key is always shown). A plugin renders when
-  `~/.config/asura/plugins.json` has it `enabled` with `host: "topbarGlyph"`.
-  `asura-shell bar list` reports both as one `shown` flag, so you never have to
-  know which store answers.
-- Every id appears at most once. A known widget missing from the layout is
-  appended to `right` (or to its manifest's `defaults.bar.section`). Duplicates
-  are dropped.
-- Presentation keys keep their own homes and are not placement: `qsbar.barSeps`
-  (separators), `qsbar.iconOnlyGids` (density), `qsbar.widgetColorStyles`
-  (per-widget colour), and the bar-shell keys `barPosition`, `barShellStyle`,
-  `barScale`, `barCornerRadius`, `barBorderEnabled`, `barFrostEnabled`,
-  `barShadowEnabled`, `barAutoHide`, `barAnim`, `barGap*`.
+- **Order & Placement**: Defined in `qsbar.layout.left`, `.center`, and `.right`. Built-in widget IDs and installed plugin IDs live side by side.
+- **Visibility**: Controlled by `qsbar.widgets[<visibilityKey>]`. Built-in widgets with no visibility key are always rendered. Plugins render when enabled in `~/.config/asura/plugins.json`.
+- **Sole Writer Rule**: Only `asura-shell bar` and `asura-shell daemon` are permitted to mutate `shell.json`. Never hand-edit `shell.json`.
 
-## The catalogue
+---
 
-One file names every built-in widget: its id, its `G1..G19` internal slot, label,
-gloss, category, description, visibility key, and its own settings. The shell, the
-settings panel, the `asura-shell bar` CLI, and Asura Agent all read it, so nothing
-hand-lists widgets. It ships at
-`/usr/share/asura/shell/modules/bar/barstyles/qsbar/core/widgets.json`
-(and the materialized copy under `~/.config/asura/shell/`).
+## Reactive Binding vs. Polling (Zero Subprocess Polling)
 
-The eighteen shipped ids and their visibility keys (a blank key means always
-shown):
+A core rule of Asura OS shell development is: **Never poll subprocesses or run timers in QML for system state.**
+Repeated `Quickshell.execDetached` or `Process` loops burn CPU and introduce frame latency.
 
-| id | label | visibility key (`qsbar.widgets.*`) |
-|---|---|---|
-| launcher | Launcher | (always) |
-| workspaces | Workspaces | (always) |
-| status | Status | status |
-| memory | Memory | memory |
-| cpu | CPU | cpu |
-| volume | Volume | volume |
-| ai | AI usage | claude |
-| clock | Clock | (always) |
-| media | Now playing | mpris |
-| quick | Quick | quick |
-| network | Network | network |
-| battery | Battery | battery |
-| brightness | Brightness | brightness |
-| power | Power | power |
-| bluetooth | Bluetooth | bluetooth |
-| cputemp | CPU temperature | cpuTemperature |
-| gpu | GPU | gpu |
-| storage | Storage | storage |
-| layout | Keyboard layout | layout |
+Instead, the shell uses reactive IPC topics served by `asura-shell daemon` over `$XDG_RUNTIME_DIR/asura-shell.sock`:
 
-Run `asura-shell bar catalog` for the live list including each widget's own
-settings (and any installed plugins that ride the bar).
+1. **Daemon State Streams**:
+   - `asura-shell daemon` maintains high-frequency kernel/system monitors in Go.
+   - Topics include: `settings`, `mpris`, `audio`, `network`, `bluetooth`, `battery`, `powerprofiles`, `wm`, `tray`, `cputemp`, `stats`.
+2. **QML Topic Subscriptions**:
+   - Singletons (`Settings.qml`, `qs.Services`) subscribe once over the socket (`subscribe <topic>`).
+   - The daemon pushes JSON frames only when state changes.
+   - QML property bindings react immediately to incoming frames without polling overhead.
+3. **Control Calls**:
+   - Actions and mutations send one-shot IPC requests (`call <method> <json>`) over a secondary control socket line.
 
-## The bar CLI
+---
 
-Every verb goes through the daemon's settings store; a bad id, key, or value is
-an error (`err bar: <reason>`), never a silent write.
+## BarWidgetHost & Dynamic Slot Loading
 
-```
-bar list [--json]                 every widget: id, label, kind, section, index, shown
-bar catalog [--json]              built-ins and installed bar-capable plugins, with settings
-bar move <id> --section <s> [--index N | --before <id> | --after <id>]
-bar show <id> | bar hide <id>     toggle visibility, keeping placement
-bar set <id> <key> <value>        a catalogue setting (built-in) or a manifest setting (plugin)
-bar position top|bottom
-bar form full|fit|dock|notch|islands
-bar defaults                      shipped layout and visibility; presentation keys untouched
-bar settings [route]              open QS Bar Settings on the active monitor
-```
+`shell/modules/bar/BarWidgetHost.qml` hosts each widget inside a bar section:
+- Dynamic Resolution: Maps catalogue widget IDs (`clock`, `workspaces`, `tray`, `status`, `dock`, `music`, etc.) and community plugins to their respective visual components via `Loader`.
+- Self-Hiding Layout: When a widget has nothing to display (e.g. battery on AC-only desktop, or inactive VPN), it sets its `implicitWidth: 0`. `BarWidgetHost` collapses itself so no empty gap is left on the bar.
+- Signal Forwarding: Forwards `menuRequested(id, rect)` and `actionRequested(id)` up to `FrameSurface` and popout controllers without parent coupling.
 
-`--json` shapes:
+---
 
-- `bar list --json`: `[{"id","label","kind","section","index","shown"}]`, where
-  `kind` is `"builtin"` or `"plugin"` and `section` is `left|center|right`.
-- `bar catalog --json`: the merged catalogue, `{"id","label","gloss","category",
-  "desc","kind","settings":[...],"pluginDir"}` per widget, plus `{"hosts":[...]}`
-  for plugins.
+## Popouts (`shell/modules/bar/popouts/`)
 
-Examples:
+Interactive flyout panels attached to bar widgets live in `shell/modules/bar/popouts/`:
+- `AudioPopout.qml`: Volume slider, stream mixer, and output sink switcher.
+- `NetworkPopout.qml`: Wi-Fi networks and connection controls.
+- `BluetoothPopout.qml`: Paired devices, connect/disconnect toggles.
+- `BatteryPopout.qml`: Battery health, charge thresholds, power profile modes.
+- `SysMonitorPopout.qml`: CPU cores, memory utilization, and top processes.
+- `MusicPopout.qml`: MPRIS album art, playback controls, track progress.
+- `DockPreviewPopout.qml`: Live Wayland window previews for docked applications.
 
+Popouts bind directly to daemon service singletons (`qs.Services.Audio`, `qs.Services.Network`, etc.) and open smoothly via keyboard triggers or widget clicks.
+
+---
+
+## Bar & Dock CLI Reference
+
+All bar and dock operations should be performed via `asura-shell`:
+
+### Bar Commands
 ```bash
-asura-shell bar move clock --section right --index 0
-asura-shell bar hide gpu
+# List widgets in layout with current section, index, and shown status
+asura-shell bar list [--json]
+
+# Print widget catalogue (built-in and installed plugins) with all settings
+asura-shell bar catalog [--json]
+
+# Move widget to a section/position
+asura-shell bar move clock --section center
+asura-shell bar move memory --section right --index 2
+
+# Toggle widget visibility
+asura-shell bar show gpu
+asura-shell bar hide ai
+
+# Configure widget-specific option
 asura-shell bar set cputemp barTemperatureSource gpu
 asura-shell bar set volume audioBoost true
-asura-shell bar position bottom
-asura-shell bar form islands
-asura-shell bar list --json
+
+# Bar appearance & placement
+asura-shell bar position top        # or bottom
+asura-shell bar form full           # full, fit, dock, notch, islands
+asura-shell bar defaults            # Reset layout to default
+
+# Open GUI settings panel
+asura-shell bar settings [route]    # routes: bars, layout, widgets, dock, community
 ```
 
-## The dock CLI
-
-```
-dock show | dock hide
-dock edge auto|top|bottom|left|right
-dock autohide on|off
-dock pin <app-id> | dock unpin <app-id>
-dock list [--json]
-```
-
-`dock list --json`: `{"enabled","edge","autohide","pinned":[...]}`. Dock state
-lives under the `dock` object in `shell.json`.
-
+### Dock Commands
 ```bash
+# Visibility & Autohide
+asura-shell dock show
+asura-shell dock hide
+asura-shell dock autohide on        # or off
+
+# Edge placement
+asura-shell dock edge bottom        # auto, top, bottom, left, right
+
+# Manage pinned applications
 asura-shell dock pin org.mozilla.firefox
-asura-shell dock edge bottom
-asura-shell dock autohide on
+asura-shell dock unpin org.mozilla.firefox
+asura-shell dock list [--json]
 ```
-
-## Opening the settings panel
-
-The bar and the dock have their own GUI, **QS Bar Settings**, not a Asura Hub
-page; name it when a user asks how to change the bar from the desktop.
-
-`asura-shell bar settings [route]` raises **QS Bar Settings** on the active
-monitor (routes: `bars`, `layout`, `widgets`, `dock`, `community`). It is the
-same panel the bar's launcher mark opens; Escape closes it. Layout lists the
-three lanes side by side; a move there and a `bar move` from a terminal reach
-the same `qsbar.layout`. Community lists every installed bar plugin that is not
-Asura's own (a manifest without `"official": true`), with its author and a
-REMOVE action; a plugin you write for the user lands there.

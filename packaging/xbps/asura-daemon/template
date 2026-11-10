@@ -14,6 +14,7 @@ do_build() {
 	(
 		cd desktop
 		CGO_ENABLED=0 go build -o ../bin/asura ./cmd/asura
+		CGO_ENABLED=0 go build -o ../bin/asura-agent ./cmd/asura-agent
 		CGO_ENABLED=0 go build -o ../bin/asura-sysd ./cmd/asura-sysd
 		CGO_ENABLED=0 go build -o ../bin/asura-userd ./cmd/asura-userd
 		CGO_ENABLED=0 go build -o ../bin/apm ./cmd/apm
@@ -22,6 +23,7 @@ do_build() {
 
 do_install() {
 	vbin bin/asura
+	vbin bin/asura-agent
 	vbin bin/asura-sysd
 	vbin bin/asura-userd
 	vbin bin/apm
@@ -39,6 +41,10 @@ do_install() {
 	# Install runit service templates
 	vmkdir usr/share/asura/runit/services
 	vcopy "system/runit/user-services/*" usr/share/asura/runit/services
+
+	# Install local coding agent skills
+	vmkdir usr/share/asura/shell/agent/skills/asura
+	vcopy "shell/agent/skills/asura/*" usr/share/asura/shell/agent/skills/asura
 
 	# Install system runit service (asura-sysd)
 	vsv asura-sysd

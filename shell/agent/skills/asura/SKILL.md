@@ -7,161 +7,101 @@ description: >
   Hyprland, window rules, keybinds, monitors, gaps, borders, the bar, the dock,
   bar widgets, plugins, themes, wallpaper, colours, night light, idle, lock
   screen, and user-facing asura commands (asura, asura-shell, asura-hubd,
-  asura-wallpaper). Read the system configuration first; act through commands, not by
-  editing shipped files.
+  asura-wallpaper, asura-agent). Read the system configuration first; act through commands,
+  not by editing shipped files.
 ---
 
-# Asura
+# Asura OS Desktop Skill
 
-Asura OS is an independent modern operating system: a Hyprland compositor, a single Quickshell shell
-that draws the bar, the dock, the launcher, the popouts and the widgets, and a
-set of Go command-line tools that own the config. This skill is for changing a
-running Asura OS system on behalf of its user. It is not for developing Asura OS
-itself (editing the source checkout, writing migrations, cutting a release).
+Asura OS is an independent modern operating system built on Void Linux x86_64 (glibc)
+with `runit` supervision. The desktop environment consists of:
+- **Compositor**: Hyprland
+- **Shell**: A unified Quickshell architecture drawing the QS Bar, the dock, launcher, popouts, Hub, and desktop widgets
+- **Control Plane**: Go command-line tools (`asura`, `asura-shell`, `asura-hubd`, `asura-wallpaper`, `asura-agent`)
+- **State Store**: Managed JSON stores (`shell.json`, `plugins.json`, `colors.json`) served by `asura-shell daemon` over `$XDG_RUNTIME_DIR/asura-shell.sock`
 
-## When to use this skill
+This skill is for configuring, customizing, extending, and diagnosing a running Asura OS desktop.
+It is not for modifying shipped package files in place.
 
-Use it whenever a request would change the desktop or read its state: the bar
-layout and widgets, the dock, Hyprland behaviour, themes and wallpaper, keybinds,
-idle and lock, plugins, or any `~/.config` file Asura owns. If you are about to
-guess a path or edit a config file under `~/.config`, stop and use this skill.
+---
 
-Do not use it to modify the Asura source tree, and never treat a shipped file as
-a place to store a user's choice.
+## Core Asura OS Rules
 
-## System configuration & architecture
+### 1. Strict Monochrome Ink Aesthetic
+Asura's visual language is strictly monochrome ink. Express character through **material, shape, and rhythm**, never through accent colour.
+- **Singletons**: All UI components must import and draw strictly from `shell/Ui/Singletons/Tokens.qml` and `Ink.qml` (or through `qs.PluginKit` / `qs.PluginKit.Singletons`).
+- **Zero Hardcoded Colours**: Never hardcode non-monochrome hex literals (`#ff0000`, `#3b82f6`, etc.) in QML. Colors resolve live through `Tokens.paper`, `Tokens.ink`, `Tokens.inkDim`, `Tokens.line`, `Tokens.tint5`, etc.
+- **Contrast Floor**: Body ink must satisfy a strict **4.5:1** contrast ratio against its composite backdrop (`Ink.legible()`); UI indicators/borders must clear **3:1**.
+- **Radius Scale**: Use only the standardized corner radius scale: `6 / 7 / 8 / 10 / 12 / 14 / 18 / 22 px`. Never invent intermediate radius values.
+- **Spacing Grid**: Standard 4px grid (`Tokens.s1` = 4px, `Tokens.s2` = 8px, `Tokens.s3` = 12px, `Tokens.s4` = 16px, `Tokens.s5` = 24px, `Tokens.s6` = 32px, `Tokens.s7` = 48px).
+- **Two-Stop Elevation**: Raised surfaces get a 1px contact border (`Tokens.line`) plus a soft ambient shadow.
 
-The user's configuration lives under `~/.config/asura/` (and defaults under `/usr/share/asura/`).
-Read the system configuration and query the owning commands before making changes:
+### 2. The Overlay Boundary & Ownership Model
+Asura cleanly isolates package-shipped files from user-customized state:
+- **Shipped Base (`/usr/share/asura/shell/`)**: Owned by packages. **Never edit shipped files in place.** Any edits here are destroyed on the next package update.
+- **Materialized Config (`~/.config/asura/`)**: Active desktop configs materialized by `asura materialize`. Shipped templates are clobbered on updates.
+- **User Overrides (`~/.config/asura/user_edits/`)**: The overlay tree. Any file placed here mirrors `~/.config/asura/` and wins unconditionally over the base, surviving updates intact. For Hyprland tweaks, prefer `~/.config/asura/hyprland/user.conf`.
+- **Live Daemon Socket**: `asura-shell daemon` serves live state and configuration over `$XDG_RUNTIME_DIR/asura-shell.sock`. All settings changes flow through the owning command or daemon IPC.
+- **One Writer Per Setting**: Only the owning tool (`asura-shell`, `asura-hubd`, `asura-wallpaper`) may write to its respective store. Never hand-edit `shell.json` or `plugins.json`.
 
-- `asura doctor`: reports live state, portal bindings, shell reachability, and differences between user overrides and base.
-- `asura status`: reports versions, package channel, and update state.
-- `asura-shell bar catalog`: lists every bar widget id, its visibility key, and settings.
-- `asura-shell bar list`: lists active bar sections and current visibility.
-- `~/.config/asura/user_edits/`: user-specific overrides.
-- `~/.config/asura/`: user desktop settings materialized by `asura`.
+---
 
-Topic guides sit beside this file. Read the matching one first:
+## Sub-Documentation Guides
 
-- [`gui.md`](gui.md): the GUI map. Every intent to its Asura Hub page, shell
-  picker, or QS Bar Settings route, how to open it, and the command it wraps.
-- [`bar.md`](bar.md): the QS Bar and the dock, their layout model, and the
-  `asura-shell bar` / `asura-shell dock` commands.
-- [`plugins.md`](plugins.md): installing, listing, and removing shell plugins
-  with `asura plugin`, and the store.
+Before implementing changes, consult the matching specialized guide:
 
-## Answer policy: GUI first
-
-When a user asks HOW to change something, lead with the GUI path: the exact
-keybind or the Asura Hub page. The Hub opens with Super+comma; deep-link one
-page with `asura-shell hub open <section>` (the section key names the page, e.g.
-`keybinds`, `gpu`, `lockscreen`). Give the command after, as the fallback or the
-way to script the same change. When the user asks YOU to change it, act through
-the command (the GUI is for the human), then say what you changed and where to
-see or undo it in the GUI. Never hand back a bare shell command for a change that
-has a page or a picker.
-
-Two surfaces have no Hub page. Wallpaper and theme are the shell picker
-(`asura-wallpaper wallpaper ui`) and the bar Wallpaper widget; the bar layout
-and the dock are QS Bar Settings (`asura-shell bar settings`), not the Hub. See
-[`gui.md`](gui.md) for the full intent-to-surface map.
-
-## Safety rules
-
-Asura separates the files it ships from the files you own, so an update can
-refresh the base freely while your changes stand. Respect the split:
-
-- **Never edit a shipped file in place.** `/usr/share/asura/` (the packaged
-  base) and the copies `asura materialize` lays into `~/.config/asura/` are re-laid on
-  every `asura update` (`asura materialize` clobbers every shipped file), so an
-  edit there is lost on the next update. Reading them is safe and useful.
-- **A user override goes to the overlay:** `~/.config/asura/user_edits/`, which
-  mirrors `~/.config/asura`. A file there wins at its mirrored path and survives every
-  update. To change a shipped Hyprland or app config, drop your version at the
-  mirrored path under `user_edits` (a fork), or, better, use the dedicated
-  override file the tool already reads (`hyprland/user.conf` for Hyprland;
-  `settings.conf` and `rebinds.conf` beside it are written by Asura Settings, so
-  leave them), which the package never ships and never touches. `asura reset <path>` drops an overlay file back to the base.
-- **Prefer a command over a file edit.** The tool that owns a setting is its one
-  writer; hand-editing its store drifts. Asura Settings' own state (bar, colours,
-  launcher, device lighting) lives under `~/.config/asura/*.json`, written by
-  their tools (the shell daemon, `asura-hubd`, `asura-wallpaper`); do not hand-edit those
-  JSON stores, drive them through the command or the GUI so one writer stays in
-  charge.
-
-## Command discovery
-
-Asura's behaviour lives behind five command-line tools, all self-documenting.
-Prefer a command to a file edit; read a command's `--help` before running it.
-
-| Tool | Owns |
+| Guide | When to Read |
 |---|---|
-| `asura` | Updates, rollback, status, materialize, reset, doctor. `asura --help` lists them. |
-| `asura-shell` | The live shell: the bar, the dock, menus, popouts, and the `shell.json` settings store (the sole writer of `shell.json`). |
-| `asura-hubd` | The Asura Settings data plane and the Hyprland overlay files it generates. Read `asura-hubd --help`. |
-| `asura-wallpaper` | Wallpapers and the colour palette (`asura-wallpaper wallpaper set|next|random`). |
+| [`gui.md`](gui.md) | Lookup for GUI-first answers: Asura Hub schema pages, deep-links (`asura-shell hub open <key>`), wallpaper picker, QS Bar Settings routes, and the CLI commands behind them. |
+| [`bar.md`](bar.md) | Customizing or extending the QS Bar and dock: slot architecture, `BarWidgetHost.qml`, popouts (`shell/modules/bar/popouts/`), layout keys in `shell.json`, and `asura-shell bar` / `asura-shell dock` commands. |
+| [`plugins.md`](plugins.md) | Scaffolding, authoring, and testing shell plugins with `asura plugin`: `qs.PluginKit`, R1–R11 static audit rules, manifest configuration, and lifecycle loading. |
+| [`diagnostics.md`](diagnostics.md) | Triage playbook for crashes: Void `runit` services (`sv status`), crash dumps (`~/.local/state/asura/`), running Quickshell harnesses, contract tests (`shell_test.sh`, `qml.sh`), and recovery via `asura materialize` / `asura reset`. |
 
-```bash
-asura --help                 # the asura CLI surface
-asura-shell bar catalog      # every bar widget, its id, and its settings
-asura-shell bar list         # the live bar, per section, with shown state
-asura-wallpaper wallpaper --help
-```
+---
 
-To find where a setting or widget is defined, search the shell sources in `/usr/share/asura/shell/` (or checkout `shell/`):
+## Answer Policy: GUI First
 
-```bash
-grep -rn "barPosition" /usr/share/asura/shell/
-grep -rn "barShellStyle" /usr/share/asura/shell/
-```
+When a user asks **HOW** to change a setting:
+1. Lead with the **GUI path**: name the Asura Hub page (Super+comma), QS Bar Settings (`asura-shell bar settings`), or the wallpaper picker (`asura-wallpaper wallpaper ui`).
+2. Provide the direct deep-link command: e.g., `asura-shell hub open keybinds`.
+3. Provide the command-line equivalent as a scriptable fallback.
 
-## Decision framework
+When the user asks **YOU** to execute the change:
+1. Execute the command directly on their behalf (e.g., `asura-shell bar move clock --section right`).
+2. Confirm the action and explain where the user can view or adjust it in the GUI.
 
-When a request would change the system, in order:
+---
 
-1. **Is there a GUI for it?** A Asura Hub page (`asura-shell hub open <section>`,
-   Super+comma), the wallpaper picker (`asura-wallpaper wallpaper ui`), or QS Bar Settings
-   (`asura-shell bar settings`). If a user asks how to do it, name the surface
-   first; whether you or they drive it, the change still lands through the
-   command that page wraps, so read on.
-2. **Is there a command for it?** Use it. The bar and dock have a full CLI
-   (`asura-shell bar ...`, `asura-shell dock ...`, see `bar.md`); wallpaper has
-   `asura-wallpaper wallpaper set`; updates have `asura update`.
-3. **Is it a config edit with no command?** Edit the override, never the shipped
-   file: the tool's own `user.*` file, or a fork at the mirrored path under
-   `~/.config/asura/user_edits/`. Then reload (`systemctl --user reload asura-shell` for the shell, `hyprctl
-   reload` for Hyprland).
-4. **Is it a plugin?** A shell widget installs from git with
-   `asura plugin add <url> --bar`, or from the store; see `plugins.md`. Never
-   run a plugin's code to install it. A Hyprland compositor plugin (title
-   bars, cursor motion, key sounds, a `.so` the compositor loads) is managed
-   by `asura-hubd desktop plugins list|rebuild|add|remove` and Hub > Plugins;
-   a "version mismatch" after an update means
-   `asura-hubd desktop plugins rebuild --stale`.
-5. **Is it a theme or wallpaper?** Drive it through `asura-wallpaper` and `asura-hubd`,
-   which own the colour master; never write the palette or theme shadow by hand.
-6. **Is it a package?** `asura update` for the whole system; `apt` for one
-   package (installing needs root: give the user the `sudo apt install ...` line
-   to run in a terminal).
-7. **Unsure a command exists?** Read the tool's `--help`, or `desktop.md`.
+## System Environment: Void Linux & runit
 
-## Example requests
+Asura OS uses **Void Linux x86_64 (glibc)** with **runit** as the init and process supervisor. There is NO systemd and NO apt.
+- **Package Management**:
+  - Search packages: `xbps-query -Rs <query>`
+  - Install packages: `sudo xbps-install -S <package>`
+  - Native Asura packages & bundles: `apm`
+- **Service Management (`runit`)**:
+  - User session services: `sv status ~/.config/service/*` (e.g. `quickshell`, `asurad`)
+  - Restart a user service: `sv restart ~/.config/service/<svc>`
+  - System services: `sudo sv status /var/service/*`
+- **Shell & Daemon Reload**:
+  - Reload both live shell and daemon: `asura reload`
+  - Reload shell surface via daemon IPC: `asura-shell reload`
+  - Reload compositor: `hyprctl reload`
 
-- "Put the bar at the bottom" -> QS Bar Settings > Layout
-  (`asura-shell bar settings layout`), or `asura-shell bar position bottom`
-- "Move the clock to the right" -> QS Bar Settings > Layout, or
-  `asura-shell bar move clock --section right`
-- "Hide the GPU widget" -> QS Bar Settings > Widgets, or `asura-shell bar hide gpu`
-- "Make the bar islands" -> QS Bar Settings > Bars, or `asura-shell bar form islands`
-- "Open the bar settings" -> `asura-shell bar settings` (the launcher mark opens it too)
-- "Turn the dock off" -> QS Bar Settings > Dock, or `asura-shell dock hide`
-- "Pin Firefox to the dock" -> QS Bar Settings > Dock, or `asura-shell dock pin firefox`
-- "Change my wallpaper" -> the wallpaper picker (`asura-wallpaper wallpaper ui`);
-  scripted: `asura-wallpaper wallpaper set <path>`
-- "Remap a key" -> Asura Hub > Keybinds (Super+comma, `asura-shell hub open keybinds`)
-- "Lock after ten minutes" -> Asura Hub > Graphics & Power > Idle
-  (`asura-shell hub open gpu`)
-- "Add a weather plugin from GitHub" -> `asura plugin add <git-url> --bar`
-- "List my installed plugins" -> Asura Hub > Add-ons, or `asura plugin list`
-- "Update the system" -> Asura Hub > Updates, or `asura update`
-- "Roll back a bad update" -> `asura rollback`
+---
+
+## Core Command Reference
+
+| Command | Domain & Ownership |
+|---|---|
+| `asura doctor` | Check system health, portal bindings, and overlay drift against base. |
+| `asura status` | Display package version, channel, and update status. |
+| `asura reload` | Signal user `runit` services (`quickshell`, `asurad`) to reload state cleanly. |
+| `asura reset <path>` | Drop a user override from `~/.config/asura/user_edits/` and restore base. |
+| `asura materialize` | Re-materialize base templates into `~/.config/asura/` (preserves `user_edits`). |
+| `asura plugin ...` | Scaffold, audit, install, enable, and manage shell plugins. |
+| `asura-shell bar ...` | Inspect and manipulate QS Bar layout, sections, visibility, and widget options. |
+| `asura-shell dock ...` | Control dock edge, autohide, pins, and visibility. |
+| `asura-shell hub open <key>` | Open Asura Hub directly to a specific settings page. |
+| `asura-wallpaper ...` | Set wallpapers and generate dynamic color tokens (`wallpaper set\|next\|ui`). |
+| `asura-agent wire` | Wire the Asura OS skill suite into local coding agents (`opencode`, `pi`, `claude`, `gemini`). |

@@ -1,103 +1,89 @@
-# The Asura GUI map
+# The Asura GUI & Hub Architecture
 
-Asura has a GUI for almost every setting: the Asura Hub for system and shell
-config, the wallpaper picker for looks, and QS Bar Settings for the bar and the
-dock. When a user asks how to change something, name the surface first, then give
-the command the page wraps (SKILL.md, "Answer policy: GUI first"). This file is
-the lookup from an intent to its surface, its keybind, and the command behind it.
+Asura OS provides a graphical interface for almost every system setting.
+The primary surface is **Asura Hub** (`shell/hub/Hub.qml`), backed by **QS Bar Settings**
+and the **Wallpaper Picker**.
 
-## Opening the Hub
+When users ask how to modify a configuration, prioritize the GUI route first, followed by
+the direct command-line invocation (`SKILL.md` "Answer Policy: GUI First").
 
-Asura Hub is the settings app; it replaces the old reference settings window.
-Super+comma opens it. To jump straight to a page, deep-link it by its section
-key:
+---
 
-```bash
-asura-shell hub open              # the Hub, last page
-asura-shell hub open keybinds     # straight to Keybinds
-asura-shell hub open gpu          # Graphics & Power
-```
+## Hub Architecture & Schema Pages (`shell/hub/`)
 
-The keys are the ones in the table below; they are the same strings the Hub's
-rail uses, so `asura-shell hub open <key>` and clicking the rail reach the same
-page. Escape closes the Hub.
+Asura Hub is built on dynamic, data-driven schema pages:
+- **`SchemaPage.qml` & `SettingsSheet.qml`**: Rather than writing custom QML forms for every setting, Hub pages define declarative schemas binding keys to controls (toggles, sliders, option pickers).
+- **Zero Polling IPC**: `shell/hub/Singletons/Settings.qml` connects to `$XDG_RUNTIME_DIR/asura-shell.sock` and executes `subscribe settings`. The full configuration tree streams as JSON frames on startup and whenever any setting changes. Edits are pushed back as one-shot `settings.patch` calls.
+- **Compositor Gating**: The daemon advertises active compositor capabilities (`caps`). Pages or controls gating on unsupported features (e.g. animation curves or specific window manager rules when not on Hyprland) hide themselves automatically via `supports(cap)`.
 
-## The Hub pages
+---
 
-Every row is one page in the Hub rail. `hub open <key>` is shorthand for
-`asura-shell hub open <key>`. Pages marked advanced show only when the Hub's
-advanced view is on; gated pages appear only when the active compositor backs
-them (see below), never as dead settings.
+## Accessing the Hub
 
-| Rail name | `hub open` key | Page | What it owns |
+- **Global Keybind**: Press `Super + comma` (`Super+,`) to open Asura Hub.
+- **Direct Deep-Linking**:
+  ```bash
+  asura-shell hub open <key>
+  ```
+  Deep-linking raises the window and navigates immediately to the specified section.
+
+---
+
+## Hub Page Directory
+
+| Page Key | Title | File (`shell/hub/pages/`) | Controlled Subsystem |
 |---|---|---|---|
-| Profile | `profile` | ProfilePage.qml | the user profile, avatar, and hero |
-| General | `global` | GlobalPage.qml | Hub-wide preferences |
-| Updates | `updates` | UpdatesPage.qml | system updates and the release channel |
-| Displays | `displays` | DisplaysPage.qml | monitors, resolution, arrangement (gated: `monitorConfig`) |
-| Connections | `connections` | ConnectionsPage.qml | wifi and bluetooth |
-| Input | `input` | InputPage.qml | keyboard, mouse, and touchpad |
-| Graphics & Power | `gpu` | GpuPage.qml | GPU mode, power profile, and the idle/lock timers |
-| Animations | `animations` | AnimationsPage.qml | compositor animation curves (Hyprland only) |
-| Lockscreen | `lockscreen` | LockscreenPage.qml | the qylock theme and lock behaviour |
-| Window Manager | `windowmanager` | WindowManagerPage.qml | gaps, borders, tiling (gated: needs a backing provider) |
-| Plugins | `plugins` | PluginsPage.qml | compositor plugins (gated: `plugins`) |
-| Layer Rules | `layerrules` | LayerRulesPage.qml | layer-shell rules (advanced; shows only with rules present) |
-| Bar Studio | `bar-studio` | BarStudioPage.qml | the bar style and its studio |
-| Desktop | `desktop` | DesktopPage.qml | the desktop stage and its surfaces |
-| Widgets | `widgets` | WidgetsPage.qml | desktop widgets |
-| App Launcher | `launcher` | LauncherPage.qml | how the Super+Space launcher behaves |
-| Keybinds | `keybinds` | KeybindsPage.qml | every shortcut; the one compositor-specific page kept out of the compositor group |
-| App Overrides | `appoverrides` | AppOverridesPage.qml | per-app tweaks (advanced) |
-| Window Rules | `windowrules` | WindowRulesPage.qml | window placement rules (advanced) |
-| Performance | `performance` | PerformancePage.qml | performance and gaming scripts (Hyprland only) |
-| Session | `session` | SessionPage.qml | session and login behaviour |
-| Recording | `recording` | RecordingPage.qml | screen recording |
-| Dictation | `dictation` | DictationPage.qml | voice typing |
-| Fastfetch | `fastfetch` | FastfetchPage.qml | the fastfetch splash (advanced) |
-| Import config | `import` | ImportPage.qml | import settings from another config (advanced) |
-| Add-ons | `addons` | AddonsPage.qml | store add-ons and extras |
-| Credits | `credits` | CreditsPage.qml | credits |
+| `profile` | Profile | `ProfilePage.qml` | User avatar, name, and profile hero styling |
+| `global` | General | `GlobalPage.qml` | Hub preferences, font scaling, UI zoom |
+| `updates` | Updates | `UpdatesPage.qml` | System updates, release channel, package manager |
+| `displays` | Displays | `DisplaysPage.qml` | Monitor resolutions, refresh rates, scaling |
+| `connections` | Connections | `ConnectionsPage.qml` | Wi-Fi networks, Bluetooth pairing |
+| `input` | Input | `InputPage.qml` | Keyboard layout, repeat rate, touchpad gestures |
+| `gpu` | Graphics & Power | `GpuPage.qml` | Power profiles, GPU performance, idle & lock screen timers |
+| `animations` | Animations | `AnimationsPage.qml` | Compositor animation curves and bezier profiles |
+| `lockscreen` | Lockscreen | `LockscreenPage.qml` | Hyprlock appearance, clock format, lock timeouts |
+| `windowmanager` | Window Manager | `WindowManagerPage.qml` | Window gaps, border radius, active border colors |
+| `plugins` | Plugins | `PluginsPage.qml` | Compositor plugins and extensions |
+| `layerrules` | Layer Rules | `LayerRulesPage.qml` | Advanced layer-shell window rules |
+| `bar-studio` | Bar Studio | `BarStudioPage.qml` | QS Bar styling, border radiuses, height |
+| `desktop` | Desktop | `DesktopPage.qml` | Desktop stage, widgets, and background effects |
+| `widgets` | Widgets | `WidgetsPage.qml` | Desktop clock, system monitor, and media widgets |
+| `launcher` | App Launcher | `LauncherPage.qml` | Super+Space launcher behavior and search engines |
+| `keybinds` | Keybinds | `KeybindsPage.qml` | Global shortcut chords and compositor keybindings |
+| `appoverrides` | App Overrides | `AppOverridesPage.qml` | Per-application window rules and float settings |
+| `windowrules` | Window Rules | `WindowRulesPage.qml` | Tiling rules, workspace assignments |
+| `performance` | Performance | `PerformancePage.qml` | Gaming mode toggles, CPU governor tuning |
+| `session` | Session | `SessionPage.qml` | Autostart services, session timeout, power actions |
+| `recording` | Recording | `RecordingPage.qml` | Screen recording bitrate, audio sources |
+| `dictation` | Dictation | `DictationPage.qml` | Voice dictation and input triggers |
+| `fastfetch` | Fastfetch | `FastfetchPage.qml` | Terminal system splash logo and info |
+| `import` | Import Config | `ImportPage.qml` | Migrate external dotfiles and configs |
+| `addons` | Add-ons | `AddonsPage.qml` | Shell plugins catalogue and community extensions |
+| `credits` | Credits | `CreditsPage.qml` | Distribution credits and licenses |
 
-## Surfaces outside the Hub
+---
 
-Wallpaper, theme, the bar, the launcher, and the Stash are not Hub pages. Reach
-them here:
+## Surfaces Outside the Hub
 
-| Intent | GUI surface | How to open | The command behind it |
+Certain interactive tools run outside the Asura Hub:
+
+| Purpose | GUI Surface | Shortcut / Command | Scriptable Backend |
 |---|---|---|---|
-| Change wallpaper or theme | Wallpaper picker | `asura-wallpaper wallpaper ui` | `asura-wallpaper wallpaper ui` (picker), `asura-wallpaper wallpaper set\|next\|random` |
-| Bar layout, widgets, dock | QS Bar Settings | `asura-shell bar settings [route]` | `asura-shell bar ...`, `asura-shell dock ...` (see bar.md) |
-| Launch an app | App launcher | Super+Space | the shell launcher (the App Launcher page tunes it) |
-| Screen time and downloads | Stash | Super+S | a shell surface; no config command |
+| Wallpaper & Palette | Wallpaper Picker | `asura-wallpaper wallpaper ui` | `asura-wallpaper wallpaper set <path>` |
+| Bar & Dock Settings | QS Bar Settings | `asura-shell bar settings [route]` | `asura-shell bar ...` / `asura-shell dock ...` |
+| Application Launcher | Shell Launcher | `Super + Space` | Managed in `shell.json` (`launcher.*`) |
+| Clipboard & Stash | Stash Overlay | `Super + S` | Staged in `~/.local/state/asura/stash/` |
 
-QS Bar Settings routes are `bars`, `layout`, `widgets`, `dock`, and `community`,
-so `asura-shell bar settings layout` opens straight to the layout lanes. The bar
-also carries a Wallpaper widget that opens the same picker. bar.md covers the bar
-and dock model in full.
+---
 
-## Compositor-gated pages
+## Formulating User Answers
 
-The Hub shows no page for a capability the running compositor lacks. It gates
-Displays (`monitorConfig`), Plugins (`plugins`), Window Manager (a backing
-provider), and Layer Rules (shown only with rules present); each appears only
-when the active compositor supports it. Animations and the performance and gaming
-scripts are Hyprland-specific and do nothing under another compositor. Keybinds
-is the deliberate exception: it is compositor-specific yet stays a top-level page
-rather than sitting in the compositor group. A setting you change for a
-compositor applies only after switching to that compositor.
+Always formulate answers with the GUI interface as the hero:
 
-## A worked answer
-
-The user asks: "how do I make the screen lock after ten minutes?" The GUI-first
-answer names the page first:
-
-> Open Asura Hub with Super+comma and go to Graphics & Power > Idle, or jump
-> straight there with `asura-shell hub open gpu`, then set the lock timer to ten
-> minutes.
-
-When the user asks YOU to set it, change it on that page's behalf through the
-command it wraps, then tell them it now locks after ten minutes and that Graphics &
-Power > Idle is where they see or change it. Same shape for wallpaper: point them
-at the picker (`asura-wallpaper wallpaper ui`) first; when you set it yourself,
-use `asura-wallpaper wallpaper set <path>` and tell them where the picker is.
+**Question**: *"How do I change the display scaling?"*
+**Answer**:
+> Open **Asura Hub** using `Super+,` and navigate to **Displays**, or run:
+> ```bash
+> asura-shell hub open displays
+> ```
+> From there, adjust the monitor scale slider. Alternatively, you can configure it via Hyprland config or `asura-shell`.
