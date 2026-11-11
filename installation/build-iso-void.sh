@@ -558,6 +558,8 @@ EOF
 echo "build-iso-void: building Asura Go binaries..."
 (
 	export GOWORK=off
+	export GOFLAGS="-buildvcs=false"
+	git config --global --add safe.directory '*' 2>/dev/null || true
 	cd "$REPO_ROOT/desktop"
 	CGO_ENABLED=0 go build -o "$INCLUDE_DIR/usr/bin/asura" ./cmd/asura
 	CGO_ENABLED=0 go build -o "$INCLUDE_DIR/usr/bin/asura-sysd" ./cmd/asura-sysd
@@ -804,6 +806,8 @@ MKLIVE_DIR="$BUILD_DIR/void-mklive"
 if [ ! -d "$MKLIVE_DIR" ]; then
 	echo "build-iso-void: cloning void-mklive..."
 	git clone --depth 1 https://github.com/void-linux/void-mklive.git "$MKLIVE_DIR"
+elif [ -d "$MKLIVE_DIR/.git" ]; then
+	git -C "$MKLIVE_DIR" checkout -f
 fi
 
 # Pre-trust custom package repository keys in void-mklive keys directory
@@ -826,7 +830,11 @@ if [ -f "$MKLIVE_DIR/mklive.sh" ]; then
 	sed -i 's/--add-drivers "ahci"/--add-drivers "ahci vboxvideo vmwgfx virtio_gpu bochs qxl simpledrm"/g' "$MKLIVE_DIR/mklive.sh"
 	sed -i 's|--repository=https://repo-default.voidlinux.org/current/musl||g' "$MKLIVE_DIR/mklive.sh"
 	sed -i "s|https://repo-default.voidlinux.org/current|$MIRROR|g" "$MKLIVE_DIR/mklive.sh"
-	sed -i 's/loglevel=4/loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0/g' "$MKLIVE_DIR/mklive.sh"
+	sed -i 's/loglevel=4/loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 console=ttyS0,115200/g' "$MKLIVE_DIR/mklive.sh"
+	# Stage /EFI/BOOT into ISO9660 filesystem so xorriso emerges /EFI/BOOT
+	sed -i 's|mkdir -p "${GRUB_EFI_TMPDIR}"/EFI/BOOT|mkdir -p "${GRUB_EFI_TMPDIR}"/EFI/BOOT "$IMAGEDIR"/EFI/BOOT|g' "$MKLIVE_DIR/mklive.sh"
+	sed -i 's|cp -f "$VOIDTARGETDIR/tmp/boot${EFI_ARCH,,}.efi" "${GRUB_EFI_TMPDIR}/EFI/BOOT/BOOT${EFI_ARCH^^}.EFI"|cp -f "$VOIDTARGETDIR/tmp/boot${EFI_ARCH,,}.efi" "${GRUB_EFI_TMPDIR}/EFI/BOOT/BOOT${EFI_ARCH^^}.EFI"\n\t\tcp -f "$VOIDTARGETDIR/tmp/boot${EFI_ARCH,,}.efi" "$IMAGEDIR/EFI/BOOT/BOOT${EFI_ARCH^^}.EFI"|g' "$MKLIVE_DIR/mklive.sh"
+	sed -i 's|cp -f grub/grub.cfg "$GRUB_DIR"|mkdir -p "$IMAGEDIR/EFI/BOOT" "$GRUB_DIR"\n    cp -f grub/grub.cfg "$GRUB_DIR"\n    cp -f grub/grub.cfg "$IMAGEDIR/EFI/BOOT/grub.cfg"|g' "$MKLIVE_DIR/mklive.sh"
 fi
 if [ -f "$MKLIVE_DIR/lib.sh" ]; then
 	sed -i 's|--repository=https://repo-default.voidlinux.org/current/musl||g' "$MKLIVE_DIR/lib.sh"
@@ -893,9 +901,12 @@ COM32 poweroff.c32
 BOOTCFG
 fi
 
-# Prune cluttered extra speech and nogfx entries from GRUB configuration
+# Prune cluttered extra speech and nogfx entries from GRUB configuration, and enable serial console
 if [ -f "$MKLIVE_DIR/grub/grub_void.cfg.pre" ]; then
 	sed -i 's/timeout=15/timeout=3/g' "$MKLIVE_DIR/grub/grub_void.cfg.pre"
+	sed -i 's/terminal_input console/terminal_input console serial/g' "$MKLIVE_DIR/grub/grub_void.cfg.pre"
+	sed -i 's/terminal_output gfxterm/terminal_output gfxterm serial/g' "$MKLIVE_DIR/grub/grub_void.cfg.pre"
+	sed -i '1s/^/insmod serial\nserial --speed=115200 --unit=0 --word=8 --parity=no --stop=1\n/' "$MKLIVE_DIR/grub/grub_void.cfg.pre"
 fi
 
 # Post-setup script to configure users and seat permissions inside ROOTFS
@@ -1322,7 +1333,7 @@ echo "build-iso-void: generating ISO with void-mklive..."
 		-i gzip \
 		-s zstd \
 		-S "dbus seatd NetworkManager zramen" \
-		-C "loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 live.user=asura live.autologin nowatchdog mitigations=off preempt=full" \
+		-C "loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 console=ttyS0,115200 live.user=asura live.autologin nowatchdog mitigations=off preempt=full" \
 		-x "$POSTSETUP_SCRIPT" \
 		-T "$ISO_TITLE" \
 		-o "$FINAL_ISO"

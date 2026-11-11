@@ -54,6 +54,7 @@ cleanup_installer() {
 	if [ -d "$TARGET_DIR" ]; then
 		# Unmount in reverse order
 		umount "$TARGET_DIR/boot/efi" 2>/dev/null || true
+		umount "$TARGET_DIR/sys/firmware/efi/efivars" 2>/dev/null || true
 		umount "$TARGET_DIR/sys" 2>/dev/null || true
 		umount "$TARGET_DIR/proc" 2>/dev/null || true
 		umount "$TARGET_DIR/dev/pts" 2>/dev/null || true
@@ -80,6 +81,7 @@ on_signal() {
 	rm -f "$DISKS_FILE" 2>/dev/null || true
 	if [ -d "$TARGET_DIR" ]; then
 		umount "$TARGET_DIR/boot/efi" 2>/dev/null || true
+		umount "$TARGET_DIR/sys/firmware/efi/efivars" 2>/dev/null || true
 		umount "$TARGET_DIR/sys" 2>/dev/null || true
 		umount "$TARGET_DIR/proc" 2>/dev/null || true
 		umount "$TARGET_DIR/dev/pts" 2>/dev/null || true
@@ -617,7 +619,7 @@ mkdir -p "$TARGET_DIR/etc/default"
 cat >"$TARGET_DIR/etc/default/grub" <<'GRUBDEF'
 GRUB_DISTRIBUTOR="Asura OS"
 GRUB_TIMEOUT=3
-GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 quiet splash"
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 quiet splash console=tty0 console=ttyS0,115200"
 GRUB_DISABLE_OS_PROBER=false
 GRUBDEF
 
@@ -650,7 +652,17 @@ printf "${GREEN}✓ Kernel and initramfs verified in /boot.${RESET}\n"
 printf "${WHITE}${BOLD}[5/5] Installing bootloader (%s)...${RESET}\n" "$BOOT_DISPLAY"
 
 if [ "$IS_UEFI" -eq 1 ]; then
+	if [ -d /sys/firmware/efi/efivars ]; then
+		mkdir -p "$TARGET_DIR/sys/firmware/efi/efivars"
+		mount -t efivarfs efivarfs "$TARGET_DIR/sys/firmware/efi/efivars" 2>/dev/null || true
+	fi
 	chroot "$TARGET_DIR" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Asura --recheck
+	mkdir -p "$TARGET_DIR/boot/efi/EFI/BOOT"
+	if [ -f "$TARGET_DIR/boot/efi/EFI/Asura/grubx64.efi" ]; then
+		cp -f "$TARGET_DIR/boot/efi/EFI/Asura/grubx64.efi" "$TARGET_DIR/boot/efi/EFI/BOOT/BOOTX64.EFI"
+	elif [ -f "$TARGET_DIR/boot/efi/EFI/asura/grubx64.efi" ]; then
+		cp -f "$TARGET_DIR/boot/efi/EFI/asura/grubx64.efi" "$TARGET_DIR/boot/efi/EFI/BOOT/BOOTX64.EFI"
+	fi
 	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg
 else
 	chroot "$TARGET_DIR" grub-install --target=i386-pc --recheck "$TARGET_DISK"
@@ -711,13 +723,13 @@ fi
 printf "${GREEN}${BOLD}All post-installation verification checks passed.${RESET}\n"
 
 # Unmount cleanly
+if [ "$IS_UEFI" -eq 1 ]; then
+	umount "$TARGET_DIR/sys/firmware/efi/efivars" 2>/dev/null || true
+	umount "$TARGET_DIR/boot/efi" 2>/dev/null || true
+fi
 umount "$TARGET_DIR/sys"
 umount "$TARGET_DIR/proc"
 umount "$TARGET_DIR/dev"
-
-if [ "$IS_UEFI" -eq 1 ]; then
-	umount "$TARGET_DIR/boot/efi"
-fi
 
 if [ "$FS_TYPE" = "btrfs" ]; then
 	umount "$TARGET_DIR/home"
