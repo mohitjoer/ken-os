@@ -34,11 +34,22 @@ RED=$(printf '\033[1;31m')
 RESET=$(printf '\033[0m')
 CYAN=$(printf '\033[1;36m')
 
+SAVED_STTY=""
+if [ -t 0 ]; then
+	SAVED_STTY=$(stty -g 2>/dev/null || true)
+fi
+
 DISKS_FILE=$(mktemp 2>/dev/null || echo "/tmp/asura-disks.$$")
 TARGET_DIR="/mnt/asura-target"
 
 cleanup_installer() {
 	exit_code=$?
+	# Always restore terminal settings and echo
+	if [ -n "$SAVED_STTY" ]; then
+		stty "$SAVED_STTY" 2>/dev/null || stty echo 2>/dev/null || true
+	else
+		stty echo 2>/dev/null || true
+	fi
 	rm -f "$DISKS_FILE" 2>/dev/null || true
 	if [ -d "$TARGET_DIR" ]; then
 		# Unmount in reverse order
@@ -58,7 +69,32 @@ cleanup_installer() {
 		read -r _ 2>/dev/null || true
 	fi
 }
-trap cleanup_installer EXIT INT TERM
+
+on_signal() {
+	trap - EXIT INT TERM
+	if [ -n "$SAVED_STTY" ]; then
+		stty "$SAVED_STTY" 2>/dev/null || stty echo 2>/dev/null || true
+	else
+		stty echo 2>/dev/null || true
+	fi
+	rm -f "$DISKS_FILE" 2>/dev/null || true
+	if [ -d "$TARGET_DIR" ]; then
+		umount "$TARGET_DIR/boot/efi" 2>/dev/null || true
+		umount "$TARGET_DIR/sys" 2>/dev/null || true
+		umount "$TARGET_DIR/proc" 2>/dev/null || true
+		umount "$TARGET_DIR/dev/pts" 2>/dev/null || true
+		umount "$TARGET_DIR/dev" 2>/dev/null || true
+		umount "$TARGET_DIR/home" 2>/dev/null || true
+		umount "$TARGET_DIR/.snapshots" 2>/dev/null || true
+		umount "$TARGET_DIR" 2>/dev/null || true
+		rmdir "$TARGET_DIR" 2>/dev/null || true
+	fi
+	printf "\n"
+	exit 130
+}
+
+trap on_signal INT TERM
+trap cleanup_installer EXIT
 
 clear 2>/dev/null || true
 
@@ -460,35 +496,90 @@ rm -f "$TARGET_DIR/etc/skel/Desktop/asura-installer.desktop" 2>/dev/null || true
 chroot "$TARGET_DIR" getent group asura-hw >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r asura-hw
 chroot "$TARGET_DIR" getent group docker >/dev/null 2>&1 || chroot "$TARGET_DIR" groupadd -r docker || true
 
-# User account creation / reconfiguration
+# Record live user hash from running environment to verify against later
+LIVE_SHADOW_HASH=$(grep '^asura:' /etc/shadow 2>/dev/null | cut -d: -f2 || true)
+
+# Completely purge live user account, credentials, and live home directory from target
+if chroot "$TARGET_DIR" id -u asura >/dev/null 2>&1; then
+	chroot "$TARGET_DIR" userdel -r asura >/dev/null 2>&1 || true
+fi
+rm -rf "$TARGET_DIR/home/asura"
+
+# User account creation on target
 if ! chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
 	chroot "$TARGET_DIR" useradd -m -s /bin/zsh -G wheel,_seatd,video,audio,input,storage,network,asura-hw,docker "$USERNAME_INPUT"
 else
 	chroot "$TARGET_DIR" usermod -aG wheel,_seatd,video,audio,input,storage,network,asura-hw,docker "$USERNAME_INPUT"
 fi
 
-# Set password for primary user
-echo "$USERNAME_INPUT:$USER_PASS" | chroot "$TARGET_DIR" chpasswd
+# Set password for primary user with explicit SHA512 encryption
+echo "$USERNAME_INPUT:$USER_PASS" | chroot "$TARGET_DIR" chpasswd -c SHA512
 
 # Configure root password or lock root account
 if [ -n "$ROOT_PASS" ]; then
-	echo "root:$ROOT_PASS" | chroot "$TARGET_DIR" chpasswd
+	echo "root:$ROOT_PASS" | chroot "$TARGET_DIR" chpasswd -c SHA512
 else
-	chroot "$TARGET_DIR" passwd -l root
+	chroot "$TARGET_DIR" usermod -p '!' root
 fi
 
-# Remove default live user account if different from primary user
-if [ "$USERNAME_INPUT" != "asura" ]; then
-	chroot "$TARGET_DIR" userdel -r asura 2>/dev/null || true
-	rm -rf "$TARGET_DIR/home/asura"
-fi
+# Clean up any shadow/passwd backup files that might contain the live hash
+rm -f "$TARGET_DIR/etc/shadow-" "$TARGET_DIR/etc/passwd-" "$TARGET_DIR/etc/group-" "$TARGET_DIR/etc/gshadow-"
 
-# Purge live-only configurations and autologin from installed system
+# Purge live-only configurations, live sudoers, polkit rules, and autologin from installed system
+rm -f "$TARGET_DIR/etc/sudoers.d/99-asura-live" "$TARGET_DIR/etc/sudoers.d/99-void-live" "$TARGET_DIR/etc/sudoers.d/"*live*
+rm -f "$TARGET_DIR/etc/polkit-1/rules.d/asura-live.rules"
+rm -f "$TARGET_DIR/etc/default/live.conf"
 rm -f "$TARGET_DIR/etc/sv/agetty-tty1/conf"
 rm -f "$TARGET_DIR/etc/profile.d/asura-autologin.sh"
 rm -f "$TARGET_DIR/home/$USERNAME_INPUT/.hushlogin" 2>/dev/null || true
 rm -f "$TARGET_DIR/etc/skel/.hushlogin" 2>/dev/null || true
 rm -rf "$TARGET_DIR/tmp"/* "$TARGET_DIR/var/tmp"/*
+
+# Replace live MOTD, issue, and issue.net with installed system banners
+cat >"$TARGET_DIR/etc/motd" <<'MOTD'
+       #                    #         Asura OS Beta 001
+     %##                    ##%       https://asuraos.dev
+    ####   %%%%%%%%%%%%%%   ####
+  ######% %%%%%%%%%%%%%%%% %######    Robust. Minimal. Kinetic.
+%###########% %%%%%%%%  ###########%
+ %###########          ###########%
+     ########  @@@@@@  ########
+   %% ########%      %######## %%%
+   %%  %%##################%%% %%%
+   %% ##     %########%     ## %%%
+   %% ####%%%%%      %%%%%#### %%
+       %####################%
+      %%  %##############%  %%
+       ### ############## %##
+       %##  ############  ###
+        ###  %        %  ###
+         %################%
+           %############%
+             ##########
+MOTD
+
+cat >"$TARGET_DIR/etc/issue" <<'ISSUE'
+       #                    #         Asura OS Beta 001 (\m)
+     %##                    ##%       Kernel \r on an \m (\l)
+    ####   %%%%%%%%%%%%%%   ####
+  ######% %%%%%%%%%%%%%%%% %######    Robust. Minimal. Kinetic.
+%###########% %%%%%%%%  ###########%  https://asuraos.dev
+ %###########          ###########%
+     ########  @@@@@@  ########
+   %% ########%      %######## %%%
+   %%  %%##################%%% %%%
+   %% ##     %########%     ## %%%
+   %% ####%%%%%      %%%%%#### %%
+       %####################%
+      %%  %##############%  %%
+       ### ############## %##
+       %##  ############  ###
+        ###  %        %  ###
+         %################%
+           %############%
+             ##########
+ISSUE
+cp "$TARGET_DIR/etc/motd" "$TARGET_DIR/etc/issue.net"
 
 # Strict sudoers configuration: require password for wheel group (NO NOPASSWD)
 mkdir -p "$TARGET_DIR/etc/sudoers.d"
@@ -590,7 +681,14 @@ fi
 
 V_USER="FAIL"
 if chroot "$TARGET_DIR" id -u "$USERNAME_INPUT" >/dev/null 2>&1; then
-	V_USER="PASS"
+	TARGET_USER_HASH=$(grep "^${USERNAME_INPUT}:" "$TARGET_DIR/etc/shadow" 2>/dev/null | cut -d: -f2 || true)
+	if [ -n "$TARGET_USER_HASH" ] && \
+	   [ "$TARGET_USER_HASH" != "!" ] && \
+	   [ "$TARGET_USER_HASH" != "*" ] && \
+	   [ "$(printf '%s' "$TARGET_USER_HASH" | cut -c1)" != "!" ] && \
+	   { [ -z "$LIVE_SHADOW_HASH" ] || [ "$TARGET_USER_HASH" != "$LIVE_SHADOW_HASH" ]; }; then
+		V_USER="PASS"
+	fi
 fi
 
 V_SERVICES="FAIL"
