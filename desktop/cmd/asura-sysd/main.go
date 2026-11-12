@@ -314,17 +314,9 @@ func applyPowerProfile(profile string) error {
 		_ = os.WriteFile("/sys/firmware/acpi/platform_profile", []byte("balanced"), 0644)
 	}
 
-	// Maintain 80% battery charge threshold for battery longevity
-	bats, _ := filepath.Glob("/sys/class/power_supply/BAT*/charge_control_end_threshold")
-	for _, b := range bats {
-		_ = os.WriteFile(b, []byte("80"), 0644)
-	}
-
-	// Enable D3cold runtime PM for discrete PCIe devices (including NVIDIA dGPU)
-	gpus, _ := filepath.Glob("/sys/bus/pci/devices/*/power/control")
-	for _, f := range gpus {
-		_ = os.WriteFile(f, []byte("auto"), 0644)
-	}
+	// Battery charge threshold and NVIDIA runtime PM are owned by udev rules
+	// (99-battery-threshold.rules and 80-nvidia-pm.rules), which persist them
+	// across reboots and AC plug events. asura-sysd does not duplicate them.
 
 	return nil
 }

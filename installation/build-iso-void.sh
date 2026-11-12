@@ -545,6 +545,11 @@ if [ -d "$REPO_ROOT/system/modules-load.d" ]; then
 	mkdir -p "$INCLUDE_DIR/etc/modules-load.d"
 	cp "$REPO_ROOT/system/modules-load.d"/*.conf "$INCLUDE_DIR/etc/modules-load.d/"
 fi
+
+if [ -d "$REPO_ROOT/system/tlp.d" ]; then
+	mkdir -p "$INCLUDE_DIR/etc/tlp.d"
+	cp "$REPO_ROOT/system/tlp.d"/*.conf "$INCLUDE_DIR/etc/tlp.d/"
+fi
 cp "$REPO_ROOT/system/sysctl.d/99-asura-performance.conf" "$INCLUDE_DIR/etc/sysctl.d/99-asura-performance.conf"
 cp "$REPO_ROOT/session/turnstile/turnstile.conf" "$INCLUDE_DIR/etc/turnstile/turnstile.conf"
 cp "$REPO_ROOT/system/xbps.d/asura.conf" "$INCLUDE_DIR/etc/xbps.d/asura.conf"
@@ -937,9 +942,9 @@ fi
 rm -f "$ROOTFS/usr/share/applications/btop.desktop"
 rm -f "$ROOTFS/home/asura/Desktop/btop.desktop"
 
-# Enable core system runit services (Layer 1 seatd, Layer 3 scx-lavd, ananicy-cpp, zramen, docker)
+# Enable core system runit services (Layer 1 seatd, Layer 3 scx-lavd, ananicy-cpp, zramen). Docker is opt-in: not enabled by default (podman is the default container tool).
 mkdir -p "$ROOTFS/etc/runit/runsvdir/default"
-for svc in dbus seatd elogind udevd NetworkManager acpid turnstiled tlp zramen asura-sysd asura-boot-guard docker; do
+for svc in dbus seatd elogind udevd NetworkManager acpid turnstiled tlp zramen asura-sysd asura-boot-guard; do
 	if [ -d "$ROOTFS/etc/sv/$svc" ]; then
 		ln -sf "/etc/sv/$svc" "$ROOTFS/etc/runit/runsvdir/default/$svc"
 	fi
@@ -1098,6 +1103,11 @@ cp "$REPO_ROOT/system/xbps.d/asura.conf" "$ROOTFS/etc/xbps.d/00-repository-main.
 if [ -d "$REPO_ROOT/system/modules-load.d" ]; then
 	mkdir -p "$ROOTFS/etc/modules-load.d"
 	cp "$REPO_ROOT/system/modules-load.d"/*.conf "$ROOTFS/etc/modules-load.d/" 2>/dev/null || true
+fi
+
+if [ -d "$REPO_ROOT/system/tlp.d" ]; then
+	mkdir -p "$ROOTFS/etc/tlp.d"
+	cp "$REPO_ROOT/system/tlp.d"/*.conf "$ROOTFS/etc/tlp.d/" 2>/dev/null || true
 fi
 
 # Ensure wpa_supplicant does not run as a standalone runit service (managed by NetworkManager)
@@ -1332,7 +1342,24 @@ chmod +x "$POSTSETUP_SCRIPT"
 
 FINAL_ISO="$BUILD_DIR/$ISO_NAME.iso"
 
-# Run mklive to produce the image with boot splash & hybrid graphics
+# Run mklive to produce the image with boot splash & hybrid graphics.
+#
+# Flag audit (void-mklive revision at clone time):
+#   -a ARCH        target architecture (x86_64)
+#   -b base-system base metapackage
+#   -k linux       kernel package
+#   -r HYPR_CACHE  extra repository (hyprland-void) for hyprland packages
+#   -r MIRROR      Void mirror (passed twice: hypr repo + void repo)
+#   -p PACKAGES    package list from system/packages-void.yaml
+#   -I INCLUDE_DIR overlay rootfs (ASURA's files laid over the base)
+#   -i gzip        initramfs compression
+#   -s zstd        ISO squashfs compression
+#   -S "..."       runit services enabled in the live image
+#   -C "..."       kernel cmdline (quiet splash for Plymouth, console for serial)
+#   -x POSTSETUP   post-install hook script
+#   -T ISO_TITLE   volume label
+#   -o FINAL_ISO   output path
+# SPLASH_IMAGE env points at the boot splash PNG consumed by mklive.
 echo "build-iso-void: generating ISO with void-mklive..."
 (
 	cd "$MKLIVE_DIR"
@@ -1347,7 +1374,7 @@ echo "build-iso-void: generating ISO with void-mklive..."
 		-I "$INCLUDE_DIR" \
 		-i gzip \
 		-s zstd \
-		-S "dbus seatd NetworkManager zramen" \
+		-S "dbus seatd elogind NetworkManager zramen" \
 		-C "loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 console=ttyS0,115200 live.user=asura live.autologin nowatchdog mitigations=off preempt=full" \
 		-x "$POSTSETUP_SCRIPT" \
 		-T "$ISO_TITLE" \

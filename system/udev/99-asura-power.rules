@@ -6,9 +6,5 @@
 SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="/usr/bin/asura power ac"
 SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="/usr/bin/asura power bat"
 
-# 2. NVIDIA PCIe Runtime Power Management (enables RTD3 / 0-Watt sleep on hybrid systems)
-# Enable runtime PM for NVIDIA Audio Controller
-ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto"
-
-# Enable runtime PM for NVIDIA VGA Controller
-ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto"
+# 2. NVIDIA PCIe Runtime Power Management is owned by 80-nvidia-pm.rules
+# (bind-time, TEST=="power/control"). Not duplicated here.

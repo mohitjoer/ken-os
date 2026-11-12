@@ -8,6 +8,6 @@ ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{pwm[0-9]*}!="", RUN+="/bin/sh -c 
 ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{pwm[0-9]*_enable}!="", RUN+="/bin/sh -c 'chgrp asura-hw %S%p/pwm*_enable 2>/dev/null && chmod 0664 %S%p/pwm*_enable 2>/dev/null || true'"
 ACTION=="add|change", SUBSYSTEM=="hwmon", ATTR{fan[0-9]*_target}!="", RUN+="/bin/sh -c 'chgrp asura-hw %S%p/fan*_target 2>/dev/null && chmod 0664 %S%p/fan*_target 2>/dev/null || true'"
 
-# ACPI platform profile & ASUS notebook WMI thermal policy direct sysfs access
-ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="asus-nb-wmi", ATTR{throttle_thermal_policy}!="", GROUP="asura-hw", MODE="0664"
-ACTION=="add|change", SUBSYSTEM=="acpi", ATTR{platform_profile}!="", GROUP="asura-hw", MODE="0664"
+# ACPI platform profile & ASUS notebook WMI thermal policy are written by
+# asura-sysd (power mode command), which runs as root; no udev permission
+# change is needed or effective for sysfs attributes.
