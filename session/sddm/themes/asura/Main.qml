@@ -69,6 +69,22 @@ Rectangle {
         }
     }
 
+    Connections {
+        target: sddm
+        // SDDM's greeter protocol: a successful login is acknowledged by the
+        // daemon and the greeter is then closed by SDDM itself, so there is
+        // nothing for the surface to do here beyond staying out of the way.
+        function onLoginSucceeded() {
+            root.message = qsTr("Signing in…")
+        }
+        // SDDM forwards messages from PAM (for example "Caps Lock is on").
+        // Type 0 is informational; anything else is a warning or an error.
+        function onInformationMessage(message, type) {
+            root.message = message
+            root.failed = (type !== 0)
+        }
+    }
+
     Image {
         anchors.fill: parent
         source: "file:///usr/share/asura/backgrounds/galaxy.png"

@@ -213,8 +213,6 @@ components:
         blob: 225fc41396c0aa0b9260d3bcad96b3cfb652425a
       - path: modules/common/widgets/MaterialShapeWrappedMaterialSymbol.qml
         blob: b6abd1e9d1b93fa1067cdbd260ed97e764d80864
-      - path: modules/common/widgets/MaterialSymbol.qml
-        blob: d117bb60b4a2ed8086eca975b0bff6e3ef93e840
       - path: modules/common/widgets/MaterialTextArea.qml
         blob: 1390d716fc09f64e90ca61c1be977cf2b8a0454a
       - path: modules/common/widgets/MaterialTextField.qml

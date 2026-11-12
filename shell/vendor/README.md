@@ -71,6 +71,8 @@ files, and these are not vendored files.
 | `shell/modules/common/Config.qml` | The settings seam. Same arrangement, one layer down: the vendored components read their settings from this one file, and this is where Asura's version reads GSettings and dconf — the store the project's own rules say owns them. |
 | `shell/modules/common/widgets/AppIcon.qml` | A widget the base layer cannot run. The vendored components instantiate it by that name, so the path has to exist; upstream's version is a KDE Frameworks `Kirigami.Icon`, and Asura's base layer carries no KDE Frameworks — one widget is not a reason to put an application framework on a desktop whose manifest deliberately excludes it. Asura's file draws the same icon from the same source, in the same two properties the one consumer uses. |
 
+| `shell/modules/common/widgets/MaterialSymbol.qml` | The icon-name seam. Upstream draws its icons as Material Symbols ligatures selected by spelling the icon's name, and asks for a font the base layer does not carry. Asura's file maps those names onto the Font Awesome 4.7 codepoints the archive's font has, so the vendored components' icons resolve instead of rendering nothing. |
+
 The whole of the re-theme and the re-bind is `Appearance.qml` and `Config.qml`: upstream's
 components read Asura's palette and Asura's settings because they were pointed at a file
 that holds them. No vendored file is modified.

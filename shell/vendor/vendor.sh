@@ -112,6 +112,12 @@ GlobalStates.qml
 #                   application framework on the desktop. Asura's version
 #                   has the same two properties — a source and a size — and
 #                   nothing else.
+#   MaterialSymbol.qml
+#                   upstream's Material Symbols icon widget, which asks for a
+#                   font the base layer does not carry. Asura's version maps
+#                   the Material Symbol names onto the Font Awesome 4.7
+#                   codepoints the archive's font has, so the vendored
+#                   components' icons resolve instead of rendering nothing.
 #
 # They are Asura's files, in Asura's tree, at upstream's paths. That is the
 # overlay: the vendored components are upstream's, the context they run in is
@@ -120,6 +126,7 @@ EXCLUDE_FILES="
 modules/common/Appearance.qml
 modules/common/Config.qml
 modules/common/widgets/AppIcon.qml
+modules/common/widgets/MaterialSymbol.qml
 GlobalStates.qml
 "
 
