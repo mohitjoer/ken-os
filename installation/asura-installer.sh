@@ -635,6 +635,8 @@ rm -f "$TARGET_DIR/etc/ld.so.preload"
 mkdir -p "$TARGET_DIR/etc/default"
 cat >"$TARGET_DIR/etc/default/grub" <<'GRUBDEF'
 GRUB_DISTRIBUTOR="Asura OS"
+GRUB_DEFAULT=saved
+GRUB_SAVEDEFAULT=true
 GRUB_TIMEOUT=3
 GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 quiet splash console=tty0 console=ttyS0,115200"
 GRUB_DISABLE_OS_PROBER=false
@@ -684,6 +686,13 @@ if [ "$IS_UEFI" -eq 1 ]; then
 else
 	chroot "$TARGET_DIR" grub-install --target=i386-pc --recheck "$TARGET_DISK"
 	chroot "$TARGET_DIR" grub-mkconfig -o /boot/grub/grub.cfg
+fi
+
+# Install the Asura snapshot GRUB snippet so /.snapshots entries are generated
+if [ -d "$TARGET_DIR/usr/share/asura/session/grub" ]; then
+    mkdir -p "$TARGET_DIR/etc/grub.d"
+    cp "$TARGET_DIR/usr/share/asura/session/grub"/* "$TARGET_DIR/etc/grub.d/" 2>/dev/null || true
+    chmod +x "$TARGET_DIR/etc/grub.d"/40_asura_snapshots 2>/dev/null || true
 fi
 
 printf "${GREEN}✓ Bootloader successfully installed.${RESET}\n"

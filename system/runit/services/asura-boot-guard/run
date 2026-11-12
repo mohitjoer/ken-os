@@ -1,6 +1,7 @@
 #!/bin/sh
-# asura-boot-guard: monitors core runit daemon readiness and tracks boot success.
-# Marks a boot as successful once seatd and asura-sysd are healthy.
+# asura-boot-guard: monitors core runit daemon readiness and, after three
+# consecutive failed boots, rolls back to the most recent Btrfs snapshot via
+# GRUB (GRUB_DEFAULT=saved, grub-reboot by exact menuentry title).
 exec 2>&1
 
 STATUS_DIR="/var/lib/asura"
@@ -37,6 +38,7 @@ else
     prev_fail=0
     if [ -f "$STATUS_FILE" ]; then
         prev_fail=$(grep '^failed_count=' "$STATUS_FILE" 2>/dev/null | cut -d= -f2 || echo 0)
+        case "$prev_fail" in ''|*[!0-9]*) prev_fail=0 ;; esac
     fi
     fail_count=$((prev_fail + 1))
     printf "status=degraded\nlast_check=%s\nfailed_count=%d\nkernel=%s\n" \
@@ -45,16 +47,21 @@ else
 
     # Trigger recovery action if failure threshold reached (3 consecutive failures)
     if [ "$fail_count" -ge 3 ]; then
-        echo "asura-boot-guard: CRITICAL: 3 consecutive failed boots detected. Triggering recovery rollback..."
-        # 1. Bootloader rollback: fall back to previous GRUB boot entry
-        if command -v grub-reboot >/dev/null 2>&1; then
-            echo "asura-boot-guard: setting GRUB fallback boot entry..."
-            grub-reboot 1 2>/dev/null || true
+        echo "asura-boot-guard: CRITICAL: 3 consecutive failed boots detected. Triggering rollback..."
+        # Find the most recent snapshot in /.snapshots
+        latest=""
+        if [ -d "/.snapshots" ]; then
+            latest=$(ls -1 "/.snapshots" 2>/dev/null | sort -r | head -n 1)
         fi
-        # 2. Btrfs snapshot recovery marker
-        if [ -d "/.snapshots" ] && command -v btrfs >/dev/null 2>&1; then
-            echo "asura-boot-guard: creating Btrfs rollback marker in /var/lib/asura/..."
-            touch "$STATUS_DIR/rollback-requested" 2>/dev/null || true
+        if [ -n "$latest" ] && command -v grub-reboot >/dev/null 2>&1; then
+            echo "asura-boot-guard: rolling back to snapshot: $latest"
+            grub-reboot "Asura OS (snapshot $latest)" 2>/dev/null || true
+            # Reboot into the selected snapshot
+            if command -v reboot >/dev/null 2>&1; then
+                reboot
+            fi
+        else
+            echo "asura-boot-guard: no snapshot available or grub-reboot missing; cannot roll back"
         fi
     fi
 fi
@@ -64,4 +71,3 @@ if command -v pause >/dev/null 2>&1; then
 else
     exec sleep infinity
 fi
-

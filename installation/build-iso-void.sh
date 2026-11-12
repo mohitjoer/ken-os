@@ -293,6 +293,11 @@ if [ -d "$REPO_ROOT/session/scripts" ]; then
 	cp "$REPO_ROOT/session/scripts"/* "$INCLUDE_DIR/usr/bin/"
 fi
 
+if [ -d "$REPO_ROOT/session/grub" ]; then
+	mkdir -p "$INCLUDE_DIR/usr/share/asura/session/grub"
+	cp "$REPO_ROOT/session/grub"/* "$INCLUDE_DIR/usr/share/asura/session/grub/"
+fi
+
 # Copy all shell scripts (asura-app, asura-cmd-*, asura-summon, etc.) to /usr/bin/
 if [ -d "$REPO_ROOT/shell/scripts" ]; then
 	cp "$REPO_ROOT/shell/scripts"/* "$INCLUDE_DIR/usr/bin/"

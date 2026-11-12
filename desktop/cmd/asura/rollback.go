@@ -134,6 +134,17 @@ func rollbackSystem(target string) int {
 		fmt.Println("GRUB boot menu updated.")
 	}
 
+	// Select the snapshot entry for the next boot (GRUB_DEFAULT=saved).
+	if _, err := exec.LookPath("grub-reboot"); err == nil {
+		entry := "Asura OS (snapshot " + filepath.Base(snapPath) + ")"
+		grubReboot := exec.Command("grub-reboot", entry)
+		if out, err := grubReboot.CombinedOutput(); err != nil {
+			fmt.Fprintf(os.Stderr, "notice: grub-reboot: %s (%v)\n", strings.TrimSpace(string(out)), err)
+		} else {
+			fmt.Printf("selected for next boot: %s\n", entry)
+		}
+	}
+
 	fmt.Println("\nRollback complete. Reboot to activate restored system state.")
 	return exitOK
 }

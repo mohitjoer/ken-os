@@ -77,6 +77,20 @@ func asuraUpdate(args []string) int {
 		updateFlatpaks()
 	}
 
+	// Regenerate GRUB so the new Btrfs snapshot gets a boot entry. This is
+	// what makes rollback (option b) actually bootable: the boot guard selects
+	// the snapshot by its exact menuentry title via grub-reboot.
+	if !*dryRun && isBtrfsRoot() {
+		if _, err := exec.LookPath("grub-mkconfig"); err == nil {
+			fmt.Println("==> Regenerating GRUB boot menu (snapshot entries)...")
+			cmd := exec.Command("grub-mkconfig", "-o", "/boot/grub/grub.cfg")
+			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+			if err := cmd.Run(); err != nil {
+				fmt.Fprintf(os.Stderr, "asura update: grub-mkconfig: %v\n", err)
+			}
+		}
+	}
+
 	status, err := overlay.StatusOf(paths)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "asura update:", err)

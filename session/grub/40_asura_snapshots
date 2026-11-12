@@ -1,0 +1,43 @@
+#!/bin/sh
+# Asura: emit a GRUB menuentry for every Btrfs snapshot in /.snapshots so a
+# failed boot can be recovered by selecting one. Sourced by grub-mkconfig.
+# Snapshots are read-only recovery images; run `asura rollback --system` to
+# make one the permanent default.
+set -e
+
+. /usr/share/grub/grub-mkconfig_lib 2>/dev/null || true
+
+prefix="/.snapshots"
+[ -d "$prefix" ] || exit 0
+
+# Latest kernel + initramfs, matching the main Asura entry.
+kernel=$(ls /boot/vmlinuz-* 2>/dev/null | sort -V | tail -n 1)
+[ -n "$kernel" ] || exit 0
+kver=${kernel#/boot/vmlinuz-}
+initrd="/boot/initramfs-${kver}.img"
+[ -f "$initrd" ] || initrd="/boot/initrd.img-${kver}"
+[ -f "$initrd" ] || exit 0
+
+if [ -z "${GRUB_DEVICE_UUID:-}" ]; then
+    GRUB_DEVICE_UUID=$(blkid -s UUID -o value "$(findmnt -n -o SOURCE / 2>/dev/null)" 2>/dev/null || true)
+fi
+[ -n "$GRUB_DEVICE_UUID" ] || exit 0
+
+cmdline="${GRUB_CMDLINE_LINUX_DEFAULT:-loglevel=4 quiet splash}"
+
+for snap in $(ls -1 "$prefix" 2>/dev/null | sort -r); do
+    [ -d "$prefix/$snap" ] || continue
+    cat <<EOF
+menuentry "Asura OS (snapshot $snap)" --class asura --class gnu-linux --class gnu --class os {
+    load_video
+    set gfxpayload=keep
+    insmod gzio
+    insmod part_gpt
+    insmod btrfs
+    search --no-floppy --fs-uuid --set=root $GRUB_DEVICE_UUID
+    echo 'Loading Linux $kver (snapshot $snap)...'
+    linux $kernel root=UUID=$GRUB_DEVICE_UUID ro rootflags=subvol=/.snapshots/$snap $cmdline
+    initrd $initrd
+}
+EOF
+done
