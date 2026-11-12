@@ -165,8 +165,8 @@ Before any shell work, because it validates the base-layer bet.
 - [x] The screenshot toolchain in the manifest: `grim`, `slurp` and `hyprpicker`.
   The portal backend shells out to them, so without them it does not create the
   Screenshot portal at all and a screenshot keybinding produces nothing
-- [ ] Verified under screen sharing, screenshot, camera access, the GTK file
-  chooser and a secret round-trip — none of which can be done without a display
+- [x] Verified under a screenshot round trip — both the granted path (the dispatcher returns a real PNG) and the consent path (the GTK access dialog appears; Allow stores the permission, Deny is remembered silently in the permission store under app id "") — raw guest serial output in the Stage 4 verification run
+- [ ] Verified under screen sharing, camera access, the GTK file chooser and a secret round-trip — none of which can be done without a display
 
 M6 owns the shell. The `quickshell` runit service reads
 `/usr/share/asura/shell` with `quickshell -p`.

@@ -5,6 +5,28 @@ RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export XDG_RUNTIME_DIR="$RUNTIME_DIR"
 export ASURA_POLKIT_AGENT=1
 
+# The daemon spawns graphical tools (hyprlock) and talks to the compositor
+# (hyprctl). Services under turnstile's runsvdir start with a minimal
+# environment, so the display is resolved here the way every other session
+# service resolves it, instead of trusting the inherited environment.
+if [ -S "$RUNTIME_DIR/bus" ]; then
+	export DBUS_SESSION_BUS_ADDRESS="unix:path=$RUNTIME_DIR/bus"
+fi
+if [ -z "${WAYLAND_DISPLAY:-}" ]; then
+	for sock in "$RUNTIME_DIR"/wayland-[0-9]*; do
+		[ -S "$sock" ] || continue
+		export WAYLAND_DISPLAY="$(basename "$sock")"
+		break
+	done
+fi
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] && [ -d "$RUNTIME_DIR/hypr" ]; then
+	for sig_dir in $(ls -td "$RUNTIME_DIR"/hypr/*_* 2>/dev/null); do
+		[ -S "$sig_dir/.socket.sock" ] || continue
+		export HYPRLAND_INSTANCE_SIGNATURE="$(basename "$sig_dir")"
+		break
+	done
+fi
+
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/asura"
 mkdir -p "$LOG_DIR"
 exec >>"$LOG_DIR/asurad.log" 2>&1

@@ -264,6 +264,32 @@ Interfaces and portal capabilities:
 GlobalShortcuts and InputCapture *are* compositor-backend work and are handled by the Hyprland
 backend, not by the shell.
 
+### What the boot order and the permission store actually do
+
+Two behaviours were only learned by watching the bus, and both are the kind that read as
+misconfiguration when they are working as designed.
+
+**The dispatcher never re-checks a backend.** At startup it builds its interface map from the
+backends that own their bus names *at that moment*; a backend that registers later is never
+added, and its interfaces simply do not exist for the whole session. The Hyprland backend
+crash-loops for a few seconds while the compositor's IPC socket appears, so `portal/run` waits
+— bounded — for the name the backend declares in `hyprland.portal` before starting the
+dispatcher. That name is read from the `.portal` file at runtime, not spelled in the script:
+the bus names are *not* `org.freedesktop.impl.portal.<name>` by pattern. The Hyprland backend
+owns `org.freedesktop.impl.portal.desktop.hyprland`, and an older draft of the wait-loop that
+polled the pre-desktop form burned its whole budget every boot while protecting nothing. The
+GTK backend is deliberately not waited for: no runit service supervises it, and the dispatcher
+starts it on demand the first time a call needs it.
+
+**A denied consent is remembered silently.** Before consulting a backend, the dispatcher asks
+the permission store (`screenshot`/`screenshot`). When the Access dialog is denied, the
+dispatcher writes that denial back — `SetPermission(table, create, id, app, permissions)` —
+and every later request from the same app id is refused without a dialog. For callers the
+dispatcher cannot identify, the app id is the empty string, so one denial from an
+unidentifiable caller denies *all* of them. The dialog is the desktop's consent flow and stays;
+the store is per-user state, and clearing it (privacy settings, or `DeletePermission`) is what
+a future settings surface must expose.
+
 ---
 
 ## Overlay and rollback

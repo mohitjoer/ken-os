@@ -46,6 +46,8 @@ grep -Fq 'etc/sv/asura-sysd' "$SCRIPT"
 grep -Fq '99-asura-power.rules' "$SCRIPT"
 grep -Fq '99-asura-performance.conf' "$SCRIPT"
 grep -Fq 'turnstile.conf' "$SCRIPT"
+grep -Fq 'pam_elogind.so' "$SCRIPT"
+grep -Fq '90-asura-powerkey.conf' "$SCRIPT"
 grep -Fq 'system/xbps.d/asura.conf' "$SCRIPT"
 grep -Fq 'boot-splash.png' "$SCRIPT"
 grep -Fq 'Welcome to Asura OS!' "$SCRIPT"
@@ -208,10 +210,7 @@ if grep -Fq 'xdg-desktop-portal-lxqt' "$MANIFEST"; then
 fi
 grep -Fq 'xdg-desktop-portal-hyprland' "$MANIFEST"
 grep -Fq 'xdg-desktop-portal-gtk' "$MANIFEST"
-if grep -Fq 'elogind' "$MANIFEST"; then
-	echo "build-iso-void_test: elogind found in manifest" >&2
-	exit 1
-fi
+grep -Fq 'elogind' "$MANIFEST"
 grep -Fq 'seatd' "$MANIFEST"
 grep -Fq 'turnstile' "$MANIFEST"
 if grep -Fq 'swayidle' "$MANIFEST" || grep -Fq 'swaylock' "$MANIFEST"; then

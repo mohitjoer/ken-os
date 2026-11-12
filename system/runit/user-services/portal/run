@@ -1,7 +1,44 @@
 #!/bin/sh
 exec 2>&1
-# Allow portal-hyprland backend to register first
-sleep 0.2
+
+# The dispatcher derives the per-desktop portal configuration file name by
+# lowercasing XDG_CURRENT_DESKTOP. Services under turnstile's runsvdir start
+# with a minimal environment, so the desktop identity is carried here rather
+# than hoping the session env reaches this process. Same values the session
+# script exports.
+export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Asura}"
+
+# The dispatcher builds its interface map from the backends that own their bus
+# names when it starts, and a backend that appears later is never added: the
+# Hyprland backend crash-loops for a few seconds while Hyprland's IPC socket
+# appears, and a dispatcher that started first would then run without
+# Screenshot or ScreenCast for the whole session. So wait — bounded — for the
+# bus name the Hyprland backend declares in its .portal file. The name is read
+# from that file rather than spelled here: an older draft of this script
+# waited on the pre-desktop form, org.freedesktop.impl.portal.hyprland, which
+# nothing ever owns, so the loop silently burned its whole budget every boot
+# and the race it was written for stayed live. The gtk backend is deliberately
+# not waited for: no runit service supervises it, and the dispatcher starts it
+# on demand the first time a portal call needs it — a bounded wait on a name
+# nobody owns yet would burn the whole budget on every boot.
+name=""
+if [ -r /usr/share/xdg-desktop-portal/portals/hyprland.portal ]; then
+	name=$(sed -n 's/^DBusName=//p' /usr/share/xdg-desktop-portal/portals/hyprland.portal | head -n1)
+fi
+if [ -n "$name" ]; then
+	i=0
+	while [ "$i" -lt 150 ]; do
+		if gdbus call --session --dest org.freedesktop.DBus \
+			--object-path /org/freedesktop/DBus \
+			--method org.freedesktop.DBus.NameHasOwner "$name" 2>/dev/null | grep -q true; then
+			break
+		fi
+		i=$((i + 1))
+		sleep 0.1
+	done
+	[ "$i" -lt 150 ] || echo "WARNING: $name never registered; starting the dispatcher anyway"
+fi
+
 EXE=""
 for p in /usr/libexec/xdg-desktop-portal /usr/lib/xdg-desktop-portal; do
 	if [ -x "$p" ]; then

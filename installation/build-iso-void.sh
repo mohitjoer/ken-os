@@ -934,7 +934,7 @@ rm -f "$ROOTFS/home/asura/Desktop/btop.desktop"
 
 # Enable core system runit services (Layer 1 seatd, Layer 3 scx-lavd, ananicy-cpp, zramen, docker)
 mkdir -p "$ROOTFS/etc/runit/runsvdir/default"
-for svc in dbus seatd udevd NetworkManager acpid turnstiled tlp zramen asura-sysd asura-boot-guard docker; do
+for svc in dbus seatd elogind udevd NetworkManager acpid turnstiled tlp zramen asura-sysd asura-boot-guard docker; do
 	if [ -d "$ROOTFS/etc/sv/$svc" ]; then
 		ln -sf "/etc/sv/$svc" "$ROOTFS/etc/runit/runsvdir/default/$svc"
 	fi
@@ -957,6 +957,16 @@ ldconfig -r "$ROOTFS" 2>/dev/null || true
 if [ -f "$ROOTFS/etc/pam.d/system-login" ] && ! grep -q 'pam_turnstile.so' "$ROOTFS/etc/pam.d/system-login"; then
 	echo "session optional pam_turnstile.so" >> "$ROOTFS/etc/pam.d/system-login"
 fi
+
+# Hook elogind into PAM session stack if present (registers the session with
+# login1 so polkit sees a valid subject and asurad can spawn its agent)
+if [ -f "$ROOTFS/etc/pam.d/system-login" ] && ! grep -q 'pam_elogind.so' "$ROOTFS/etc/pam.d/system-login"; then
+	echo "session optional pam_elogind.so" >> "$ROOTFS/etc/pam.d/system-login"
+fi
+
+# The power key stays with acpid: elogind must not also handle it (one writer)
+mkdir -p "$ROOTFS/etc/elogind/logind.conf.d"
+printf '[Login]\nHandlePowerKey=ignore\nHandleSuspendKey=ignore\nHandleHibernateKey=ignore\nHandleLidSwitch=ignore\n' > "$ROOTFS/etc/elogind/logind.conf.d/90-asura-powerkey.conf"
 
 # Configure seat permissions and groups for default user
 chroot "$ROOTFS" getent group asura-hw >/dev/null 2>&1 || chroot "$ROOTFS" groupadd -r asura-hw || true
