@@ -592,6 +592,23 @@ if [ -f "$TARGET_DIR/etc/sudoers" ]; then
 	sed -i '/NOPASSWD/d' "$TARGET_DIR/etc/sudoers"
 fi
 
+# The session dismisses the boot splash before the compositor claims KMS, and
+# plymouthd runs as root, so the wheel group gets exactly these commands without
+# a password. Every other sudo call still asks for one. The drop-in name sorts
+# after "wheel" on purpose: sudo applies the LAST matching entry, so a file
+# sorted before wheel would be overridden by wheel's password rule.
+cat >"$TARGET_DIR/etc/sudoers.d/zz-asura-session" <<'SUDOERS'
+# Asura's session: the boot splash is dismissed by asura-session before the
+# compositor claims KMS. plymouthd runs as root, so these exact commands are
+# the only passwordless privileges the session needs. Both spellings are
+# granted because sudo resolves a bare name through secure_path, where
+# /usr/sbin precedes /usr/bin. The file name sorts after "wheel" because
+# sudo applies the last matching sudoers entry.
+Cmnd_Alias ASURA_SESSION_PLYMOUTH = /usr/bin/plymouth --quit, /usr/sbin/plymouth --quit, /usr/bin/killall -9 plymouthd, /usr/sbin/killall -9 plymouthd, /usr/bin/pkill -9 -x plymouthd, /usr/sbin/pkill -9 -x plymouthd
+%wheel ALL=(root) NOPASSWD: ASURA_SESSION_PLYMOUTH
+SUDOERS
+chmod 0440 "$TARGET_DIR/etc/sudoers.d/zz-asura-session"
+
 # Enable core system runit services
 mkdir -p "$TARGET_DIR/etc/runit/runsvdir/default"
 for svc in dbus seatd udevd NetworkManager acpid turnstiled zramen ananicy-cpp asura-sysd asura-boot-guard docker; do
