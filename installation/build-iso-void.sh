@@ -1162,6 +1162,20 @@ for fname in os.listdir(hypr_cache):
                 pkg_props = plistlib.load(props_file)
                 pkgver = pkg_props.get("pkgver", fname.replace(".xbps", ""))
                 pkg_props["state"] = "installed"
+                # Soname-compat fix: Makrennel's prebuilts declare the old
+                # shlib names, but the base layer ships the newer ABI. Rewrite
+                # shlib-requires to the names the installed libraries actually
+                # provide, so xbps-install -Su does not abort later. Runtime
+                # resolution still uses the compat symlinks created above.
+                requires = pkg_props.get("shlib-requires")
+                if isinstance(requires, list):
+                    fixed = []
+                    for r in requires:
+                        r = r.replace("libdisplay-info.so.2", "libdisplay-info.so.3")
+                        r = r.replace("libjxl.so.0.11", "libjxl.so.0.12")
+                        r = r.replace("libjxl_threads.so.0.11", "libjxl_threads.so.0.12")
+                        fixed.append(r)
+                    pkg_props["shlib-requires"] = fixed
                 pkgdb[pkgver] = pkg_props
                 if files_file:
                     dest_files = os.path.join(rootfs, f"var/db/xbps/{pkgver}-files.plist")
