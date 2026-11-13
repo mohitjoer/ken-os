@@ -1064,9 +1064,12 @@ if [ -f "$ROOTFS/etc/plymouth/plymouthd.conf" ]; then
 	sed -i 's/^Theme=.*/Theme=asura/' "$ROOTFS/etc/plymouth/plymouthd.conf"
 fi
 
-# Silence runit boot messages and sysctl dump while Plymouth splash is active
+# Boot status goes to Plymouth while it runs; the stock functions file stays
+# intact — its msg/msg_warn/msg_error are OVERRIDDEN below, and everything
+# else it defines (detect_container, emergency_shell, ...) must survive, or
+# stage 1 dies with "detect_container: not found" on every boot.
 if [ -f "$ROOTFS/etc/runit/functions" ]; then
-	cat >"$ROOTFS/etc/runit/functions" <<'FNEOF'
+	cat >>"$ROOTFS/etc/runit/functions" <<'FNEOF'
 msg() {
 	if command -v plymouth >/dev/null 2>&1 && plymouth --ping 2>/dev/null; then
 		plymouth update --status="$*" 2>/dev/null || true
@@ -1089,6 +1092,18 @@ msg_error() {
 	fi
 }
 FNEOF
+fi
+
+if [ -f "$ROOTFS/etc/runit/core-services/02-kmods.sh" ]; then
+	# Upstream's cleanup strips `.ko` and `.ko.gz` from modules-load -v output
+	# but not `.ko.zst`, so zstd-compressed module names print during boot.
+	python3 - "$ROOTFS/etc/runit/core-services/02-kmods.sh" <<'PY'
+import sys
+p = sys.argv[1]
+s = open(p).read()
+s = s.replace(r"s:\.ko\(\.gz\)\? ::g", r"s:\.ko\(\.gz\|\.zst\)\? ::g")
+open(p, "w").write(s)
+PY
 fi
 
 if [ -f "$ROOTFS/etc/runit/core-services/08-sysctl.sh" ]; then
@@ -1361,7 +1376,9 @@ FINAL_ISO="$BUILD_DIR/$ISO_NAME.iso"
 # Flag audit (void-mklive revision at clone time):
 #   -a ARCH        target architecture (x86_64)
 #   -b base-system base metapackage
-#   -k linux       kernel package
+#   -v linux       kernel package (`-k` is the CONSOLE KEYMAP in void-mklive;
+#                  passing `-k linux` there made the live image boot with
+#                  `KEYMAP=linux`, which loadkeys cannot open)
 #   -r HYPR_CACHE  extra repository (hyprland-void) for hyprland packages
 #   -r MIRROR      Void mirror (passed twice: hypr repo + void repo)
 #   -p PACKAGES    package list from system/packages-void.yaml
@@ -1381,7 +1398,7 @@ echo "build-iso-void: generating ISO with void-mklive..."
 	./mklive.sh \
 		-a "$ARCH" \
 		-b base-system \
-		-k linux \
+		-v linux \
 		-r "$HYPR_CACHE" \
 		-r "$MIRROR" \
 		-p "$PACKAGES" \

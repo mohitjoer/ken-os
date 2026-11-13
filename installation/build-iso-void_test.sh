@@ -35,7 +35,7 @@ fi
 grep -Fq 'system/packages-void.yaml' "$SCRIPT"
 grep -Fq 'void-linux' "$SCRIPT"
 grep -Fq 'asura-os-x86_64' "$SCRIPT"
-grep -Fq -- '-k linux' "$SCRIPT"
+grep -Fq -- '-v linux' "$SCRIPT"
 grep -Fq 'LIBSEAT_BACKEND=seatd' "$SCRIPT"
 grep -Fq 'void-mklive' "$SCRIPT"
 grep -Fq 'asura-user-services' "$SCRIPT"
