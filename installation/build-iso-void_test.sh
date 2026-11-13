@@ -181,7 +181,7 @@ fi
 grep -Fq 'NVreg_DynamicPowerManagement=0x02' "$REPO_ROOT/system/modprobe.d/nvidia.conf"
 grep -Fq 'tcp_bbr' "$REPO_ROOT/system/modules-load.d/bbr.conf"
 grep -Fq 'system/modules-load.d' "$SCRIPT"
-grep -Fq 'performable:copy_to_clipboard' "$REPO_ROOT/apps/ghostty/config"
+grep -Fq 'copy_to_clipboard:mixed' "$REPO_ROOT/apps/ghostty/config"
 grep -Fq 'ATTR{type}=="Mains"' "$REPO_ROOT/system/udev/99-asura-power.rules"
 test -x "$REPO_ROOT/system/runit/services/asura-sysd/log/run"
 grep -Fq 'svlogd' "$REPO_ROOT/system/runit/services/asura-sysd/log/run"
@@ -192,7 +192,7 @@ if grep -Fq 'greetd' "$MANIFEST"; then
 fi
 grep -Fq 'zoxide' "$MANIFEST"
 grep -Fq 'fzf' "$MANIFEST"
-grep -Fq 'neovim' "$MANIFEST"
+# neovim is intentionally NOT shipped: Zed is the default editor (agent rule).
 grep -Fq 'zsh-autosuggestions' "$MANIFEST"
 grep -Fq 'zsh-syntax-highlighting' "$MANIFEST"
 grep -Fq 'eza' "$MANIFEST"

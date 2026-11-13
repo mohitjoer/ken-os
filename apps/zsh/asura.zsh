@@ -20,11 +20,11 @@ if [[ -s "$NVM_DIR/nvm.sh" ]]; then
 fi
 
 # Editor selection: use GUI zed --wait when available in a display session,
-# falling back cleanly to terminal editors (nvim, nano, vi) on TTY, SSH, or headless
+# falling back cleanly to terminal editors (nano, vi) on TTY, SSH, or headless
 if [[ -n "$DISPLAY" || -n "$WAYLAND_DISPLAY" ]] && command -v zed >/dev/null 2>&1; then
   export EDITOR="${EDITOR:-zed --wait}" VISUAL="${VISUAL:-zed --wait}"
 else
-  for _editor in nvim nano vi; do
+  for _editor in nano vi; do
     if command -v "$_editor" >/dev/null 2>&1; then
       export EDITOR="${EDITOR:-$_editor}" VISUAL="${VISUAL:-$_editor}"
       break
@@ -132,8 +132,10 @@ if [[ -o interactive ]] && command -v fastfetch >/dev/null 2>&1; then
   local _ff_lock="${XDG_RUNTIME_DIR:-/tmp}/asura-fastfetch-${UID:-$(id -u)}"
   if [[ ! -f "$_ff_lock" ]]; then
     touch "$_ff_lock" 2>/dev/null || true
-    # Suppress fastfetch on bare console login (tty1) before graphical session starts
-    if [[ -n "$WAYLAND_DISPLAY" || -n "$DISPLAY" || "$(tty 2>/dev/null)" != "/dev/tty1" ]]; then
+    # Suppress fastfetch on bare console login (tty1) before graphical session starts.
+    # Check WAYLAND_DISPLAY, DISPLAY, or XDG_SESSION_TYPE (set via hyprland env.conf).
+    if [[ -n "$WAYLAND_DISPLAY" || -n "$DISPLAY" || "$XDG_SESSION_TYPE" == "wayland" || \
+          "$(tty 2>/dev/null)" != "/dev/tty1" ]]; then
       fastfetch
     fi
   fi

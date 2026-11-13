@@ -157,7 +157,6 @@ terminal-and-shell:
     - ripgrep
     - fd
     - bat
-    - neovim
   exclude:
     - kitty: Kitty is strictly forbidden in Asura per agent rules
 
