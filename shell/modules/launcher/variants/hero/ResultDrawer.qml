@@ -2,7 +2,6 @@ import QtQuick
 import qs.Ui
 import qs.Ui.Singletons
 import "../../shared/Singletons"
-import "../../shared/lib/results.js" as Results
 import "../../shared/lib/lifecycle.js" as Lifecycle
 import "../../shared" as Shared
 import "." as HeroVariant
@@ -36,7 +35,7 @@ Item {
     property string askQuestion: ""
     property var answer: ({ available: false })
 
-    signal leadActivated()
+    signal activateRequested()
     signal resultSelected(string resultKey, int rank)
     signal actionFocusRequested(string actionId)
     signal actionExecuteRequested(string actionId)
@@ -45,12 +44,13 @@ Item {
     readonly property real pad: 10 * s
     readonly property bool hasResults: selectedResult !== null && results.length > 0
     readonly property real progressHeight: searching && hasResults ? 18 * s : 0
-    readonly property real leadHeight: Results.LAYOUT.leadHeight * s
+    readonly property real errorHeight: errorText.length > 0 ? 20 * s : 0
     readonly property real prefixHeight: actionBrowse || answerMode
         ? prefixStack.implicitHeight + 8 * s : 0
+    readonly property real emptyBodyHeight: 96 * s
     readonly property real resultBodyHeight: hasResults
-        ? leadHeight + actionShelf.targetHeight + ledger.desiredHeight
-        : leadHeight + ledger.desiredHeight
+        ? errorHeight + actionShelf.targetHeight + ledger.desiredHeight
+        : emptyBodyHeight
     readonly property real standardDesiredHeight: pad * 2 + prefixHeight + resultBodyHeight
     readonly property real rawDesiredHeight: helpMode
         ? pad * 2 + helpPanel.implicitHeight
@@ -303,26 +303,29 @@ Item {
                     }
                 }
 
-                HeroVariant.LeadResult {
-                    id: lead
+                // a failed action: one red line above the list. The old lead
+                // card carried it as the metadata line.
+                Text {
+                    id: errorStrip
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.top: parent.top
-                    height: root.hasResults ? root.leadHeight : 0
-                    visible: root.hasResults
-                    s: root.s
-                    entry: root.selectedResult
-                    errorText: root.errorText
-                    windowCount: root.windowCount
-                    windowFocusActive: root.windowFocusActive
-                    onActivated: root.leadActivated()
+                    anchors.top: progress.bottom
+                    height: root.errorHeight
+                    visible: height > 0
+                    text: root.errorText
+                    color: Theme.error
+                    font.family: Theme.mono
+                    font.pixelSize: 8 * root.s
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 0.5 * root.s
+                    elide: Text.ElideRight
                 }
 
                 HeroVariant.ActionShelf {
                     id: actionShelf
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.top: lead.bottom
+                    anchors.top: errorStrip.bottom
                     s: root.s
                     open: root.shelfOpen && root.hasResults
                     animationsEnabled: root.animationsEnabled
@@ -339,15 +342,18 @@ Item {
                     anchors.right: parent.right
                     anchors.top: actionShelf.bottom
                     height: root.hasResults
-                        ? Math.max(0, Math.min(desiredHeight,
-                            standardBody.height - progress.height
-                                - lead.height - actionShelf.height))
+                        ? Math.max(0, Math.min(ledger.desiredHeight,
+                            resultDeck.height - ledger.y))
                         : 0
                     visible: root.hasResults && height > 0
                     s: root.s
                     results: root.results
                     selectedResultKey: root.selectedResultKey
+                    windowCount: root.windowCount
+                    windowFocusActive: root.windowFocusActive
+                    secondaryCount: root.secondaryActions.length
                     onResultSelected: (resultKey, rank) => root.resultSelected(resultKey, rank)
+                    onActivateRequested: root.activateRequested()
                 }
             }
 

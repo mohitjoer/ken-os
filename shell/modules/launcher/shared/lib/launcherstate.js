@@ -189,11 +189,9 @@ function moveResultIndex(index, count, key) {
   const requested = Number(index) | 0;
   if (requested < 0) return 0;
   const current = Math.max(0, Math.min(length - 1, requested));
-  if (key === "Up") return Math.max(0, current - 2);
-  if (key === "Down") return Math.min(length - 1, current + 2);
-  if (key === "Left") return current % 2 === 0 ? current : current - 1;
-  if (key === "Right") return current % 2 === 0 && current + 1 < length
-    ? current + 1 : current;
+  // the ledger is a single column: Up/Down step one row, Left/Right stay.
+  if (key === "Up") return Math.max(0, current - 1);
+  if (key === "Down") return Math.min(length - 1, current + 1);
   return current;
 }
 

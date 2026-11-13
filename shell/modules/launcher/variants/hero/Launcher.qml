@@ -1045,7 +1045,7 @@ Item {
         windowFocusActive: root.interactionRegion === "windows"
         askQuestion: root.askQuestion
                 answer: providerSet.web ? providerSet.web.answer : ({ available: false })
-        onLeadActivated: root.activateCurrent()
+        onActivateRequested: root.activateCurrent()
         onResultSelected: (resultKey, rank) => root.selectResult(resultKey, rank)
         onActionFocusRequested: actionId => root.focusedActionId = actionId
         onActionExecuteRequested: actionId => root.executeAction(

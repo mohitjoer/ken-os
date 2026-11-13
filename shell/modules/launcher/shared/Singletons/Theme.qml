@@ -47,6 +47,8 @@ Singleton {
     readonly property color modeActive: leadContainer
     readonly property color onModeActive: onLead
     readonly property color modeIdle: Ui.Tokens.light ? Qt.rgba(1, 1, 1, 0.76) : Qt.rgba(0, 0, 0, 0.76)
+    // the one red: a failed action in the drawer. A state colour, not an accent.
+    readonly property color error: "#dc2626"
     readonly property color providerApps: Ui.Tokens.sun
     readonly property color providerFind: Config.matchWallpaper ? Scheme.accent2 : vermDim
     readonly property color providerRecent: Ui.Tokens.inkMuted

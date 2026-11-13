@@ -445,12 +445,12 @@ test("window focus is an explicit Tab destination and Enter otherwise launches",
   assert.equal(activationTarget("windows", false), "result");
 });
 
-test("result arrows move through the visible two-column grid", () => {
-  assert.equal(moveResultIndex(0, 6, "Right"), 1);
+test("result arrows step one row in the single-column ledger", () => {
+  assert.equal(moveResultIndex(0, 6, "Right"), 0);
   assert.equal(moveResultIndex(1, 6, "Right"), 1);
-  assert.equal(moveResultIndex(1, 6, "Left"), 0);
-  assert.equal(moveResultIndex(1, 6, "Down"), 3);
-  assert.equal(moveResultIndex(4, 6, "Up"), 2);
+  assert.equal(moveResultIndex(1, 6, "Left"), 1);
+  assert.equal(moveResultIndex(1, 6, "Down"), 2);
+  assert.equal(moveResultIndex(4, 6, "Up"), 3);
   assert.equal(moveResultIndex(4, 5, "Down"), 4);
   assert.equal(moveResultIndex(-1, 6, "Down"), 0);
 });

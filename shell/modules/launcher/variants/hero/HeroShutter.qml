@@ -282,10 +282,27 @@ Item {
         width: Math.min(parent.width - 48 * root.s, 430 * root.s)
         height: 30 * root.s
 
+        // the field: a recessed well over the art, hairline-edged; the edge
+        // brightens while the caret is in. Radius 7 is the project scale's
+        // field stop. The old floating underline is gone — the well is the
+        // affordance now.
+        Rectangle {
+            id: well
+            anchors.fill: parent
+            radius: 7 * root.s
+            color: Tokens.light ? Qt.rgba(1, 1, 1, 0.30) : Qt.rgba(0, 0, 0, 0.35)
+            border.width: Math.max(1, root.s)
+            border.color: field.activeFocus ? Theme.bright : Theme.faint
+            Behavior on border.color {
+                ColorAnimation { duration: Motion.selection; easing.type: Easing.OutCubic }
+            }
+        }
+
         Item {
             id: searchGlyph
             anchors.left: parent.left
-            anchors.verticalCenter: field.verticalCenter
+            anchors.leftMargin: 12 * root.s
+            anchors.verticalCenter: parent.verticalCenter
             width: 16 * root.s
             height: 16 * root.s
 
@@ -315,6 +332,7 @@ Item {
             anchors.left: searchGlyph.right
             anchors.leftMargin: 10 * root.s
             anchors.right: parent.right
+            anchors.rightMargin: 12 * root.s
             anchors.verticalCenter: parent.verticalCenter
             height: 26 * root.s
             color: Theme.bright
@@ -391,14 +409,6 @@ Item {
             font.pixelSize: 11 * root.s
             font.weight: Font.Medium
             font.letterSpacing: 1.3 * root.s
-        }
-
-        Rectangle {
-            anchors.left: field.left
-            anchors.right: field.right
-            anchors.bottom: parent.bottom
-            height: Math.max(1, root.s)
-            color: field.activeFocus ? Theme.bright : Theme.faint
         }
     }
 

@@ -3,7 +3,6 @@ var LAYOUT = Object.freeze({
   workMargin: 32,
   heroRest: 250,
   heroCompressed: 126,
-  leadHeight: 82,
   ledgerRowHeight: 44,
   actionRowHeight: 38,
   shelfMaxHeight: 114
