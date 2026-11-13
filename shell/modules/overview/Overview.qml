@@ -503,30 +503,10 @@ Item {
         anchors.top: parent.top
         anchors.leftMargin: 52 * root.s
         anchors.topMargin: 46 * root.s
-        spacing: 11 * root.s
 
         BrandMark {
             anchors.verticalCenter: parent.verticalCenter
             size: 20 * root.s
-        }
-        Column {
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 1 * root.s
-            Text {
-                text: I18n.tr("OVERVIEW")
-                color: Theme.cream
-                font.family: Theme.mono
-                font.pixelSize: 12 * root.s
-                font.letterSpacing: 3 * root.s
-                font.weight: Font.DemiBold
-            }
-            Text {
-                text: I18n.tr("DESKTOP %1").arg(("0" + (root.viewedDesktop + 1)).slice(-2))
-                color: Theme.faint
-                font.family: Theme.mono
-                font.pixelSize: 9 * root.s
-                font.letterSpacing: 2 * root.s
-            }
         }
     }
 

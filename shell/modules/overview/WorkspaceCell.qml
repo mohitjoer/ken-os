@@ -172,45 +172,13 @@ Item {
             Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.28) }
         }
 
-        // Asura-style workspace numeral: a bold zero-padded mono ordinal in the
-        // top-left, vermillion when active/hovered.
-        // Above the previews (z), on a faint chip so it reads over any window.
-        Rectangle {
-            id: numChip
+        // app-icon roster: the distinct apps open on this workspace, drawn small
+        // in the top-left corner as a quick glance of what lives here beyond the
+        // live previews.
+        Row {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.margins: 8 * cell.s
-            visible: !cell.isAdd && cell.full
-            width: numText.implicitWidth + 12 * cell.s
-            height: numText.implicitHeight + 5 * cell.s
-            radius: Theme.radius
-            color: Qt.rgba(0, 0, 0, 0.5)
-            border.width: 1
-            border.color: cell.active ? Theme.brand : Theme.hair
-            z: 3
-            Behavior on border.color { ColorAnimation { duration: Motion.highlight } }
-            Text {
-                id: numText
-                anchors.centerIn: parent
-                // position within the desktop (ws11 on desktop 2 reads "01"), so
-                // every desktop counts its own 01, 02, 03... Asura-style padded.
-                readonly property int pos: cell.ov ? (((cell.wsId - 1) % cell.ov.perDesktop) + 1) : cell.wsId
-                text: (numText.pos < 10 ? "0" : "") + numText.pos
-                color: (cell.active || cell.hovered) ? Theme.brand : Theme.cream
-                font.family: Theme.mono
-                font.pixelSize: 22 * cell.s
-                font.weight: Font.DemiBold
-                Behavior on color { ColorAnimation { duration: Motion.highlight } }
-            }
-        }
-
-        // app-icon roster: the distinct apps open on this workspace, drawn small
-        // (below the number badge, smaller than it) as a quick glance of what
-        // lives here beyond the live previews.
-        Row {
-            anchors.top: numChip.bottom
-            anchors.left: numChip.left
-            anchors.topMargin: 6 * cell.s
             spacing: 5 * cell.s
             visible: !cell.isAdd && cell.full && cell.cards.length > 0
             z: 3
