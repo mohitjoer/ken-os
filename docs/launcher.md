@@ -1,11 +1,11 @@
 # The launcher
 
 The launcher is the command palette on Super+Space: one search box for apps, commands,
-files, packages, radio, the calculator, open windows and system actions. It is Ryoku's
-launcher, ported as it is (GPL-3.0, see `NOTICE.md`), and lives in `shell/modules/launcher/`.
+files, packages, radio, the calculator, open windows and system actions. It is a ported
+launcher, adapted in place (GPL-3.0, see `NOTICE.md`), and lives in `shell/modules/launcher/`.
 `shell.qml` loads it, builds it on the first open and tears it down a while after the last
 close. Its look is `~/.config/asura/launcher.json` (`variant`: hero, main, okshell or
-kairos).
+side).
 
 ## Providers
 
@@ -21,7 +21,7 @@ key, and nothing is run or logged for it.
 | windows | none | the daemon's `wm` topic (`asura-shell`) | no rows until the daemon is up |
 | actions | `/` | the command each action runs | that action is left out |
 | calc | `=`, a leading digit | `asura-cmd-calc` (uses `qalc` when installed) | not registered |
-| packages | `>` | `apt-cache`, `dpkg-query`; installs use `pkexec` and a terminal | not registered |
+| packages | `>` | `xbps-query`, `apm`; installs use `pkexec` and a terminal | not registered |
 | find | `/file /folder /image /video`, the IMG and FILE keys | `plocate` with a readable database | not registered, keys hidden |
 | radio | `@` | `asura-cmd-radio` (mpv, yt-dlp) | not registered, status never polled |
 | web | `?` | a browser; the instant answer uses `curl` | no answer panel |
@@ -30,11 +30,11 @@ key, and nothing is run or logged for it.
 
 ## Packages
 
-`>name` searches. `apt-cache search` gives the names, ranked name matches first and capped at
-30, and `dpkg-query` says what is installed. `>install name` and `>remove name` filter the
-same way; Enter opens a terminal (`asura-app terminal`) running `pkexec apt-get`, so the
-password prompt and apt's output are visible. A non-root `apt-cache` takes about a second when
-dpkg's status is newer than apt's cache file, so the query is debounced and cached per term.
+`>name` searches. `xbps-query -Rs` gives the names, ranked name matches first and capped at
+30, and `xbps-query -l` says what is installed. `>install name` and `>remove name` filter the
+same way; Enter opens a terminal (`asura-app terminal`) running `pkexec xbps-install` or `apm`, so the
+password prompt and xbps's output are visible. A non-root `xbps-query` takes about a second when
+the database is stale, so the query is debounced and cached per term.
 
 ## Files
 

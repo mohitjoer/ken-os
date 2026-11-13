@@ -3,7 +3,7 @@
 ASURA Agent is the optional resident assistant: a machine-generated knowledge vault
 (hardware, packages, the desktop map, what the user changed, habits), a local daemon with
 a browser dashboard, the launcher's `\` quick ask, the sidebar chat, and a terminal ask
-that proposes commands. It is ported from Ryoku's Rashin (GPL-3.0, see `NOTICE.md`) and
+that proposes commands. It is ported from the prior project's Rashin (GPL-3.0, see `NOTICE.md`) and
 lives in `desktop/cmd/asura-agent`. It is off until the user switches it on in Settings,
 Agent, and while it is off nothing runs, indexes, or reaches a network.
 
@@ -89,7 +89,7 @@ the port also check that the Origin is localhost.
   with four read-only tools (system state, read file, list directory, code search), when a
   fast-lane provider is set: `asura-agent backend <provider>[:model]`. `ollama` and
   `local` need no key, the hosted presets read their key from the daemon's environment
-  (`systemctl --user edit asura-agent.service`). A key is never read from or written to
+  (edit `~/.config/service/asura-agent/run`). A key is never read from or written to
   a file. Without a provider, or when a question needs more than those tools, the ask goes
   to the engine.
 - **Chat** (sidebar and dashboard) is the engine's session. `asura-agent agent --json`
@@ -109,9 +109,9 @@ the port also check that the Origin is localhost.
 --snippet]`, `index`, `repo-index`, `setup`. `TestShellCallSitesAreImplemented` reads the
 QML and fails if the shell calls a verb or flag that is not here.
 
-## Not ported or changed from Ryoku
+## Not ported or changed from the prior project
 
-- No engine ships. Ryoku's resident agent, its installer, its config wiring and its
+- No engine ships. The prior project's resident agent, its installer, its config wiring and its
   PATH auto-detection of other coding agents are gone; `engine.command` replaces them.
 - No Secret Service key storage and no built-in model session: fast-lane keys come from
   the daemon's environment only.
@@ -120,4 +120,4 @@ QML and fails if the shell calls a verb or flag that is not here.
   the commands it can run over ACP.
 - The `term` shell adapter (zsh) belongs to the apps lane; it must call `asura-agent term
   --buffer` and export `ASURA_AGENT_LAST_CMD` and `ASURA_AGENT_LAST_STATUS`.
-- `prowl` (code index) is not in the Ubuntu archive; the code card and `search_code` say so.
+- `prowl` (code index) is not in the Void archive; the code card and `search_code` say so.

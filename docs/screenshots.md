@@ -43,7 +43,7 @@ the tool still works on regions and monitors.
 
 ## Not ported
 
-The beautify editor is not here. It needed changes to run on Ubuntu (its HD upscaler,
+The beautify editor is not here. It needed changes to run on ASURA (its HD upscaler,
 `waifu2x-ncnn-vulkan`, is not in the archive, and its watermark and presets carry the
 reference desktop's branding), so it was left out rather than shipped half working. The
 Capture tab's "Beautify after" switch is stored but opens nothing.

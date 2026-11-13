@@ -41,7 +41,7 @@ Themes modify desktop styling and colors:
 2. Removal protects the currently active theme, refusing to delete active configurations.
 
 ### 4. Bar Styles (`barstyles`)
-Bar styles (`qsbar`, `kairos`, `sumi`) are built directly into Asura OS shell. The store provides style discovery, preview, and selection via Bar Studio.
+Bar styles (`top`, `side`) are built directly into Asura OS shell. The store provides style discovery, preview, and selection via Bar Studio.
 
 ## CLI Commands
 

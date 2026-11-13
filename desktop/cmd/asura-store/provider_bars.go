@@ -14,13 +14,12 @@ import (
 type barProvider struct{}
 
 // The roster is the shell's own: Bar Studio's style shelf offers exactly
-// qsbar, kairos and sumi (shell/hub/schema/BarStudioPage.js), and those are
-// the three barstyles the shell ships under modules/bar/barstyles/. There is
-// no fourth entry to list.
+// top and side (shell/hub/schema/BarStudioPage.js), and those are
+// the two barstyles the shell ships under modules/bar/barstyles/. There is
+// no third entry to list.
 var builtinBarStyles = []Item{
-	{ID: "qsbar", Name: "Control Bar", Summary: "The default top bar", Description: "The shell's default top bar.", Tags: []string{"top", "horizontal", "built-in"}},
-	{ID: "kairos", Name: "Kairos", Summary: "Island clock", Description: "One floating island on the top edge, carrying the clock: it rests centred and grows on hover.", Tags: []string{"top", "island", "built-in"}},
-	{ID: "sumi", Name: "Sumi", Summary: "Ink spine", Description: "The built-in left rail: paper, ink, and a vertical working edge.", Tags: []string{"rail", "vertical", "built-in"}},
+	{ID: "top", Name: "Top", Summary: "The default top bar", Description: "The shell's default top bar.", Tags: []string{"top", "horizontal", "built-in"}},
+	{ID: "side", Name: "Side", Summary: "Ink spine", Description: "The built-in left rail: paper, ink, and a vertical working edge.", Tags: []string{"rail", "vertical", "built-in"}},
 }
 
 func (barProvider) Category() Category {
@@ -35,7 +34,7 @@ func (barProvider) Category() Category {
 func (barProvider) Load(context.Context, bool) ([]Item, SourceState, error) {
 	active := readBarStyleSelection(filepath.Join(configHome(), "asura", "shell.json"))
 	if active == "" {
-		active = "qsbar"
+		active = "top"
 	}
 	items := make([]Item, len(builtinBarStyles))
 	for i, style := range builtinBarStyles {

@@ -9,8 +9,8 @@ var rows = [
         "label": "Bar style",
         "desc": "Which desktop bar is active.",
         "ctl": "seg",
-        "opts": ["qsbar", "kairos", "sumi"],
-        "optLabels": { "qsbar": "Control Bar", "kairos": "Kairos", "sumi": "Sumi" },
+        "opts": ["top", "side"],
+        "optLabels": { "top": "Top", "side": "Side" },
         "src": "shell"
     },
     {
@@ -21,16 +21,6 @@ var rows = [
         "desc": "Which screen edge the Control Bar docks to.",
         "ctl": "seg",
         "opts": ["top", "bottom"],
-        "src": "shell"
-    },
-    {
-        "tab": "Bar",
-        "group": "STYLE & POSITION",
-        "key": "qsbar.barShellStyle",
-        "label": "Form",
-        "desc": "The shell geometry the bar takes.",
-        "ctl": "chips",
-        "opts": ["islands", "full", "fit", "dock", "notch"],
         "src": "shell"
     },
     {
@@ -60,27 +50,6 @@ var rows = [
     {
         "tab": "Bar",
         "group": "SURFACE & CORNERS",
-        "key": "qsbar.barBorderEnabled",
-        "label": "Bar border",
-        "desc": "Draw a fine 1px hairline around the bar shell.",
-        "ctl": "sw",
-        "src": "shell"
-    },
-    {
-        "tab": "Bar",
-        "group": "SURFACE & CORNERS",
-        "key": "qsbar.barCornerRadius",
-        "label": "Corner radius",
-        "desc": "Roundness of bar outer corners.",
-        "ctl": "step",
-        "lo": 0,
-        "hi": 40,
-        "unit": "px",
-        "src": "shell"
-    },
-    {
-        "tab": "Bar",
-        "group": "SURFACE & CORNERS",
         "key": "qsbar.panelTooltipBorderEnabled",
         "label": "Panel & tooltip borders",
         "desc": "Draw contact borders on popups and menus.",
@@ -106,57 +75,6 @@ var rows = [
         "src": "shell"
     },
 
-
-    // ── CONTROL BAR: GAPS ──
-    {
-        "tab": "Bar",
-        "group": "GAPS",
-        "key": "qsbar.barGapTop",
-        "label": "Top gap",
-        "desc": "Clearance between bar and top screen edge.",
-        "ctl": "step",
-        "lo": 0,
-        "hi": 64,
-        "unit": "px",
-        "src": "shell"
-    },
-    {
-        "tab": "Bar",
-        "group": "GAPS",
-        "key": "qsbar.barGapBottom",
-        "label": "Bottom gap",
-        "desc": "Clearance between bar and bottom screen edge.",
-        "ctl": "step",
-        "lo": 0,
-        "hi": 64,
-        "unit": "px",
-        "src": "shell"
-    },
-    {
-        "tab": "Bar",
-        "group": "GAPS",
-        "key": "qsbar.barGapLeft",
-        "label": "Left gap",
-        "desc": "Clearance between bar and left screen edge.",
-        "ctl": "step",
-        "lo": 0,
-        "hi": 64,
-        "unit": "px",
-        "src": "shell"
-    },
-    {
-        "tab": "Bar",
-        "group": "GAPS",
-        "key": "qsbar.barGapRight",
-        "label": "Right gap",
-        "desc": "Clearance between bar and right screen edge.",
-        "ctl": "step",
-        "lo": 0,
-        "hi": 64,
-        "unit": "px",
-        "src": "shell"
-    },
-
     // ── IDENTITY: LAUNCHER MARK & WORKSPACES ──
     {
         "tab": "Identity",
@@ -166,7 +84,8 @@ var rows = [
         "desc": "Display text wordmark or glyph icon in the launcher pill.",
         "ctl": "seg",
         "opts": ["text", "icon"],
-        "optLabels": { "text": "Wordmark", "icon": "Glyph" },
+        "optLabels": { "text": "Text", "icon": "Icon" },
+        "value": "icon",
         "src": "shell"
     },
     {
@@ -174,9 +93,8 @@ var rows = [
         "group": "LAUNCHER MARK",
         "key": "qsbar.launcherLogoText",
         "label": "Wordmark",
-        "desc": "Text wordmark in the launcher pill when style is Wordmark.",
-        "ctl": "chips",
-        "opts": ["asura", "hyprland", "ubuntu", "linux", "nixos", "debian", "fedora", "gentoo", "void", "wayland", "sway", "gnome", "dwm"],
+        "desc": "Type the wordmark shown in the launcher pill when style is Text.",
+        "ctl": "text",
         "src": "shell"
     },
     {
@@ -184,9 +102,8 @@ var rows = [
         "group": "LAUNCHER MARK",
         "key": "qsbar.launcherLogoIcon",
         "label": "Glyph",
-        "desc": "Icon glyph in the launcher pill when style is Glyph.",
-        "ctl": "chips",
-        "opts": ["asura", "hyprland", "arch", "grid", "spark", "power", "dragon", "mark", "nix", "branch", "rebel", "ubuntu", "debian", "fedora", "gentoo", "void", "tux", "github", "python", "rust", "go", "node", "vim", "neovim", "steam", "discord"],
+        "desc": "Type the glyph shown in the launcher pill when style is Icon.",
+        "ctl": "text",
         "src": "shell"
     },
     {
@@ -365,25 +282,6 @@ var rows = [
         "ctl": "sw",
         "src": "shell"
     },
-    {
-        "tab": "Widgets",
-        "group": "BUILT-IN WIDGETS",
-        "key": "qsbar.widgets.layout",
-        "label": "Keyboard layout",
-        "desc": "Active input language and layout code.",
-        "ctl": "sw",
-        "src": "shell"
-    },
-    {
-        "tab": "Widgets",
-        "group": "BUILT-IN WIDGETS",
-        "key": "qsbar.widgets.claude",
-        "label": "AI usage tools",
-        "desc": "AI coding agent meter and tool launcher.",
-        "ctl": "sw",
-        "src": "shell"
-    },
-
     // ── WIDGETS: OPTIONS ──
     {
         "tab": "Widgets",
@@ -422,16 +320,6 @@ var rows = [
         "ctl": "sw",
         "src": "shell"
     },
-    {
-        "tab": "Widgets",
-        "group": "WIDGET OPTIONS",
-        "key": "qsbar.aiTools",
-        "label": "AI assistant tools",
-        "desc": "Comma-separated list of AI agent meters.",
-        "ctl": "chips",
-        "opts": ["claude,codex,opencode", "claude,codex", "claude", "codex", "opencode"],
-        "src": "shell"
-    },
 
     // ── DOCK: PLACEMENT & STYLE ──
     {
@@ -460,7 +348,7 @@ var rows = [
         "label": "Visual design style",
         "desc": "Geometric look and presentation of the dock band.",
         "ctl": "chips",
-        "opts": ["islands", "rail", "ledger", "tanzaku", "seal"],
+        "opts": ["floating", "bar", "row", "solid"],
         "src": "shell"
     },
 

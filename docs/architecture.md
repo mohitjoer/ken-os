@@ -171,7 +171,7 @@ ASURA's layers, from bottom up.
 | Base system | Void packages | Unmodified; ASURA adds only what it needs |
 | Desktop services | ASURA + non-GNOME system services | power-profiles-daemon, pipewire, wireplumber, iwd |
 | Display | Hyprland | Behind a `asura wm` seam so it can be swapped |
-| Shell surfaces | Quickshell, over a ported shell tree and a vendored upstream component | Bar, dock, launcher, popouts, widgets, notifications, global shortcuts. The ported components are Ryoku's ([`NOTICE.md`](../NOTICE.md)); the vendored ones are upstream's, at a pinned commit; the theme and the settings binding are ASURA's. See [vendored upstream components](#vendored-upstream-components) |
+| Shell surfaces | Quickshell, over a ported shell tree and a vendored upstream component | Bar, dock, launcher, popouts, widgets, notifications, global shortcuts. The ported components are from the prior project ([`NOTICE.md`](../NOTICE.md)); the vendored ones are upstream's, at a pinned commit; the theme and the settings binding are ASURA's. See [vendored upstream components](#vendored-upstream-components) |
 | Shell state & session daemons | `asura-userd` (`~/.config/service/asura-userd`), `asura-shell daemon` (`~/.config/service/asura-shell`) | The user session daemons. `asura-userd` acts as the unprivileged state authority, watching `shell.json` to synchronize GTK/Qt/GSettings/Hyprland themes and bridging calls to root; `asura-shell` provides streaming shell telemetry |
 | System daemon & root control | `asura-sysd` (`/etc/sv/asura-sysd`, socket at `/run/asura/sysd.sock`) | The privileged root daemon. One Unix socket, line-framed JSON: handles hardware profiles, power states, battery charging thresholds, backlight fallback, and XBPS package transactions without sudo |
 | Settings store | GSettings / dconf, and `shell.json` | One writer per setting (`asura config set`, `asura-userd`, `asura-shell`) |
@@ -425,7 +425,7 @@ so that the desktop has one UI toolkit and one design system rather than two.
 two different statements, and the licence depends on the difference, so they are kept apart
 here as well. The engine is Quickshell: the binary, built by ASURA, shipped unmodified,
 **LGPL-3.0-only**. The surfaces are the QML — some of it ASURA's own, a ported tree from
-Ryoku (**GPL-3.0**, with the MIT portions [`NOTICE.md`](../NOTICE.md) records) and a vendored
+the prior project (**GPL-3.0**, with the MIT portions [`NOTICE.md`](../NOTICE.md) records) and a vendored
 upstream component under **GPL-3.0**. The composed shell is GPL-3.0. See
 [vendored upstream components](#vendored-upstream-components) for the component, the pin and
 the three overlay files, and [`LICENSING.md`](../LICENSING.md) for the obligations.
@@ -783,7 +783,7 @@ against.
 | The lock screen | **ASURA** owns when; `hyprlock` does the locking | `hypridle`, run by the user-level runit service `~/.config/service/asura-idle` from the `org.asura.desktop` `idle-*` keys, decides *when*, and `asura-shell lock` is the one command every trigger runs; the locker owns the surface and the PAM conversation. `hyprlock` is a decision (mature, in the archive, a process of its own), not a platform limit: Quickshell here has `Quickshell.Services.Pam` |
 | The idle policy | **ASURA** | The timeouts live in `org.asura.desktop`, `asura config set` is their only writer, and `~/.config/service/asura-idle` hands them to hypridle |
 | The keybind catalogue | **ASURA** | `session/binds.json`, installed at `/usr/share/asura/session/binds.json`, checked in both directions against the compositor's configuration by `asura doctor` |
-| The Hub | **ASURA** | The settings application: Ryoku's Hub, ported (`shell/hub/`) — a grouped navigation rail, a global search and a page per area of the desktop. The look pages change `shell.json` by asking the `asura-shell` daemon, the compositor and machine pages go through `asura-hubd`, and the **ASURA** group draws what `asura config export` hands it (the pages, the keys, their types, their permitted values, their ranges and their current values) and writes only through `asura config set`, never through GSettings. Its chrome is the shell's own component kit, so both windows are one design system |
+| The Hub | **ASURA** | The settings application: a ported Hub (`shell/hub/`) — a grouped navigation rail, a global search and a page per area of the desktop. The look pages change `shell.json` by asking the `asura-shell` daemon, the compositor and machine pages go through `asura-hubd`, and the **ASURA** group draws what `asura config export` hands it (the pages, the keys, their types, their permitted values, their ranges and their current values) and writes only through `asura config set`, never through GSettings. Its chrome is the shell's own component kit, so both windows are one design system |
 | The wallpaper | **ASURA** | `asura-wallpaper` chooses it (the catalogue, the choice per output, playlists, the day/night schedule) and the shell's own surface draws what the daemon publishes. `org.asura.shell`'s `wallpaper-path` and `wallpaper-path-dark` only seed a fresh account's first wallpaper |
 | The palette, the settings binding, the shell's own state | **ASURA** | The three overlays, at upstream's paths |
 | The bar, the dock, the launcher and the popover surfaces | **upstream** | The components, byte-identical to the pinned commit |
@@ -795,7 +795,7 @@ A row says who owns the *capability*, not who draws the pixels. The rows that sa
 describe the vendored end-4 tree, which stays byte-identical to its pinned commit. The
 surfaces the running shell draws — the bar, the dock, the launcher, the overview, the
 on-screen display, the notifications and the wallpaper — and its service graph
-(`shell/Services/`) are Ryoku's ported components, adapted in place and recorded in
+(`shell/Services/`) are ported components, adapted in place and recorded in
 [`NOTICE.md`](../NOTICE.md). The shell root (`shell/shell.qml`) hosts them and wires them
 together, and ASURA owns the desktop they appear on.
 
@@ -853,7 +853,7 @@ Every item here is a real support ticket someone will file:
 | Handhelds | Steam Deck, ROG Ally, Legion Go — gamescope session, gyro, controller mapping |
 | Secure Boot | shim + MOK, signed. Non-optional or nothing installs on a locked laptop |
 
-**Ryoku's machine tuning is deliberately not ported.** The desktop was ported from a distribution
+**The prior project's machine tuning is deliberately not ported.** The desktop was ported from a distribution
 that tunes each machine under its own `system/hardware/` — udev rules, NetworkManager and
 Bluetooth settings, GPU and power setup. None of it came across. Machine-specific tuning is the
 hardware profile system's job, and the base-layer boundary forbids a package writing those
@@ -1198,7 +1198,7 @@ The argument underneath the change is the one that was already true and is still
 3. **`asura state` survives as a CLI.** It is a command, it is useful at a terminal, in a
    script, and to anything that is not Quickshell. It still probes its five tools through
    `desktop/internal/desktopstate`, which the daemon does not use: the daemon is a port of
-   Ryoku's and has collectors of its own, so the two are separate implementations.
+   the prior project's and has collectors of its own, so the two are separate implementations.
 
 What should not happen is the other migration — hand-written QML parsing to avoid running a
 tested binary, in either direction. The daemon is where the tested code lives; the shell is
@@ -1215,6 +1215,6 @@ where the document is drawn.
 | Repository hosting | ASURA's XBPS repository and ISO hosting need a home. GitHub Pages serves static files; a package repo wants object storage. |
 | ~~**Plugin mechanism**~~ | **Settled** — a plugin is a folder with a `manifest.json`, a `service/Main.qml` for the logic and a `content/Widget.qml` for the one view, drawn through the `qs.PluginKit` kit. `asura plugin new`, `audit`, `install`, `enable`, `disable`, `remove` and `list` scaffold, check and place it, the plugin runtime in `shell/plugins/` loads it, and it lives in `~/.local/share/asura/plugins/`. See [`plugins.md`](plugins.md). A package index for plugins is not built. |
 | Hardware report scope | What `asura hardware report` captures, and how aggressively it strips PII before emitting. |
-| Ryoku's hardware tuning | ASURA ports none of the per-machine tuning (udev, NetworkManager, Bluetooth, GPU, power) that the desktop it was ported from ships under `system/hardware/`; the hardware profiles own that job. Whether some of it should return as profile content is the user's decision. See [the hard list](#the-hard-list). |
+| The prior project's hardware tuning | ASURA ports none of the per-machine tuning (udev, NetworkManager, Bluetooth, GPU, power) that the desktop it was ported from ships under `system/hardware/`; the hardware profiles own that job. Whether some of it should return as profile content is the user's decision. See [the hard list](#the-hard-list). |
 | ISO firmware policy | Whether one ISO carries firmware or firmware is fetched at install time. See [firmware and free software](#firmware-and-free-software). |
 | Test matrix | Which Hyprland, Quickshell and kernel versions CI must pass before a release. |

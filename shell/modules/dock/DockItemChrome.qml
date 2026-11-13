@@ -33,43 +33,42 @@ Item {
 
     Loader {
         anchors.fill: parent
-        sourceComponent: chrome.style === "rail" ? railC
-            : chrome.style === "ledger" ? ledgerC
-            : chrome.style === "tanzaku" ? tanzakuC
-            : chrome.style === "seal" ? sealC
+        sourceComponent: chrome.style === "bar" ? barC
+            : chrome.style === "row" ? rowC
+            : chrome.style === "solid" ? solidC
             : null
     }
 
-    // ── rail: a bone underline on the outer edge the width of the cell, its
+    // ── bar: a bone underline on the outer edge the width of the cell, its
     // thickness the window count (1 px for one window, 2 px for more) ──────────
     Component {
-        id: railC
+        id: barC
         Item {
-            id: rail
+            id: bar
             anchors.fill: parent
             readonly property real inset: 10
             readonly property real thick: chrome.item.count === 1 ? 1 : 2
             Rectangle {
                 visible: chrome.item.count >= 1
                 color: chrome.band.bone
-                width: chrome.horizontal ? chrome.band.baseSize - rail.inset : rail.thick
-                height: chrome.horizontal ? rail.thick : chrome.band.baseSize - rail.inset
-                anchors.horizontalCenter: chrome.horizontal ? rail.horizontalCenter : undefined
-                anchors.verticalCenter: chrome.horizontal ? undefined : rail.verticalCenter
-                anchors.top: chrome.outerTop ? rail.top : undefined
-                anchors.bottom: chrome.outerBottom ? rail.bottom : undefined
-                anchors.left: chrome.outerLeft ? rail.left : undefined
-                anchors.right: chrome.outerRight ? rail.right : undefined
+                width: chrome.horizontal ? chrome.band.baseSize - bar.inset : bar.thick
+                height: chrome.horizontal ? bar.thick : chrome.band.baseSize - bar.inset
+                anchors.horizontalCenter: chrome.horizontal ? bar.horizontalCenter : undefined
+                anchors.verticalCenter: chrome.horizontal ? undefined : bar.verticalCenter
+                anchors.top: chrome.outerTop ? bar.top : undefined
+                anchors.bottom: chrome.outerBottom ? bar.bottom : undefined
+                anchors.left: chrome.outerLeft ? bar.left : undefined
+                anchors.right: chrome.outerRight ? bar.right : undefined
             }
         }
     }
 
-    // ── ledger: a numbered cell -- a leading hairline divider, a mono index in
+    // ── row: a numbered cell -- a leading hairline divider, a mono index in
     // the inner corner, and a bone inversion when the app is active ────────────
     Component {
-        id: ledgerC
+        id: rowC
         Item {
-            id: ledger
+            id: row
             anchors.fill: parent
             readonly property real r: chrome.band.radius
 
@@ -79,10 +78,10 @@ Item {
                 visible: chrome.item.isActive
                 anchors.fill: parent
                 color: chrome.band.bone
-                topLeftRadius:     chrome.firstCell ? ledger.r : 0
-                bottomRightRadius: chrome.lastCell ? ledger.r : 0
-                topRightRadius:    (chrome.horizontal ? chrome.lastCell : chrome.firstCell) ? ledger.r : 0
-                bottomLeftRadius:  (chrome.horizontal ? chrome.firstCell : chrome.lastCell) ? ledger.r : 0
+                topLeftRadius:     chrome.firstCell ? row.r : 0
+                bottomRightRadius: chrome.lastCell ? row.r : 0
+                topRightRadius:    (chrome.horizontal ? chrome.lastCell : chrome.firstCell) ? row.r : 0
+                bottomLeftRadius:  (chrome.horizontal ? chrome.firstCell : chrome.lastCell) ? row.r : 0
                 Behavior on color { enabled: chrome.band.animate; ColorAnimation { duration: Motion.thumbHover } }
             }
 
@@ -104,90 +103,24 @@ Item {
                 font.family: Theme.mono
                 font.pixelSize: 8
                 anchors.margins: 4
-                anchors.left:   (chrome.horizontal || chrome.outerRight) ? ledger.left : undefined
-                anchors.right:  (!chrome.horizontal && chrome.outerLeft) ? ledger.right : undefined
-                anchors.top:    (chrome.outerBottom || !chrome.horizontal) ? ledger.top : undefined
-                anchors.bottom: chrome.outerTop ? ledger.bottom : undefined
+                anchors.left:   (chrome.horizontal || chrome.outerRight) ? row.left : undefined
+                anchors.right:  (!chrome.horizontal && chrome.outerLeft) ? row.right : undefined
+                anchors.top:    (chrome.outerBottom || !chrome.horizontal) ? row.top : undefined
+                anchors.bottom: chrome.outerTop ? row.bottom : undefined
             }
         }
     }
 
-    // ── tanzaku: a hanging paper strip, square on the screen-edge side and
-    // rounded on the inner one, running to the screen edge; a two-letter mono
-    // abbreviation at its foot; the whole strip inverts when the app is running ─
-    Component {
-        id: tanzakuC
-        Item {
-            id: tanzaku
-            anchors.fill: parent
-            readonly property bool run: chrome.item.count >= 1
-            readonly property real r: chrome.band.radius
-            readonly property string appName: {
-                const e = DesktopEntries.heuristicLookup(chrome.item.className);
-                return (e && e.name) ? e.name : chrome.item.className;
-            }
-            readonly property string abbr: tanzaku.appName.substring(0, 2).toUpperCase()
-
-            Rectangle {
-                id: strip
-                anchors.fill: parent
-                anchors.topMargin:    chrome.outerTop ? -chrome.band.edgeReach : 0
-                anchors.bottomMargin: chrome.outerBottom ? -chrome.band.edgeReach : 0
-                anchors.leftMargin:   chrome.outerLeft ? -chrome.band.edgeReach : 0
-                anchors.rightMargin:  chrome.outerRight ? -chrome.band.edgeReach : 0
-                color: tanzaku.run ? chrome.band.bone
-                    : Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, chrome.band.frost ? 0.6 : 0.94)
-                border.width: 1
-                border.color: chrome.band.hairline
-                topLeftRadius:     (chrome.outerBottom || chrome.outerRight) ? tanzaku.r : 0
-                topRightRadius:    (chrome.outerBottom || chrome.outerLeft) ? tanzaku.r : 0
-                bottomLeftRadius:  (chrome.outerTop || chrome.outerRight) ? tanzaku.r : 0
-                bottomRightRadius: (chrome.outerTop || chrome.outerLeft) ? tanzaku.r : 0
-                Behavior on color { enabled: chrome.band.animate; ColorAnimation { duration: Motion.thumbHover } }
-
-                RectangularShadow {
-                    anchors.fill: parent
-                    radius: tanzaku.r
-                    blur: 12
-                    spread: 0
-                    offset: chrome.horizontal
-                        ? Qt.vector2d(0, chrome.edge === "bottom" ? -2 : 2)
-                        : Qt.vector2d(chrome.edge === "right" ? -2 : 2, 0)
-                    color: Qt.rgba(Theme.shadow.r, Theme.shadow.g, Theme.shadow.b, 0.5)
-                    visible: chrome.band.shadow && !Perf.shadowsDisabled
-                    z: -1
-                }
-            }
-
-            // Anchored to the extended strip so the abbreviation sits at the foot,
-            // clear of the icon centred in the cell above it.
-            Text {
-                text: tanzaku.abbr
-                color: tanzaku.run ? chrome.band.inkOnBone : chrome.band.inkFaint
-                font.family: Theme.mono
-                font.pixelSize: 9
-                font.weight: Font.Medium
-                anchors.margins: 3
-                anchors.horizontalCenter: chrome.horizontal ? strip.horizontalCenter : undefined
-                anchors.verticalCenter: chrome.horizontal ? undefined : strip.verticalCenter
-                anchors.top: chrome.outerTop ? strip.top : undefined
-                anchors.bottom: chrome.outerBottom ? strip.bottom : undefined
-                anchors.left: chrome.outerLeft ? strip.left : undefined
-                anchors.right: chrome.outerRight ? strip.right : undefined
-            }
-        }
-    }
-
-    // ── seal: a square plate with a hairline border and no rounding; the running
+    // ── badge: a square plate with a hairline border and no rounding; the running
     // mark is the icon's colour (drawn by the item), and the active app carries a
     // bone corner tick ─────────────────────────────────────────────────────────
     Component {
-        id: sealC
+        id: badgeC
         Item {
-            id: seal
+            id: badge
             anchors.fill: parent
             Rectangle {
-                id: sealPlate
+                id: badgePlate
                 anchors.fill: parent
                 radius: 0
                 color: Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, chrome.band.frost ? 0.6 : 0.94)
@@ -211,8 +144,8 @@ Item {
             // A bone L-bracket in the corner: the active app's seal.
             Item {
                 visible: chrome.item.isActive
-                anchors.top: sealPlate.top
-                anchors.left: sealPlate.left
+                anchors.top: badgePlate.top
+                anchors.left: badgePlate.left
                 anchors.margins: 3
                 width: 9
                 height: 9

@@ -846,7 +846,7 @@ Four things in that output are deliberate and are each load-bearing:
 
 ### Installing base-layer firmware does not violate the boundary
 
-Worth stating because it looks like a violation and is not. `asura-firmware load` runs `dpkg -i`
+Worth stating because it looks like a violation and is not. `asura-firmware load` runs `xbps-install`
 on packages from the base layer and its firmware archive. Those packages write to `/lib/firmware`
 and `/usr/lib/modules`, which ASURA does not own. The boundary rule constrains *ASURA's* packages
 to `/usr/share/asura/` and `/etc/asura/`; installing a base-layer package is the base layer

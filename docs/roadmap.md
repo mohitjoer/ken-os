@@ -220,7 +220,7 @@ has a price: the bridges into the tree are a contract that nothing checks.*
   [adopting-asura.md](adopting-asura.md) already uses
 - [x] The bar, the dock, the launcher and the popover surfaces, taken from a
   vendored upstream component at a pinned commit and re-themed, rather than
-  written from nothing. Since the Ryoku port the running shell draws Ryoku's
+  written from nothing. Since the port the running shell draws ported
   components for these, adapted in place (see [`NOTICE.md`](../NOTICE.md))
 - [x] The widget catalogue, ASURA's own, driven by `org.asura.shell`
 - [x] The vendored tree itself, held byte-identical to its upstream commit.
@@ -284,7 +284,7 @@ has a price: the bridges into the tree are a contract that nothing checks.*
 
 *Status: the settings catalogue and the page registry exist, and the invariant
 between them is checked by `asura doctor` rather than asserted. The Hub's window
-is Ryoku's Hub, ported (a grouped rail, a global search and a page per area of the
+is a ported Hub (a grouped rail, a global search and a page per area of the
 desktop), drawn with the shell's own component kit, and the settings catalogue is its
 **ASURA** group; `asura-hubd` is its data plane for the compositor and the machine.*
 
@@ -338,11 +338,16 @@ a fork of that package, and that cost arrives at the next rebase as a conflict n
 the origin of.
 
 
-## M9 — Adoption
+## M9 — Adoption (Legacy — Ubuntu/APT design)
 
 *Status: the preflight is written and tested — all eleven checks, the three exit codes, and the
 never-write promises enforced as data rather than prose. `asura adopt` itself does not exist,
 and the preflight has never been run against a machine that was about to be switched.*
+
+**Note:** This milestone documents the Ubuntu/APT-based adoption design. A Void/XBPS-based
+adoption would follow the same principles but with different package manager commands and
+no GDM dependency (ASURA uses SDDM). The design in [`adopting-asura.md`](adopting-asura.md)
+is preserved for reference.
 
 Switching an existing GNOME desktop on the base layer over to the ASURA shell, in place,
 without reinstalling and without touching the user's data. Designed in
@@ -355,7 +360,7 @@ before they commit to installing it. That is worth more than a landing page.
   no root, and is safe to run as often as the user likes
 - [x] Eleven checks, each with its own fail condition: base release, desktop session, display
   manager, GNOME version, GPU and driver, composite support, portal availability, disk space,
-  APT health, third-party extensions, boot chain
+  XBPS health, third-party extensions, boot chain
 - [x] Blockers separated from report-only warnings, with three distinct exit codes so the same
   command is usable from a script
 - [x] `--json`, which is how `asura adopt` re-runs the preflight as its own step zero rather
@@ -460,7 +465,7 @@ it is the answer.
   behave, and the shell reads a frame rather than interpreting a tool's output
   itself. `asura state` survives as a CLI of its own, so a terminal, a script and
   anything that is not Quickshell keep a way in; it probes its tools through
-  `desktop/internal/desktopstate`, which the daemon, a port of Ryoku's, does not use.
+  `desktop/internal/desktopstate`, which the daemon, a port of the prior project's, does not use.
 - [x] **Theming.** A wallpaper that recolours the desktop, with no matugen on the machine:
   `asura theme generate` makes the scheme and `asura theme render` fills the app
   templates, both in Go (`desktop/internal/theme`). The daemon runs them on every wallpaper

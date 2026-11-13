@@ -197,12 +197,12 @@ It rides the top bar as its own module, in a section you choose (left, centre or
 right) and at the position in that lane you drag it to. Your content is rendered
 at `glyph` density on the bar's axis, so it must stay small: report a mark-sized
 `implicitWidth`/`implicitHeight` (roughly the bar's inner height) and ASURA
-centres it and reserves exactly that much room; in islands form it gets its own
+centres it and reserves exactly that much room; in solid form it gets its own
 island.
 
 - ASURA handles the **island pill, spacing, and the bar's width arithmetic**.
 - A bar glyph **is a layout entry**, the same kind of entry as a built-in widget:
-  it lives in `shell.json` `qsbar.layout`, so a user drags it between lanes in QS
+  it lives in `shell.json` `top.layout`, so a user drags it between lanes in QS
   Bar Settings' Layout route or moves it from a terminal with `asura-shell bar
   move <id> --section left|center|right`. It shows once it is enabled with
   `host: topbarGlyph` in `plugins.json`.
@@ -489,7 +489,7 @@ to a warning for the run. **Warning** rules are printed but do not block.
 | `symlink` | **yes** | any symlink in the tree (R2, R10) |
 | `escalation` | **yes** | `sudo`, `doas` or `su` anywhere, or `pkexec` not declared in `capabilities.privileged` (R6) |
 | `pipe-shell` | **yes** | `curl … \| sh` and other download-and-run (R7) |
-| `internal-import` | **yes** | importing `shell.*`, `Ryoku.*` or any `qs.*` module but the kit, or climbing out of the folder (R4) |
+| `internal-import` | **yes** | importing `shell.*`, the prior project's module or any `qs.*` module but the kit, or climbing out of the folder (R4) |
 | `config-write` | **yes** | writing to `shell.json`, `plugins.json`, `~/.ssh`, `/etc`, or shell rc files (R5, R8) |
 | `secret` | **yes** | a token, key or credential in the tree (R10) |
 | `binary` | **yes** | a compiled binary, ELF/Mach-O/`.so` (R10) |
@@ -497,7 +497,7 @@ to a warning for the run. **Warning** rules are printed but do not block.
 | `undeclared-host` | no | an `https?://host` literal not in `capabilities.network` (R7) |
 | `dynamic-shell` | no | `sh` / `bash -c` whose argument is not a single string literal (R9) |
 | `outside-write` | no | a write outside `stateDir`, cache, or a temp dir (R8) |
-| `removed-name` | no | a Ryoku name ASURA changed: `ryoku-*` commands, `~/.config/ryoku`, `RYOKU_*` (see below) |
+| `removed-name` | no | a prior-project name ASURA changed: `<prior>-*` commands, `~/.config/<prior>`, `<PRIOR>_*` (see below) |
 | `large-tree` | no | a tree larger than 20 MB |
 
 The audit is a safety net, not a sandbox: a plugin runs unsandboxed inside the
@@ -523,18 +523,18 @@ URL it finds.
 
 ---
 
-## Porting a Ryoku plugin
+## Porting a prior-project plugin
 
-A plugin written for Ryoku needs these renames, and `asura plugin audit` reports
+A plugin written for the prior project needs these renames, and `asura plugin audit` reports
 each one with the fix:
 
-| Ryoku | ASURA |
+| Prior project | ASURA |
 |---|---|
-| `import Ryoku.PluginKit` | `import qs.PluginKit` |
-| `import Ryoku.PluginKit.Singletons` | `import qs.PluginKit.Singletons` |
-| `ryoku-shell`, `ryoku-plugins-place`, `ryoku` | `asura-shell`, `asura-plugins-place`, `asura` |
-| `~/.config/ryoku`, `~/.local/share/ryoku`, `$XDG_STATE_HOME/ryoku/plugins/<id>` | the same paths with `asura` |
-| `RYOKU_*`, `RYOSTORE_PLUGINS_DIR` | `ASURA_*`, `ASURA_PLUGINS_DIR` |
+| `import <prior>.PluginKit` | `import qs.PluginKit` |
+| `import <prior>.PluginKit.Singletons` | `import qs.PluginKit.Singletons` |
+| `<prior>-shell`, `<prior>-plugins-place`, `<prior>` | `asura-shell`, `asura-plugins-place`, `asura` |
+| `~/.config/<prior>`, `~/.local/share/<prior>`, `$XDG_STATE_HOME/<prior>/plugins/<id>` | the same paths with `asura` |
+| `<PRIOR>_*`, `RYOSTORE_PLUGINS_DIR` | `ASURA_*`, `ASURA_PLUGINS_DIR` |
 
 The kit keeps every token name it had (`Theme.verm`, `Theme.flameInk` ...) so the
 plugin still loads, but the values are greys: the design system has no accent

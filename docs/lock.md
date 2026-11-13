@@ -1,15 +1,15 @@
 # The lock screen
 
 hyprlock locks the session. That is a decision, not a fallback: it is mature, it
-is in the Ubuntu archive (0.9.2), and it runs as a process of its own, apart from
-the shell. The shell, hypridle and the `asura-shell` daemon only decide when it
+is in the Void archive, and it runs as a process of its own, apart from the
+shell. The shell, hypridle and the `asura-shell` daemon only decide when it
 runs.
 
 | Piece | Where | Job |
 |---|---|---|
 | hyprlock | `session/hyprland/hyprlock.conf` | the look: blurred wallpaper, clock, date, password field, battery, now playing |
 | hypridle | `session/hyprland/hypridle.conf` | the idle stages (dim, lock, screen off) and locking before sleep |
-| `asura-idle` | `session/asura-idle`, `session/units/asura-idle.service` | runs hypridle with the timeouts |
+| `asura-idle` | `session/asura-idle`, `system/runit/user-services/asura-idle/run` | runs hypridle with the timeouts |
 | the shell | `shell/Idle.qml`, `shell/IdleOverlay.qml` | draws the dim scrim; keeps the lock's wallpaper link current |
 | Lockscreen page | `shell/hub/pages/LockscreenPage.qml` | says what is missing; locks now |
 
@@ -29,7 +29,7 @@ one it started with. A change made by hand takes effect at the next
 
 ## One clock
 
-hypridle is the only idle clock. It respects D-Bus and systemd inhibitors (a
+hypridle is the only idle clock. It respects D-Bus and elogind inhibitors (a
 browser playing a video, Keep Awake) as well as Wayland ones. The dim stage does
 not touch the backlight: it writes `dim` to `$XDG_RUNTIME_DIR/asura-idle`, the
 shell watches that file and draws the scrim, and `awake` on activity clears it.
@@ -56,7 +56,7 @@ The screen-off stage is `hyprctl dispatch dpms off`, so there is no blank scrim.
   on `XDG_CONFIG_DIRS` for it.
 - `inhibit_sleep = 3` makes the machine wait for the lock before it suspends. If
   hyprlock never starts, logind suspends after its delay anyway.
-- hyprlock's own fingerprint support is left off. Ubuntu's `libpam-fprintd` puts
+- hyprlock's own fingerprint support is left off. Void's `libpam-fprintd` puts
   the reader in the PAM stack, and enabling both would have each ask for it.
 - The lock background is a link at `~/.config/asura/current/background`, kept at
   the current wallpaper by `shell/Idle.qml`. A video wallpaper keeps the last

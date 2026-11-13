@@ -1,25 +1,25 @@
 # The shell daemon
 
-`asura-shell daemon` (unit `asurad.service`) is the process the shell's services talk to. It owns the
+`asura-shell daemon` (runit service `asurad`) is the process the shell's services talk to. It owns the
 things QML should not do itself: the system tray host, NetworkManager, power profiles, the clipboard
 history, weather, the night light, the key-press stream, the PolicyKit agent and the keyring prompter.
 Every other `asura-shell <verb>` is a client that sends one line to it.
 
-It is ported from Ryoku's `ryoku-shell` daemon. What differs on the wire is in
+It was originally ported from another project's shell daemon. What differs on the wire is in
 `desktop/cmd/asura-shell/CONTRACT.md`; this page is how it runs here.
 
 ## Processes
 
 ```
-asura-session.target
- ├─ asurad.service         asura-shell daemon     socket $XDG_RUNTIME_DIR/asura-shell.sock
- └─ asura-shell.service    quickshell -p /usr/share/asura/shell
+runit user supervisor
+  ├─ asurad              asura-shell daemon     socket $XDG_RUNTIME_DIR/asura-shell.sock
+  └─ quickshell          quickshell -p /usr/share/asura/shell
 ```
 
-systemd starts and restarts both; the daemon does not start or supervise Quickshell. It reaches the
+runit starts and restarts both; the daemon does not start or supervise Quickshell. It reaches the
 running shell with `quickshell ipc -p /usr/share/asura/shell call ...`, and `asura-shell reload` is
-`systemctl --user reload asura-shell`. The unit has no `WAYLAND_DISPLAY` condition: nothing the daemon
-probes is a Wayland client. It conflicts with `hyprpolkitagent.service` because only one agent can hold
+`sv reload quickshell`. The unit has no `WAYLAND_DISPLAY` condition: nothing the daemon
+probes is a Wayland client. It conflicts with `hyprpolkitagent` because only one agent can hold
 the session's polkit slot.
 
 The compositor is reached through `desktop/internal/wm`, in-process: `hyprctl` and Hyprland's event

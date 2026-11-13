@@ -166,13 +166,12 @@ Item {
             readonly property int marks: dp.pins
             readonly property int cell: Tokens.s4
             readonly property int run: island.marks * island.cell + Tokens.s2
-            // tanzaku strips hang from the screen edge: flush, and a step deeper.
-            readonly property bool strips: dp.style === "tanzaku"
-            readonly property int depth: island.strips ? Tokens.s6 : Tokens.s5
-            readonly property int inset: island.strips ? 0 : Tokens.s2
-            // rail, ledger and seal share one plate; islands and tanzaku give
-            // each mark its own.
-            readonly property bool onePlate: dp.style === "rail" || dp.style === "ledger" || dp.style === "seal"
+            // strips are no longer a dock style; every mark shares one plate depth.
+            readonly property bool strips: false
+            readonly property int depth: Tokens.s5
+            readonly property int inset: Tokens.s2
+            // bar, row and badge share one plate; floating gives each mark its own.
+            readonly property bool onePlate: dp.style === "bar" || dp.style === "row" || dp.style === "badge"
 
             width: dp.vertical ? island.depth : island.run
             height: dp.vertical ? island.run : island.depth

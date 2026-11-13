@@ -22,7 +22,7 @@ Flickable {
     readonly property string cfgDir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/asura"
 
     property real uiScale: 100          // fontScale * 100, shown as a percent
-    property string barStyle: "qsbar"
+    property string barStyle: "top"
     property var widgets: ({})          // live mirror of widgets.json
 
     // read live state so the controls open on what the desktop is actually using.
@@ -120,8 +120,8 @@ Flickable {
             ChipRow {
                 width: parent.width
                 model: [
-                    { "key": "qsbar", "label": I18n.tr("Control Bar") },
-                    { "key": "sumi",  "label": I18n.tr("Sumi rail") }
+                    { "key": "top", "label": I18n.tr("Top") },
+                    { "key": "side",  "label": I18n.tr("Side") }
                 ]
                 current: step.barStyle
                 onSelected: (key) => { step.barStyle = key; step.setShellKey("barStyle", key); }

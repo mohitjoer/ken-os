@@ -1,8 +1,8 @@
 # Wallpaper
 
 `asura-wallpaper` owns the wallpaper. It is a Go daemon (`desktop/cmd/asura-wallpaper`, user
-unit `asura-wallpaper.service`) ported from Ryoku's `ryogami`; the picker is Ryoku's wall-ui
-(itself the skwd-wall picker), and the shell draws what the daemon publishes.
+unit `asura-wallpaper.service`) ported from another project's wallpaper daemon; the picker is the ported
+wall-ui (itself the skwd-wall picker), and the shell draws what the daemon publishes.
 
 | Part | Where |
 |---|---|
@@ -41,16 +41,16 @@ still) and renders the templates. The topic replays the current frame on every c
 shell daemon that starts after the wallpaper still themes from it. Cut-outs come back the other
 way: the shell daemon's stage worker sends `depth set <json>` / `depth clear`.
 
-## What differs from Ryoku
+## What differs from the original project
 
-- **Clips play in the shell.** The external C player (`ryogami-live`) is not built; with no
-  `asura-wallpaper-live` on `PATH` the daemon forces `video_engine` to `in_shell`, and
+- **Clips play in the shell.** The external C player is not built; with no
+  live player on `PATH` the daemon forces `video_engine` to `in_shell`, and
   `Backdrop.qml` plays the clip through QtMultimedia (`qml6-module-qtmultimedia`).
-- **No upscale.** `waifu2x-ncnn-vulkan` is not in the Ubuntu archive, so the daemon has no
+- **No upscale.** `waifu2x-ncnn-vulkan` is not in the Void archive, so the daemon has no
   `upscale.*` and the picker has no Upscale tab.
 - **First start** paints the wallpaper `org.asura.shell` names (`wallpaper-path[-dark]`, so an
   adopted desktop keeps its background), else the first image in the library. It reads the keys and
   never writes them.
-- The Browse surface drops Ryoku's store source; Wallhaven, Steam, moewalls, motionbgs and GitHub
+- The Browse surface drops the original project's store source; Wallhaven, Steam, moewalls, motionbgs and GitHub
   repositories remain, all on demand.
 - The picker's accent is the inverse plate, not a hue (`wallpaper-ui/qml/Colors.qml`).

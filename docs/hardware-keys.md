@@ -6,14 +6,16 @@ the ASUS TUF Gaming F15 (FX507ZC4) they were checked against.
 
 ## Brightness and the keyboard backlight
 
-`/sys/class/backlight/*/brightness` is group `video` and Ubuntu's `brightnessctl`
-is built without logind support, so `brightnessctl set` is refused for a user who
-is not in `video`. `docs/architecture.md` ("Writing a backlight") records that and
-declines a udev rule. systemd-logind makes the rule unnecessary:
-`Session.SetBrightness(subsystem, name, value)` writes the value, as root, for the
-owner of the session, for both `backlight` and `leds`. `asura brightness` makes
-that call, then tries `brightnessctl`, then the sysfs file if it is writable
-(`internal/backlight`). `asura brightness list` prints which route each device has.
+`/sys/class/backlight/*/brightness` is group `video` and mode `0664`. ASURA does not
+rely on `elogind`/`logind` for brightness control. Instead, `asura brightness` makes
+a multi-tiered attempt:
+
+1. **`elogind` (if active)**: `org.freedesktop.login1.Session.SetBrightness(subsystem, name, value)` writes the value as root for the owner of the active session.
+2. **`brightnessctl`**: Falls back to `brightnessctl` if available.
+3. **Direct sysfs write**: If the sysfs file is writable by the user.
+4. **`asura-sysd` fallback**: Falls back seamlessly to `asura-sysd` via `/run/asura/sysd.sock`. `asura-sysd` runs as root under runit and writes to the appropriate `/sys/class/backlight/<device>/brightness` file on behalf of the user session.
+
+`asura brightness list` prints which route each device has.
 
 | Entry point | Does |
 |---|---|
@@ -58,5 +60,4 @@ On this machine the limit is already 80 and survives reboots through the user's 
 `battery-charge-limit.service`, which writes `BAT1` at boot. Changing it is
 `echo 70 | sudo tee /sys/class/power_supply/BAT1/charge_control_end_threshold`, plus
 the same edit in the unit. A change from the Hub without a password would need a
-`pkexec` helper and a polkit rule pinned to its path (Ryoku's `ryoku-power` and
-`47-ryoku-power.rules`, with group `sudo` in place of `wheel`); that is not ported.
+`pkexec` helper and a polkit rule pinned to its path; that is not ported.

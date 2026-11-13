@@ -1,23 +1,23 @@
-# The QS Bar and Dock Architecture
+# The Top/Side Bar and Dock Architecture
 
-The Asura desktop bar is the **QS Bar** (`qsbar`), rendered by Quickshell. It is driven by data
+The Asura desktop bar is the **Top Bar** (`top`) or **Side Bar** (`side`), rendered by Quickshell. It is driven by data
 and reactive event streaming, never by polling subprocesses.
 
 ---
 
 ## Layout Model & Storage
 
-Bar configuration lives in `~/.config/asura/shell.json` under the `qsbar` namespace:
+Bar configuration lives in `~/.config/asura/shell.json` under the `top` or `side` namespace:
 
 ```json
-"qsbar": {
+"top": {
   "layout": {
     "version": 1,
     "left":   ["launcher", "workspaces"],
     "center": ["clock"],
-    "right":  ["media", "ai", "cpu", "cputemp", "memory", "storage", "gpu",
+    "right":  ["media", "cpu", "cputemp", "memory", "storage", "gpu",
                "volume", "brightness", "network", "bluetooth", "battery",
-               "power", "status", "quick", "layout"]
+               "power", "status", "quick"]
   },
   "widgets": {
     "status": true,
@@ -27,8 +27,26 @@ Bar configuration lives in `~/.config/asura/shell.json` under the `qsbar` namesp
 }
 ```
 
-- **Order & Placement**: Defined in `qsbar.layout.left`, `.center`, and `.right`. Built-in widget IDs and installed plugin IDs live side by side.
-- **Visibility**: Controlled by `qsbar.widgets[<visibilityKey>]`. Built-in widgets with no visibility key are always rendered. Plugins render when enabled in `~/.config/asura/plugins.json`.
+```json
+"side": {
+  "layout": {
+    "version": 1,
+    "left":   ["launcher", "workspaces"],
+    "center": ["clock"],
+    "right":  ["media", "cpu", "cputemp", "memory", "storage", "gpu",
+               "volume", "brightness", "network", "bluetooth", "battery",
+               "power", "status", "quick"]
+  },
+  "widgets": {
+    "status": true,
+    "memory": true,
+    "battery": true
+  }
+}
+```
+
+- **Order & Placement**: Defined in `top.layout.left`, `.center`, and `.right` (or `side.*`). Built-in widget IDs and installed plugin IDs live side by side.
+- **Visibility**: Controlled by `top.widgets[<visibilityKey>]` (or `side.*`). Built-in widgets with no visibility key are always rendered. Plugins render when enabled in `~/.config/asura/plugins.json`.
 - **Sole Writer Rule**: Only `asura-shell bar` and `asura-shell daemon` are permitted to mutate `shell.json`. Never hand-edit `shell.json`.
 
 ---
@@ -102,7 +120,7 @@ asura-shell bar set volume audioBoost true
 
 # Bar appearance & placement
 asura-shell bar position top        # or bottom
-asura-shell bar form full           # full, fit, dock, notch, islands
+asura-shell bar style top           # or side (was: form)
 asura-shell bar defaults            # Reset layout to default
 
 # Open GUI settings panel

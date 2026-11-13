@@ -1,4 +1,4 @@
-# Adopting ASURA on an existing machine
+# Adopting ASURA on an existing machine (Legacy — Ubuntu/APT design)
 
 `asura adopt` switches a stock machine's desktop over to the ASURA shell, in place, without
 reinstalling and without touching the kernel, the bootloader or the user's data. This document
@@ -6,9 +6,9 @@ is the design for that feature: what it is, what it refuses to do, how it stays 
 every step, and how a user gets back to a working GNOME desktop if anything goes wrong.
 
 > **Implementation status:** `asura adopt` does not exist in this tree; `desktop/internal/adopt/`
-> is absent. This is a design document. It describes the preflight, the plan, the state file,
-> the undo script and the never-write promises as data — none of which is implemented yet.
-> The Ubuntu-era sections below are the design record; the Void runit service graph in
+> is absent. This is a design document. **It documents the Ubuntu/APT-based adoption design.**
+> A Void/XBPS-based adoption would follow the same principles but with different package manager
+> commands, runit instead of systemd, and SDDM instead of GDM. The Void runit service graph in
 > [`session.md`](session.md) is the shipped session reality.
 
 Read [`architecture.md`](architecture.md) first. Every decision referenced here is settled
@@ -38,7 +38,7 @@ exactly as they are on an ASURA OS install, and they obey the same rule they obe
 > files.**
 
 Adoption does not break that rule. It adds **two** things that are not already sanctioned by
-it — a session registration and a systemd unit registration — and both are listed in
+it — a session registration and a runit user service registration — and both are listed in
 [the registrations](#registrations-outside-asuras-two-directories). They have to be discoverable
 by a binary that is not ASURA's, and there is nowhere else to put them.
 
@@ -99,7 +99,7 @@ The other two are new.
 | Path | Already sanctioned? | What it is | Why it cannot live under `/usr/share/asura/` |
 |---|---|---|---|
 | `/usr/share/wayland-sessions/asura.desktop` | **No — new** | Session registration | GDM and SDDM scan the fixed `wayland-sessions` directory and nowhere else. |
-| `/usr/lib/systemd/user/asura-shell.service`, `asura-portal.service` | **No — new** | User unit registration | `systemd --user` loads units from the fixed unit directory. |
+| `~/.config/service/asura-shell`, `~/.config/service/asura-portal` | **No — new** | User service registration | runit user supervisor loads services from `~/.config/service/` |
 | `/usr/share/glib-2.0/schemas/org.asura.*.gschema.xml` | Yes — "a GSettings schema" | GSettings schema | GLib compiles schemas from the fixed schema directory. |
 
 These are registrations — pointers a third-party binary must find — not ASURA-owned content. The
@@ -126,7 +126,7 @@ future change to `asura adopt` needs one of them, that change is wrong.
 /var/lib/dpkg/info/*.postinst     ~/.local/share/gnome-shell/extensions/**   (read and copy only)
 ```
 
-APT's own writes to `/var/lib/dpkg/` are not adoption's writes, but they are the reason every
+XBPS's own writes to `/var/lib/xbps/` are not adoption's writes, but they are the reason every
 package operation is simulated before it runs. See [prune](#prune-and-what-is-removed).
 
 ### The machine cannot become unbootable
@@ -193,24 +193,27 @@ a reboot. It is the only step in the whole feature that does.
 
 ---
 
-## Preflight — `asura adopt --check`
+## Preflight — `asura adopt --check` (Ubuntu/APT design)
 
 Nothing is changed by the preflight. It needs no root, and it is safe to run as often as the
 user likes.
 
 | Check | Reads | Fail condition |
 |---|---|---|
-| Base release | `/etc/os-release` | Not `ID=ubuntu` with `VERSION_ID="26.04"` |
+| Base release | `/etc/os-release` | Not `ID=void` (Void Linux rolling) |
 | Desktop session | `$XDG_CURRENT_DESKTOP` | Not GNOME — a non-GNOME session is already an ASURA session or something else entirely |
 | Display manager | `/etc/X11/default-display-manager` | Neither `gdm3` nor `sddm` |
 | GNOME version | `dpkg-query -W gnome-shell` | Not installed; there is nothing to switch away from |
 | GPU and driver | `lspci -nnk`, `/sys/class/drm/card*/device/driver` | Report only. Warns loudly on NVIDIA discrete, hybrid mux and PRIME. |
 | Composite support | `ls /dev/dri/render*`, `glxinfo -B` | No render node |
-| Portal backends available | `apt-cache policy xdg-desktop-portal-hyprland xdg-desktop-portal-gtk` | Either is not installable — this is a hard blocker, ASURA's shell has no portal backend |
+| Portal backends available | `xbps-query -Rs xdg-desktop-portal-hyprland xdg-desktop-portal-gtk` | Either is not installable — this is a hard blocker, ASURA's shell has no portal backend |
 | Disk space | `statvfs /usr` | Less than 2 GiB free |
-| APT health | `apt-get check`, `/var/lib/dpkg/lock-*`, `dpkg --audit` | A held lock or a half-configured package — a hard blocker |
+| XBPS health | `xbps-check`, `/var/lib/xbps/lock` | A held lock or a broken package — a hard blocker |
 | Third-party extensions | `~/.local/share/gnome-shell/extensions/`, `gsettings get org.gnome.shell enabled-extensions` | Report only |
 | Boot chain | `efi/`, `/boot/efi`, Secure Boot state | Report only. Warns if the machine would need a cmdline change, which puts it outside the funnel. |
+
+> **Note:** A Void/XBPS adoption design would use `xbps-query`, `xbps-install`, runit service checks,
+> and SDDM instead of GDM. The table above reflects the original Ubuntu design.
 
 Exit codes, so the same command is usable from a script:
 
@@ -223,7 +226,7 @@ Exit codes, so the same command is usable from a script:
 `--json` emits the same report machine-readably, which is how `asura adopt` re-runs it as its own
 step zero without reimplementing any of it.
 
-Sample output on a machine that is ready:
+Sample output on a machine that is ready (Ubuntu design):
 
 ```
 $ asura adopt --check
@@ -241,6 +244,8 @@ Boot chain      UEFI, Secure Boot on, MOK enrolled       ok  (unchanged)
 
   2 warnings, 0 blockers.  `asura adopt` will proceed.
 ```
+
+> **Note:** A Void/XBPS adoption would show `Base: Void Linux rolling`, `Portal xbps: ...`, `XBPS: ...`, and `Display manager: sddm`.
 
 ---
 

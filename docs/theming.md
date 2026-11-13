@@ -1,7 +1,7 @@
 # Theming
 
 How a wallpaper becomes colours, which file carries them, and who writes it. The generator is
-ASURA's own, in `desktop/internal/theme`: there is no matugen on Ubuntu, so `asura theme` makes
+ASURA's own, in `desktop/internal/theme`: there is no matugen on the machine, so `asura theme` makes
 the scheme matugen would and fills the templates itself.
 
 ## The pipeline
@@ -12,7 +12,7 @@ wallpaper
   -> the daemon writes colors.json     what the shell draws with
                        tones.json      what Ink.qml picks tones from
   -> the daemon writes a carrier and runs  asura theme render --config CONFIG --palette CARRIER
-                                       what the apps get
+                                         what the apps get
 ```
 
 The daemon (`asura-shell`) runs this on every wallpaper change, in matugen's order, and swaps the

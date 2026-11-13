@@ -289,10 +289,11 @@ which is why the overlay files are guarded with `if` rather than with `&&`.
 
 Two details in the script are load-bearing beyond the obvious:
 
-- **`XDG_CURRENT_DESKTOP=Asura` and `XDG_SESSION_DESKTOP=asura` are different strings,
+- **`XDG_CURRENT_DESKTOP=ASURA` and `XDG_SESSION_DESKTOP=asura` are different strings,
   and both are deliberate.** The dispatcher lower-cases the current desktop to derive its
-  per-desktop configuration file name, so `Asura` finds `asura-portals.conf`. The session
+  per-desktop configuration file name, so `ASURA` finds `asura-portals.conf`. The session
   desktop is the lower-case name the login manager records in `loginctl show-session`.
+
 ### How this differs from a stock desktop session
 
 | | A stock desktop session | The ASURA session |
@@ -617,24 +618,6 @@ go through logind, which runs the shutdown inhibitors, and then the system stops
 Nothing in the display manager's configuration has to change for this, which is the reason
 it is worth checking: a change there would mean writing outside the two directories ASURA
 owns.
-
----
-
-**[Session design record — the Ubuntu design narrative ends here. The Void runit service graph is the shipped reality.]**
-
----
-
-### Who owns what
-
-| Concern | Owner | Mechanism |
-|---|---|---|
-| Screen lock | `hyprlock`, from the base layer's archive | The locker authenticates against PAM. `hypridle` decides *when*, and the shell draws only the dim scrim |
-| Lock on suspend | The shell daemon (`asura-shell`) | `PrepareForSleep` on the system bus, and the delay inhibitors it holds across the request |
-| Idle detection | The compositor, through hypridle | Its own idle notifications, read by hypridle |
-| Idle policy | `org.asura.desktop`, handed to hypridle by `asura-idle` | The timeouts live in GSettings, and `asura config set` is their only writer |
-| Inhibitors | logind | Delay inhibitors are held by the shell daemon and by logind itself |
-| Live desktop state | `asurad` | The `asura-shell/1` socket at `$XDG_RUNTIME_DIR/asura-shell.sock` |
-| Suspend, poweroff, reboot | logind | the display manager's halt and reboot commands |
 
 ---
 
