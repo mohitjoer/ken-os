@@ -105,10 +105,11 @@ var vendoredRoots = map[string]bool{
 // about which paths are Asura's. TestTheOverlayListMatchesTheVendorScript
 // keeps them together.
 var overlayFiles = map[string]string{
-	"GlobalStates.qml":                   "the vendored components read these flags by name",
-	"modules/common/Appearance.qml":      "the vendored components read these tokens by name",
-	"modules/common/Config.qml":          "the vendored components read these options by name",
-	"modules/common/widgets/AppIcon.qml": "the vendored components read this icon by name",
+	"GlobalStates.qml":                                "the vendored components read these flags by name",
+	"modules/common/Appearance.qml":                   "the vendored components read these tokens by name",
+	"modules/common/Config.qml":                       "the vendored components read these options by name",
+	"modules/common/widgets/AppIcon.qml":              "the vendored components read this icon by name",
+	"modules/common/widgets/MaterialSymbol.qml":       "maps Material Symbol names to Font Awesome 4.7 codepoints; upstream expects a font the base layer does not carry",
 }
 
 // isVendored reports whether a file belongs to the vendored upstream tree.
