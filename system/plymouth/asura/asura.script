@@ -104,12 +104,6 @@ fun refresh_callback() {
         current_progress = simulated;
         update_progress_ui();
     }
-
-    # Safe fallback: if boot has progressed past 11 seconds (~550 ticks), auto-fade
-    # all sprites to ensure console, DRM master, and Wayland desktop are never obscured
-    if (boot_ticks > 550) {
-        quit_callback();
-    }
 }
 Plymouth.SetRefreshFunction(refresh_callback);
 
