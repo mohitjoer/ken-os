@@ -69,12 +69,14 @@ PanelWindow {
                 // behind it.
                 var t = text.trim()
                 if (t === "" || t === "null" || t === "[]") {
+                    switcher.token = ""
                     switcher.dismiss()
                     return
                 }
                 try {
                     switcher.windows = JSON.parse(text)
                 } catch (error) {
+                    switcher.token = ""
                     switcher.dismiss()
                     return
                 }
@@ -82,6 +84,9 @@ PanelWindow {
                 switcher.selected = switcher.selected < 0 ? last : Math.min(switcher.selected, last)
                 // The dwell counts from the card having something to show.
                 dwell.restart()
+                // Clear the load token so the next press re-runs `asura windows`
+                // instead of reusing a process that is already "running".
+                switcher.token = ""
                 switcher.focusToken = Date.now()
             }
         }
@@ -100,6 +105,10 @@ PanelWindow {
                 : []
         }
         running: switcher.focusToken !== ""
+        // Clear the token once the dispatch has run, so the next selected
+        // change re-triggers the process instead of being swallowed by a
+        // process that is already "running".
+        onExited: switcher.focusToken = ""
     }
 
     Timer {
@@ -120,6 +129,8 @@ PanelWindow {
         if (!switcher.visible) {
             switcher.windows = []
             switcher.selected = direction > 0 ? 1 : -1
+            switcher.token = ""
+            switcher.focusToken = ""
             switcher.token = Date.now()
             switcher.visible = true
             return

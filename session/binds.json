@@ -317,6 +317,22 @@
       "argument": "--batch \"dispatch togglefloating ; dispatch resizeactive exact 1000 660 ; dispatch centerwindow\""
     },
     {
+      "id": "split",
+      "category": "windows",
+      "label": "Toggle the split direction of the tiled window",
+      "chord": "SUPER + J",
+      "kind": "wm",
+      "action": "togglesplit"
+    },
+    {
+      "id": "pseudo",
+      "category": "windows",
+      "label": "Pseudo-tile the floating window",
+      "chord": "SUPER + CTRL + P",
+      "kind": "wm",
+      "action": "pseudo"
+    },
+    {
       "id": "resize-mode",
       "category": "windows",
       "label": "Resize mode: arrows or hjkl, Esc exits",
@@ -354,7 +370,7 @@
       "label": "Move the window in that direction",
       "chord": "SUPER + SHIFT + Left",
       "kind": "wm",
-      "action": "movewindow",
+      "action": "swapwindow",
       "argument": "l",
       "also": [
         {
