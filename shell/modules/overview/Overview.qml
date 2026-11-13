@@ -45,7 +45,19 @@ Item {
     // Data source: the daemon's `wm` topic when it is publishing (Wm.ready),
     // otherwise the module's own Hy feed reading the compositor directly, so the
     // expo still opens where the daemon is absent (no socket, every cap false).
+    //
+    // "Publishing" means the daemon actually has data, not merely that it
+    // declared the cap: a daemon that advertises windowGeometry but ships no
+    // windows or workspaces would blank the expo AND route every switch through
+    // actions that never fire — the overview that opens with nothing in it. So
+    // the daemon feed wins only when it has data, or when neither feed has any
+    // (a genuinely empty desktop, where the choice does not matter); otherwise
+    // the module's own hyprctl feed answers, which shows real cells and which
+    // switching demonstrably works through.
+    readonly property bool daemonHasData: Wm.windows.length > 0 || Wm.workspaces.length > 0
+    readonly property bool hyHasData: Hy.windows.length > 0 || Hy.workspaces.length > 0
     readonly property bool daemonFed: Wm.ready && Wm.caps.windowGeometry === true
+        && (root.daemonHasData || !root.hyHasData)
     readonly property var mon: Wm.outputByName(root.screenName) || Hy.outputByName(root.screenName)
     readonly property var monObj: root.mon
     readonly property real monScale: (root.monObj && root.monObj.scale > 0) ? root.monObj.scale : 1
@@ -166,6 +178,12 @@ Item {
         for (var i = 0; i < root.allWsIds.length; i++)
             if (root.deskOf(root.allWsIds[i]) === root.viewedDesktop)
                 out.push(root.allWsIds[i]);
+        // The workspace you are on always renders, even when the workspace feed
+        // is silent about it: an expo without the current space is an expo that
+        // cannot show where you are, and switching starts from seeing it.
+        if (root.viewedDesktop === root.activeDesktop && root.activeWsId > 0 && out.indexOf(root.activeWsId) < 0)
+            out.push(root.activeWsId);
+        out.sort(function (a, b) { return a - b; });
         return out;
     }
     // first globally free id in this block, for the "+" add slot. If this
@@ -182,9 +200,10 @@ Item {
         return root.newDesktopIdx * root.perDesktop + 1;
     }
     // The viewed desktop's occupied workspaces as full live cells, then ONE
-    // full-size "+" add cell. Empty / gap positions are not shown, and the add
-    // cell is always a full-size target (never a thin slat), so it is easy to
-    // hit and clicking it opens the next free workspace.
+    // compact "+" add slat. Empty / gap positions are not shown, and the add
+    // slat is thin like the gap slats: a full-size empty preview cell reads as
+    // a broken desktop when it is the only thing on screen, and a slim "+" at
+    // the end of the row reads as "add one more".
     readonly property var slotModel: {
         var out = [];
         for (var i = 0; i < root.wsList.length; i++) {
@@ -192,7 +211,7 @@ Item {
             if (root.wsHasWindows(id) || id === root.activeWsId)
                 out.push({ pos: id - root.blockBase, wsId: id, add: false, full: true });
         }
-        out.push({ pos: out.length + 1, wsId: -1, add: true, full: true });
+        out.push({ pos: out.length + 1, wsId: -1, add: true, full: false });
         return out;
     }
     readonly property int slotCount: root.slotModel.length

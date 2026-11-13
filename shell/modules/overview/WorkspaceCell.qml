@@ -120,9 +120,11 @@ Item {
         return out;
     }
 
-    // hard offset shadow behind EVERY cell (solid black, no blur; the depth is
-    // the offset, per docs/ui-ux.md). Deepens as the cell lifts.
+    // hard offset shadow behind EVERY preview cell (solid black, no blur; the
+    // depth is the offset, per docs/ui-ux.md). Deepens as the cell lifts. The
+    // add slat is chrome, not a mini-desktop, so it casts none.
     Rectangle {
+        visible: !cell.isAdd
         x: cell.lifted ? 10 * cell.s : 7 * cell.s
         y: cell.lifted ? 10 * cell.s : 7 * cell.s
         width: mini.width
@@ -234,15 +236,16 @@ Item {
 
         // thin-slat identity: an empty/gap workspace shows just its number,
         // centered. The slat keeps the gap visible + reachable (click/drop
-        // creates it) without a full preview cell's footprint.
+        // creates it) without a full preview cell's footprint. The trailing add
+        // slat shows a "+" instead of a number: it opens a fresh workspace.
         Text {
             anchors.centerIn: parent
-            visible: !cell.isAdd && !cell.full
+            visible: cell.isAdd || !cell.full
             readonly property int pos: cell.ov ? (((cell.wsId - 1) % cell.ov.perDesktop) + 1) : cell.wsId
-            text: (pos < 10 ? "0" : "") + pos
+            text: cell.isAdd ? "+" : ((pos < 10 ? "0" : "") + pos)
             color: (cell.active || cell.hovered || cell.selected) ? Theme.brand : Theme.faint
             font.family: Theme.mono
-            font.pixelSize: 19 * cell.s
+            font.pixelSize: (cell.isAdd ? 24 : 19) * cell.s
             font.weight: Font.DemiBold
             Behavior on color { ColorAnimation { duration: Motion.highlight } }
         }

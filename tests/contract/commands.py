@@ -49,7 +49,7 @@ ALIAS = {
     "fprintd-list": ["fprintd"], "fprintd-delete": ["fprintd"], "rfkill": ["rfkill"], "nvidia-smi": ["nvidia-utils", "nvidia"],
     "ssh": ["openssh", "openssh-client"], "ssh-add": ["openssh", "openssh-client"], "ssh-copy-id": ["openssh", "openssh-client"], "ssh-keygen": ["openssh", "openssh-client"],
     "qemu-img": ["qemu", "qemu-utils"], "quickget": ["quickemu"], "lsusb": ["usbutils"],
-    "btrfs": ["btrfs-progs"], "grub-mkconfig": ["grub", "grub2-common"], "pkexec": ["polkit", "policykit-1"],
+    "btrfs": ["btrfs-progs"], "grub-mkconfig": ["grub", "grub2-common"], "grub-reboot": ["grub", "grub2-common"], "pkexec": ["polkit", "policykit-1"],
     "gtk-update-icon-cache": ["gtk+3", "gtk-update-icon-cache", "libgtk-3-bin"],
     "genisoimage": ["cdrtools", "xorriso"], "mkisofs": ["cdrtools", "xorriso"], "xorriso": ["xorriso"],
 }
@@ -70,7 +70,7 @@ BASE_COMMANDS = {
     "dbus-update-activation-environment",
     "xbps-install", "xbps-query", "xbps-reconfigure", "xbps-remove", "xbps-rindex",
     "sv", "chpst", "runsv", "runsvdir", "file", "lspci", "lsusb", "rfkill",
-    "grub-mkconfig", "pkexec", "btrfs", "git",
+    "grub-mkconfig", "grub-reboot", "pkexec", "btrfs", "git",
 }
 UBUNTU_BASE_COMMANDS = BASE_COMMANDS
 
