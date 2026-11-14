@@ -316,6 +316,7 @@ done
 cp "$REPO_ROOT/system/helpers/prime-run" "$INCLUDE_DIR/usr/bin/prime-run"
 cp "$REPO_ROOT/system/helpers/fan-profile" "$INCLUDE_DIR/usr/bin/fan-profile"
 cp "$REPO_ROOT/system/helpers/systemctl" "$INCLUDE_DIR/usr/bin/systemctl"
+cp "$REPO_ROOT/system/helpers/asura-gpu" "$INCLUDE_DIR/usr/bin/asura-gpu"
 chmod 755 "$INCLUDE_DIR/usr/bin/systemctl"
 cp "$REPO_ROOT/system/helpers/journalctl" "$INCLUDE_DIR/usr/bin/journalctl"
 chmod 755 "$INCLUDE_DIR/usr/bin/journalctl"

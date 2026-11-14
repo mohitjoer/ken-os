@@ -16,8 +16,8 @@ func runGpu(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("gpu needs a subcommand: caps|mode|tune")
 	}
-	// detection, the render-mode writer and the tuner all go through asura-gpu
-	if _, err := exec.LookPath(asuraGpuBin()); err != nil && args[0] != "mux" && args[0] != "apply" && args[0] != "hook" && args[0] != "vm" {
+	// detection, the render-mode writer, the MUX switch and the tuner all go through asura-gpu
+	if _, err := exec.LookPath(asuraGpuBin()); err != nil && args[0] != "apply" && args[0] != "hook" && args[0] != "vm" {
 		return unavailable("gpu "+args[0], asuraGpuBin()+" is not installed", args[1:])
 	}
 	switch args[0] {
@@ -31,8 +31,10 @@ func runGpu(args []string) error {
 		return runGpuMode(args[1:])
 	case "tune":
 		return runGpuTune(args[1:])
-	case "mux", "apply", "hook", "vm":
-		return unavailable("gpu "+args[0], "GPU passthrough and the MUX switch are not set up by Asura yet", args[1:])
+	case "mux":
+		return runGpuMux(args[1:])
+	case "apply", "hook", "vm":
+		return unavailable("gpu "+args[0], "GPU passthrough is not set up by Asura yet", args[1:])
 	default:
 		return fmt.Errorf("unknown gpu subcommand: %s", args[0])
 	}

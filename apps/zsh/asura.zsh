@@ -128,14 +128,11 @@ fast() {
 }
 
 if [[ -o interactive ]] && command -v fastfetch >/dev/null 2>&1; then
-  # Only display system summary once per session/terminal, not on every pane split or subshell
-  local _ff_lock="${XDG_RUNTIME_DIR:-/tmp}/asura-fastfetch-${UID:-$(id -u)}"
-  if [[ ! -f "$_ff_lock" ]]; then
-    touch "$_ff_lock" 2>/dev/null || true
-    # Suppress fastfetch on bare console login (tty1) before graphical session starts.
-    # Check WAYLAND_DISPLAY, DISPLAY, or XDG_SESSION_TYPE (set via hyprland env.conf).
-    if [[ -n "$WAYLAND_DISPLAY" || -n "$DISPLAY" || "$XDG_SESSION_TYPE" == "wayland" || \
-          "$(tty 2>/dev/null)" != "/dev/tty1" ]]; then
+  # Display system summary on top-level terminal launch, suppressing in subshells
+  if [[ -z "$__ASURA_FASTFETCH_SHOWN" ]]; then
+    # Suppress fastfetch on bare console login (tty1) before graphical session starts
+    if [[ -n "$WAYLAND_DISPLAY" || -n "$DISPLAY" || "$XDG_SESSION_TYPE" == "wayland" || "$(tty 2>/dev/null)" != "/dev/tty1" ]]; then
+      export __ASURA_FASTFETCH_SHOWN=1
       fastfetch
     fi
   fi

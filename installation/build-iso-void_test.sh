@@ -104,6 +104,7 @@ grep -Fq 'podman' "$MANIFEST"
 grep -Fq 'docker' "$MANIFEST"
 test -x "$REPO_ROOT/system/helpers/systemctl"
 test -x "$REPO_ROOT/system/helpers/journalctl"
+test -x "$REPO_ROOT/system/helpers/asura-gpu"
 grep -Fq 'systemctl' "$SCRIPT"
 
 # LAYER 2: Verify Compiler, Kernel & Direct Hardware sysfs/udev
@@ -181,7 +182,7 @@ fi
 grep -Fq 'NVreg_DynamicPowerManagement=0x02' "$REPO_ROOT/system/modprobe.d/nvidia.conf"
 grep -Fq 'tcp_bbr' "$REPO_ROOT/system/modules-load.d/bbr.conf"
 grep -Fq 'system/modules-load.d' "$SCRIPT"
-grep -Fq 'performable:copy_to_clipboard' "$REPO_ROOT/apps/ghostty/config"
+grep -Fq 'ctrl+shift+c=copy_to_clipboard' "$REPO_ROOT/apps/ghostty/config"
 grep -Fq 'ATTR{type}=="Mains"' "$REPO_ROOT/system/udev/99-asura-power.rules"
 test -x "$REPO_ROOT/system/runit/services/asura-sysd/log/run"
 grep -Fq 'svlogd' "$REPO_ROOT/system/runit/services/asura-sysd/log/run"

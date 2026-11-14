@@ -1,0 +1,269 @@
+#!/usr/bin/env python3
+"""
+asura-gpu: Hardware GPU detection and rendering mode configuration for Asura OS.
+"""
+
+import sys
+import os
+import glob
+import json
+import subprocess
+
+def get_slot_token(slot):
+    # e.g. 0000:01:00.0 -> 0000-01-00-0
+    return slot.replace(":", "-").replace(".", "-")
+
+def detect_gpus():
+    cards = []
+    seen_slots = set()
+    for card_dir in sorted(glob.glob("/sys/class/drm/card[0-9]*")):
+        name = os.path.basename(card_dir)
+        if "-" in name:
+            continue
+        dev_path = os.path.join(card_dir, "device")
+        if not os.path.exists(dev_path):
+            continue
+
+        try:
+            real_path = os.path.realpath(dev_path)
+            slot = os.path.basename(real_path)
+        except Exception:
+            slot = "0000:00:00.0"
+
+        if slot in seen_slots:
+            continue
+        seen_slots.add(slot)
+
+        driver = ""
+        try:
+            driver = os.path.basename(os.path.realpath(os.path.join(dev_path, "driver")))
+        except Exception:
+            pass
+
+        connected_count = 0
+        for status_path in glob.glob(f"{card_dir}-*/status"):
+            try:
+                with open(status_path, "r", encoding="utf-8") as f:
+                    if f.read().strip() == "connected":
+                        connected_count += 1
+            except Exception:
+                pass
+
+        model = "Graphics Controller"
+        try:
+            lspci = subprocess.run(["lspci", "-s", slot], capture_output=True, text=True, timeout=2)
+            if lspci.returncode == 0 and lspci.stdout:
+                parts = lspci.stdout.strip().split(": ", 1)
+                if len(parts) > 1:
+                    model = parts[1]
+        except Exception:
+            pass
+
+        vram_mb = 0
+        vram_file = os.path.join(dev_path, "mem_info_vram_total")
+        if os.path.exists(vram_file):
+            try:
+                with open(vram_file, "r") as f:
+                    vram_mb = int(int(f.read().strip()) / (1024 * 1024))
+            except Exception:
+                pass
+
+        cards.append({
+            "slot": slot,
+            "class": "VGA",
+            "card": name,
+            "driver": driver,
+            "vram": vram_mb,
+            "connected": connected_count,
+            "model": model
+        })
+
+    return cards
+
+def get_gpu_conf_path():
+    p = os.environ.get("ASURA_GPU_CONF")
+    if p:
+        return p
+    base = os.environ.get("XDG_CONFIG_HOME")
+    if not base:
+        base = os.path.join(os.environ.get("HOME", "/root"), ".config")
+    return os.path.join(base, "asura", "hyprland", "gpu.conf")
+
+def set_mode(mode):
+    if mode not in ("hybrid", "performance", "passthrough"):
+        sys.stderr.write(f"asura-gpu: unknown mode '{mode}', must be hybrid, performance, or passthrough\n")
+        sys.exit(1)
+
+    cards = detect_gpus()
+    dgpu = None
+    igpu = None
+
+    for c in cards:
+        drv = c.get("driver", "").lower()
+        if "nvidia" in drv or "nouveau" in drv:
+            dgpu = c
+        elif "intel" in c.get("model", "").lower() or "i915" in drv or "xe" in drv:
+            igpu = c
+        elif "amd" in drv or "radeon" in drv:
+            if c.get("connected", 0) > 0 and not igpu:
+                igpu = c
+            else:
+                dgpu = c
+
+    if not igpu and cards:
+        igpu = cards[0]
+    if not dgpu and len(cards) > 1:
+        dgpu = cards[1]
+
+    conf_path = get_gpu_conf_path()
+    os.makedirs(os.path.dirname(conf_path), exist_ok=True)
+
+    if mode == "hybrid":
+        with open(conf_path, "w", encoding="utf-8") as f:
+            f.write("# Asura GPU mode: Hybrid (automatic selection)\n")
+    elif mode == "performance":
+        token_d = get_slot_token(dgpu["slot"]) if dgpu else ""
+        token_i = get_slot_token(igpu["slot"]) if igpu else ""
+        devices = []
+        if token_d:
+            devices.append(f"/dev/dri/asura-gpu-{token_d}")
+        if token_i:
+            devices.append(f"/dev/dri/asura-gpu-{token_i}")
+        val = ":".join(devices)
+        with open(conf_path, "w", encoding="utf-8") as f:
+            f.write("# Asura GPU mode: Performance (dGPU primary)\n")
+            f.write(f"env = AQ_DRM_DEVICES,{val}\n")
+    elif mode == "passthrough":
+        token_i = get_slot_token(igpu["slot"]) if igpu else ""
+        val = f"/dev/dri/asura-gpu-{token_i}" if token_i else ""
+        with open(conf_path, "w", encoding="utf-8") as f:
+            f.write("# Asura GPU mode: Passthrough (iGPU only, dGPU free)\n")
+            f.write(f"env = AQ_DRM_DEVICES,{val}\n")
+
+    print(f"asura-gpu: mode set to {mode}")
+
+def get_mux_node():
+    sysfs = os.environ.get("ASURA_SYSFS_ROOT", "")
+    candidates = [
+        sysfs + "/sys/devices/platform/asus-nb-wmi/gpu_mux_mode",
+        sysfs + "/sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode",
+        sysfs + "/sys/devices/platform/ideapad_acpi/gpu_mux_mode",
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return {"type": "sysfs_mode", "path": c}
+
+    vgaswitch = sysfs + "/sys/kernel/debug/vgaswitcheroo/switch"
+    if os.path.exists(vgaswitch):
+        return {"type": "vgaswitcheroo", "path": vgaswitch}
+
+    if os.environ.get("ASURA_MOCK_MUX"):
+        mock_mode = os.environ.get("ASURA_MOCK_MUX_MODE", "hybrid")
+        return {"type": "mock", "path": "/tmp/.asura_mock_mux", "mode": mock_mode}
+
+    return None
+
+def detect_mux():
+    node = get_mux_node()
+    if not node:
+        return {"capable": False, "mode": "hybrid", "reboot_pending": False}
+
+    reboot_pending = os.path.exists("/tmp/.asura_mux_reboot_pending")
+
+    if node["type"] == "sysfs_mode":
+        try:
+            with open(node["path"], "r", encoding="utf-8") as f:
+                val = f.read().strip()
+            mode = "discrete" if val == "0" else "hybrid"
+            return {"capable": True, "mode": mode, "reboot_pending": reboot_pending}
+        except Exception:
+            return {"capable": False, "mode": "hybrid", "reboot_pending": False}
+    elif node["type"] == "mock":
+        mode = node.get("mode", "hybrid")
+        if os.path.exists(node["path"]):
+            try:
+                with open(node["path"], "r", encoding="utf-8") as f:
+                    mode = f.read().strip()
+            except Exception:
+                pass
+        return {"capable": True, "mode": mode, "reboot_pending": reboot_pending}
+
+    return {"capable": False, "mode": "hybrid", "reboot_pending": False}
+
+def set_mux(mode):
+    if mode not in ("hybrid", "discrete"):
+        sys.stderr.write("asura-gpu: mux mode must be hybrid or discrete\n")
+        sys.exit(1)
+
+    node = get_mux_node()
+    if not node:
+        sys.stderr.write("asura-gpu: no hardware MUX switch detected on this machine\n")
+        sys.exit(1)
+
+    if node["type"] == "sysfs_mode":
+        val = "0" if mode == "discrete" else "1"
+        try:
+            with open(node["path"], "w", encoding="utf-8") as f:
+                f.write(val + "\n")
+            with open("/tmp/.asura_mux_reboot_pending", "w", encoding="utf-8") as f:
+                f.write(mode)
+            print(json.dumps({"capable": True, "mode": mode, "reboot_pending": True}))
+        except PermissionError:
+            sys.stderr.write("asura-gpu: permission denied writing to MUX node (requires root/polkit)\n")
+            sys.exit(1)
+        except Exception as e:
+            sys.stderr.write(f"asura-gpu: failed to set MUX mode: {e}\n")
+            sys.exit(1)
+    elif node["type"] == "mock":
+        try:
+            with open(node["path"], "w", encoding="utf-8") as f:
+                f.write(mode)
+            with open("/tmp/.asura_mux_reboot_pending", "w", encoding="utf-8") as f:
+                f.write(mode)
+            print(json.dumps({"capable": True, "mode": mode, "reboot_pending": True}))
+        except Exception as e:
+            sys.stderr.write(f"asura-gpu: failed to set mock MUX: {e}\n")
+            sys.exit(1)
+
+def main():
+    if len(sys.argv) < 2:
+        sys.stderr.write("Usage: asura-gpu detect [--json] | mode <hybrid|performance|passthrough> | mux <get|set <hybrid|discrete>>\n")
+        sys.exit(1)
+
+    cmd = sys.argv[1]
+    if cmd == "detect":
+        gpus = detect_gpus()
+        if len(sys.argv) > 2 and sys.argv[2] == "--json":
+            print(json.dumps(gpus))
+        else:
+            print(f"{'SLOT':<15} {'DRIVER':<12} {'CARD':<8} {'CONN':<6} {'MODEL'}")
+            print("-" * 65)
+            for g in gpus:
+                print(f"{g['slot']:<15} {g['driver']:<12} {g['card']:<8} {g['connected']:<6} {g['model']}")
+    elif cmd == "mode":
+        if len(sys.argv) < 3:
+            sys.stderr.write("Usage: asura-gpu mode <hybrid|performance|passthrough>\n")
+            sys.exit(1)
+        set_mode(sys.argv[2])
+    elif cmd == "mux":
+        if len(sys.argv) < 3:
+            sys.stderr.write("Usage: asura-gpu mux <get|set <hybrid|discrete>>\n")
+            sys.exit(1)
+        sub = sys.argv[2]
+        if sub == "get":
+            res = detect_mux()
+            print(json.dumps(res))
+        elif sub == "set":
+            if len(sys.argv) < 4:
+                sys.stderr.write("Usage: asura-gpu mux set <hybrid|discrete>\n")
+                sys.exit(1)
+            set_mux(sys.argv[3])
+        else:
+            sys.stderr.write(f"asura-gpu: unknown mux subcommand '{sub}'\n")
+            sys.exit(1)
+    else:
+        sys.stderr.write(f"asura-gpu: unknown command '{cmd}'\n")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
