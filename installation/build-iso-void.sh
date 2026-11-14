@@ -129,7 +129,7 @@ cat >"$INCLUDE_DIR/etc/plymouth/plymouthd.conf" <<'EOF'
 [Daemon]
 Theme=asura
 ShowDelay=0
-DeviceTimeout=2
+DeviceTimeout=8
 EOF
 
 cat >"$INCLUDE_DIR/etc/dracut.conf.d/50-plymouth.conf" <<'EOF'
@@ -841,7 +841,7 @@ if [ -f "$MKLIVE_DIR/mklive.sh" ]; then
 	sed -i 's/--add-drivers "ahci"/--add-drivers "ahci vboxvideo vmwgfx virtio_gpu bochs qxl simpledrm"/g' "$MKLIVE_DIR/mklive.sh"
 	sed -i 's|--repository=https://repo-default.voidlinux.org/current/musl||g' "$MKLIVE_DIR/mklive.sh"
 	sed -i "s|https://repo-default.voidlinux.org/current|$MIRROR|g" "$MKLIVE_DIR/mklive.sh"
-	sed -i 's/loglevel=4/loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 console=ttyS0,115200/g' "$MKLIVE_DIR/mklive.sh"
+	sed -i 's/loglevel=4/quiet splash loglevel=3 rd.udev.log_level=3 udev.log_level=3 rd.plymouth=1 plymouth.enable=1 vt.global_cursor_default=0 fbcon=nodefer console=ttyS0,115200 console=tty0/g' "$MKLIVE_DIR/mklive.sh"
 	# Stage /EFI/BOOT into ISO9660 filesystem so xorriso emerges /EFI/BOOT
 	sed -i 's|mkdir -p "${GRUB_EFI_TMPDIR}"/EFI/BOOT|mkdir -p "${GRUB_EFI_TMPDIR}"/EFI/BOOT "$IMAGEDIR"/EFI/BOOT|g' "$MKLIVE_DIR/mklive.sh"
 	sed -i 's|cp -f "$VOIDTARGETDIR/tmp/boot${EFI_ARCH,,}.efi" "${GRUB_EFI_TMPDIR}/EFI/BOOT/BOOT${EFI_ARCH^^}.EFI"|cp -f "$VOIDTARGETDIR/tmp/boot${EFI_ARCH,,}.efi" "${GRUB_EFI_TMPDIR}/EFI/BOOT/BOOT${EFI_ARCH^^}.EFI"\n\t\tcp -f "$VOIDTARGETDIR/tmp/boot${EFI_ARCH,,}.efi" "$IMAGEDIR/EFI/BOOT/BOOT${EFI_ARCH^^}.EFI"|g' "$MKLIVE_DIR/mklive.sh"
@@ -1092,7 +1092,19 @@ msg_error() {
 		printf "=> ERROR: %s\n" "$*"
 	fi
 }
+msg_ok() {
+	if command -v plymouth >/dev/null 2>&1 && plymouth --ping 2>/dev/null; then
+		:
+	else
+		printf "\033[1m\033[32m OK\033[m\n"
+	fi
+}
 FNEOF
+fi
+
+if [ -f "$ROOTFS/etc/runit/core-services/03-console-setup.sh" ]; then
+	# Prevent setfont on tty0 from resetting video mode and destroying Plymouth canvas
+	sed -i 's|setfont |! command -v plymouth >/dev/null 2>\&1 \|\| ! plymouth --ping 2>/dev/null \&\& setfont |g' "$ROOTFS/etc/runit/core-services/03-console-setup.sh"
 fi
 
 if [ -f "$ROOTFS/etc/runit/core-services/02-kmods.sh" ]; then
@@ -1407,7 +1419,7 @@ echo "build-iso-void: generating ISO with void-mklive..."
 		-i gzip \
 		-s zstd \
 		-S "dbus seatd elogind NetworkManager zramen" \
-		-C "loglevel=4 quiet splash rd.plymouth=1 plymouth.enable=1 console=tty0 console=ttyS0,115200 live.user=asura live.autologin nowatchdog mitigations=off preempt=full" \
+		-C "quiet splash loglevel=3 rd.udev.log_level=3 udev.log_level=3 rd.plymouth=1 plymouth.enable=1 vt.global_cursor_default=0 fbcon=nodefer console=ttyS0,115200 console=tty0 live.user=asura live.autologin nowatchdog mitigations=off preempt=full" \
 		-x "$POSTSETUP_SCRIPT" \
 		-T "$ISO_TITLE" \
 		-o "$FINAL_ISO"

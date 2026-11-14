@@ -638,9 +638,29 @@ GRUB_DISTRIBUTOR="Asura OS"
 GRUB_DEFAULT=saved
 GRUB_SAVEDEFAULT=true
 GRUB_TIMEOUT=3
-GRUB_CMDLINE_LINUX_DEFAULT="loglevel=4 quiet splash console=tty0 console=ttyS0,115200"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 rd.udev.log_level=3 udev.log_level=3 rd.plymouth=1 plymouth.enable=1 vt.global_cursor_default=0 fbcon=nodefer console=ttyS0,115200 console=tty0"
 GRUB_DISABLE_OS_PROBER=false
 GRUBDEF
+
+# Ensure Plymouth theme and dracut configuration exist on installed target
+mkdir -p "$TARGET_DIR/etc/plymouth" "$TARGET_DIR/etc/dracut.conf.d"
+cat >"$TARGET_DIR/etc/plymouth/plymouthd.conf" <<'EOF'
+[Daemon]
+Theme=asura
+ShowDelay=0
+DeviceTimeout=8
+EOF
+
+cat >"$TARGET_DIR/etc/dracut.conf.d/50-plymouth.conf" <<'EOF'
+add_dracutmodules+=" plymouth "
+add_drivers+=" vboxvideo vmwgfx bochs virtio_gpu qxl simpledrm "
+install_optional_items+=" /usr/lib/plymouth/script.so /usr/lib/plymouth/label.so /usr/lib/plymouth/label-pango.so /usr/lib/plymouth/renderers/drm.so /usr/lib/plymouth/renderers/frame-buffer.so /etc/fonts/fonts.conf /etc/fonts/local.conf /usr/share/fonts/TTF/DejaVuSans.ttf /usr/share/fonts/TTF/DejaVuSans-Bold.ttf /usr/share/fonts/TTF/DejaVuSansMono.ttf "
+EOF
+
+if [ -d "$TARGET_DIR/usr/share/plymouth/themes/asura" ]; then
+	ln -sf /usr/share/plymouth/themes/asura/asura.plymouth "$TARGET_DIR/usr/share/plymouth/themes/default.plymouth" 2>/dev/null || true
+fi
+chroot "$TARGET_DIR" plymouth-set-default-theme asura 2>/dev/null || true
 
 printf "${GREEN}✓ Host, services, and accounts configured.${RESET}\n"
 
