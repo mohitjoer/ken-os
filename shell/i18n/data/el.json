@@ -4322,7 +4322,6 @@
   "installed": "εγκατεστημένο",
   "internet radio · 24/7 live": "διαδικτυακό ραδιόφωνο · 24/7 ζωντανά",
   "internet radio · fallback station": "internet radio · εναλλακτικός σταθμός",
-  "islands": "islands",
   "its own effect": "δικό του εφέ",
   "iwd": "iwd",
   "just now": "μόλις τώρα",
@@ -4340,7 +4339,6 @@
   "launch": "εκκίνηση",
   "launcher": "εκκινητής",
   "launcher grid": "πλέγμα εκκινητή",
-  "ledger": "ledger",
   "left": "αριστερά",
   "legacy island bar": "παλιά μπάρα νησιού",
   "light": "φως",
@@ -4501,7 +4499,6 @@
   "radio": "ράδιο",
   "radio_button_checked": "επιλεγμένο πλήκτρο επιλογής",
   "radio_button_unchecked": "μη επιλεγμένο πλήκτρο επιλογής",
-  "rail": "rail",
   "raw xkb options, comma separated": "επιλογές xkb, χωρισμένες με κόμμα",
   "reached": "φτάσιμο",
   "reached (%1)": "φτάσιμο (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "με καρτέλες",
   "tall": "ψηλό",
   "taller": "ψηλότερο",
-  "tanzaku": "tanzaku",
   "tap to replay": "πατήστε για αναπαραγωγή",
   "tap to set": "πατήστε για ορισμό",
   "template": "πρότυπο",
@@ -4687,5 +4683,8 @@
   "● current": "● τρέχουσα",
   "★ Set as default": "★ Ορισμός ως προεπιλογή",
   "★ Update default": "★ Ενημέρωση προεπιλογής",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

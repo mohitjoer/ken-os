@@ -4322,7 +4322,6 @@
   "installed": "स्थापित",
   "internet radio · 24/7 live": "इंटरनेट रेडियो · 24/7 लाइव",
   "internet radio · fallback station": "इंटरनेट रेडियो · फॉलबैक स्टेशन",
-  "islands": "islands",
   "its own effect": "इसका अपना प्रभाव",
   "iwd": "iwd",
   "just now": "अभी-अभी",
@@ -4340,7 +4339,6 @@
   "launch": "लॉन्च करें",
   "launcher": "लॉन्चर",
   "launcher grid": "लॉन्चर ग्रिड",
-  "ledger": "ledger",
   "left": "बाएँ",
   "legacy island bar": "लेगेसी आइलैंड बार",
   "light": "हल्का",
@@ -4501,7 +4499,6 @@
   "radio": "रेडियो",
   "radio_button_checked": "रेडियो_बटन_चेक",
   "radio_button_unchecked": "रेडियो_बटन_अनचेक",
-  "rail": "rail",
   "raw xkb options, comma separated": "कच्चे xkb विकल्प, अल्पविराम से अलग",
   "reached": "पहुँचा",
   "reached (%1)": "पहुँचा (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "टैब किया गया",
   "tall": "लंबा",
   "taller": "लंबा",
-  "tanzaku": "tanzaku",
   "tap to replay": "फिर से चलाने के लिए टैप करें",
   "tap to set": "सेट करने के लिए टैप करें",
   "template": "टेम्पलेट",
@@ -4687,5 +4683,8 @@
   "● current": "● वर्तमान",
   "★ Set as default": "★ डिफ़ॉल्ट के रूप में सेट करें",
   "★ Update default": "★ डिफ़ॉल्ट अपडेट करें",
-  "❯ fastfetch": "❯ फास्टफेच"
+  "❯ fastfetch": "❯ फास्टफेच",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

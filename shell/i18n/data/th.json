@@ -4322,7 +4322,6 @@
   "installed": "ติดตั้งแล้ว",
   "internet radio · 24/7 live": "วิทยุอินเทอร์เน็ต · 24/7 สดๆ",
   "internet radio · fallback station": "วิทยุอินเทอร์เน็ต · สถานีสำรอง",
-  "islands": "islands",
   "its own effect": "เอฟเฟกต์ของมันเอง",
   "iwd": "iwd",
   "just now": "เมื่อสักครู่",
@@ -4340,7 +4339,6 @@
   "launch": "เปิด",
   "launcher": "ตัวเปิด",
   "launcher grid": "ตารางเปิดแอป",
-  "ledger": "ledger",
   "left": "ซ้าย",
   "legacy island bar": "bar island เดิม",
   "light": "สว่าง",
@@ -4501,7 +4499,6 @@
   "radio": "วิทยุ",
   "radio_button_checked": "ปุ่มวิทยุที่เลือก",
   "radio_button_unchecked": "ปุ่มวิทยุที่ไม่เลือก",
-  "rail": "rail",
   "raw xkb options, comma separated": "ตัวเลือก xkb ดิบ คั่นด้วยจุลภาค",
   "reached": "ถึง",
   "reached (%1)": "ถึง (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "แบบแท็บ",
   "tall": "สูง",
   "taller": "สูงขึ้น",
-  "tanzaku": "tanzaku",
   "tap to replay": "แตะเพื่อ replay",
   "tap to set": "แตะเพื่อตั้ง",
   "template": "แม่แบบ",
@@ -4687,5 +4683,8 @@
   "● current": "● ปัจจุบัน",
   "★ Set as default": "★ ตั้งเป็นค่าเริ่มต้น",
   "★ Update default": "★ อัปเดตค่าเริ่มต้น",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

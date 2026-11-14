@@ -4322,7 +4322,6 @@
   "installed": "ইনস্টল করা",
   "internet radio · 24/7 live": "ইন্টারনেট রেডিও · ২৪/৭ সরাসরি",
   "internet radio · fallback station": "ইন্টারনেট রেডিও · ফলব্যাক স্টেশন",
-  "islands": "islands",
   "its own effect": "এর নিজস্ব প্রভাব",
   "iwd": "আইডব্লিউডি",
   "just now": "এইমাত্র",
@@ -4340,7 +4339,6 @@
   "launch": "চালু করুন",
   "launcher": "লঞ্চার",
   "launcher grid": "লঞ্চার গ্রিড",
-  "ledger": "ledger",
   "left": "বাম",
   "legacy island bar": "লিগেসি আইল্যান্ড বার",
   "light": "আলো",
@@ -4501,7 +4499,6 @@
   "radio": "রেডিও",
   "radio_button_checked": "রেডিও_বাটন_চেক করা হয়েছে",
   "radio_button_unchecked": "radio_button_uncheck করা হয়েছে",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb অপশন, কমা আলাদা",
   "reached": "পৌঁছেছে",
   "reached (%1)": "পৌঁছেছে (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "ট্যাবড",
   "tall": "লম্বা",
   "taller": "লম্বা",
-  "tanzaku": "tanzaku",
   "tap to replay": "রিপ্লে করতে ট্যাপ করুন",
   "tap to set": "সেট করতে আলতো চাপুন",
   "template": "টেমপ্লেট",
@@ -4687,5 +4683,8 @@
   "● current": "● বর্তমান",
   "★ Set as default": "★ ডিফল্ট হিসাবে সেট করুন",
   "★ Update default": "★ ডিফল্ট আপডেট করুন",
-  "❯ fastfetch": "❯ দ্রুত আনা"
+  "❯ fastfetch": "❯ দ্রুত আনা",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

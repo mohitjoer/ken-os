@@ -4322,7 +4322,6 @@
   "installed": "مثبتة",
   "internet radio · 24/7 live": "راديو الإنترنت · بث مباشر 24/7",
   "internet radio · fallback station": "راديو الإنترنت · محطة احتياطية",
-  "islands": "islands",
   "its own effect": "تأثيرها الخاص",
   "iwd": "com.iwd",
   "just now": "الآن فقط",
@@ -4340,7 +4339,6 @@
   "launch": "تشغيل",
   "launcher": "المشغل",
   "launcher grid": "شبكة التطبيقات",
-  "ledger": "ledger",
   "left": "اليسار",
   "legacy island bar": "شريط الجزيرة القديم",
   "light": "ضوء",
@@ -4501,7 +4499,6 @@
   "radio": "راديو",
   "radio_button_checked": "زر راديو مختار",
   "radio_button_unchecked": "زر راديو غير مختار",
-  "rail": "rail",
   "raw xkb options, comma separated": "خيارات xkb الخام، مفصولة بفواصل",
   "reached": "وصل",
   "reached (%1)": "وصل (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "مبوبة",
   "tall": "طويل القامة",
   "taller": "أطول",
-  "tanzaku": "tanzaku",
   "tap to replay": "انقر لاعادتها",
   "tap to set": "انقر لتعيين",
   "template": "قالب",
@@ -4687,5 +4683,8 @@
   "● current": "● الحالية",
   "★ Set as default": "★ تعيين كافتراضي",
   "★ Update default": "★ التحديث الافتراضي",
-  "❯ fastfetch": "❯ جلب سريع"
+  "❯ fastfetch": "❯ جلب سريع",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

@@ -4322,7 +4322,6 @@
   "installed": "نصب شده",
   "internet radio · 24/7 live": "رادیو اینترنتی · پخش زنده ۲۴/۷",
   "internet radio · fallback station": "رادیو اینترنتی · ایستگاه پشتیبان",
-  "islands": "islands",
   "its own effect": "اثر خود",
   "iwd": "iwd",
   "just now": "همین الآن",
@@ -4340,7 +4339,6 @@
   "launch": "اجرا",
   "launcher": "لانچر",
   "launcher grid": "شبکه راه‌انداز",
-  "ledger": "ledger",
   "left": "چپ",
   "legacy island bar": "نوار جزیره قدیمی",
   "light": "روشن",
@@ -4501,7 +4499,6 @@
   "radio": "رادیو",
   "radio_button_checked": "دکمه_رادیویی_انتخاب_شده",
   "radio_button_unchecked": "دکمه_رادیویی_انتخاب_نشده",
-  "rail": "rail",
   "raw xkb options, comma separated": "گزینه‌های xkb خام، جدا شده با کاما",
   "reached": "رسید",
   "reached (%1)": "رسید (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "برگه‌دار",
   "tall": "بلند",
   "taller": "بلندتر",
-  "tanzaku": "tanzaku",
   "tap to replay": "برای تکرار ضربه بزنید",
   "tap to set": "برای تنظیم ضربه بزنید",
   "template": "الگو",
@@ -4687,5 +4683,8 @@
   "● current": "● فعلی",
   "★ Set as default": "★ تعیین به عنوان پیش‌فرض",
   "★ Update default": "★ به‌روزرسانی پیش‌فرض",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

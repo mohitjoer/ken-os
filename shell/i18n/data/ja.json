@@ -4322,7 +4322,6 @@
   "installed": "インストール済み",
   "internet radio · 24/7 live": "インターネットラジオ · 24/7 ライブ",
   "internet radio · fallback station": "インターネットラジオ · フォールバック局",
-  "islands": "islands",
   "its own effect": "独自のエフェクト",
   "iwd": "iwd",
   "just now": "今",
@@ -4340,7 +4339,6 @@
   "launch": "起動",
   "launcher": "ランチャー",
   "launcher grid": "ランチャーグリッド",
-  "ledger": "ledger",
   "left": "左",
   "legacy island bar": "レガシーアイランドバー",
   "light": "ライト",
@@ -4501,7 +4499,6 @@
   "radio": "ラジオ",
   "radio_button_checked": "ラジオボタン_チェック済み",
   "radio_button_unchecked": "ラジオボタン_未チェック",
-  "rail": "rail",
   "raw xkb options, comma separated": "生 xkb オプション、コンマ区切り",
   "reached": "到達しました",
   "reached (%1)": "到達しました (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "タブ",
   "tall": "トール",
   "taller": "高",
-  "tanzaku": "tanzaku",
   "tap to replay": "タップして再生",
   "tap to set": "タップして設定",
   "template": "テンプレート",
@@ -4687,5 +4683,8 @@
   "● current": "● 現在",
   "★ Set as default": "★ デフォルトに設定",
   "★ Update default": "★ デフォルトを更新",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

@@ -4322,7 +4322,6 @@
   "installed": "telepítve",
   "internet radio · 24/7 live": "internetes rádió · 24/7 élő",
   "internet radio · fallback station": "internetes rádió · tartalék állomás",
-  "islands": "islands",
   "its own effect": "saját hatása",
   "iwd": "iwd",
   "just now": "éppen most",
@@ -4340,7 +4339,6 @@
   "launch": "indítás",
   "launcher": "indító",
   "launcher grid": "indítósor rácsa",
-  "ledger": "ledger",
   "left": "bal",
   "legacy island bar": "örökölt sziget sáv",
   "light": "világos",
@@ -4501,7 +4499,6 @@
   "radio": "rádió",
   "radio_button_checked": "rádió_gomb_bejelölve",
   "radio_button_unchecked": "rádió_gomb_bejelöletlen",
-  "rail": "rail",
   "raw xkb options, comma separated": "nyers xkb lehetőségek, vesszővel elválasztva",
   "reached": "elérve",
   "reached (%1)": "elérve (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "füles",
   "tall": "magas",
   "taller": "magasabb",
-  "tanzaku": "tanzaku",
   "tap to replay": "koppintson az újrajátszáshoz",
   "tap to set": "koppintson a beállításhoz",
   "template": "sablon",
@@ -4687,5 +4683,8 @@
   "● current": "● jelenlegi",
   "★ Set as default": "★ Alapértelmezettként beállít",
   "★ Update default": "★ Alapértelmezett frissítése",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

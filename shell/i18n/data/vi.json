@@ -4322,7 +4322,6 @@
   "installed": "đã cài đặt",
   "internet radio · 24/7 live": "radio internet · 24/7 trực tiếp",
   "internet radio · fallback station": "radio internet · đài dự phòng",
-  "islands": "islands",
   "its own effect": "hiệu ứng riêng",
   "iwd": "iwd",
   "just now": "vừa xong",
@@ -4340,7 +4339,6 @@
   "launch": "khởi chạy",
   "launcher": "trình khởi chạy",
   "launcher grid": "lưới launcher",
-  "ledger": "ledger",
   "left": "trái",
   "legacy island bar": "thanh đảo cũ",
   "light": "sáng",
@@ -4501,7 +4499,6 @@
   "radio": "radio",
   "radio_button_checked": "nút radio đã chọn",
   "radio_button_unchecked": "nút radio chưa chọn",
-  "rail": "rail",
   "raw xkb options, comma separated": "tùy chọn xkb thô, phân tách bằng dấu phẩy",
   "reached": "đã đạt",
   "reached (%1)": "đã đạt (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "theo thẻ",
   "tall": "cao",
   "taller": "cao hơn",
-  "tanzaku": "tanzaku",
   "tap to replay": "chạm để phát lại",
   "tap to set": "chạm để đặt",
   "template": "mẫu",
@@ -4687,5 +4683,8 @@
   "● current": "● hiện tại",
   "★ Set as default": "★ Đặt làm mặc định",
   "★ Update default": "★ Cập nhật mặc định",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

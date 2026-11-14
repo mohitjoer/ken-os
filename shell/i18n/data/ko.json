@@ -4322,7 +4322,6 @@
   "installed": "설치됨",
   "internet radio · 24/7 live": "인터넷 라디오 · 24/7 생중계",
   "internet radio · fallback station": "인터넷 라디오 · 대체 방송국",
-  "islands": "islands",
   "its own effect": "자체 효과",
   "iwd": "iwd",
   "just now": "방금",
@@ -4340,7 +4339,6 @@
   "launch": "실행",
   "launcher": "런처",
   "launcher grid": "launcher 그리드",
-  "ledger": "ledger",
   "left": "왼쪽",
   "legacy island bar": "레거시 island bar",
   "light": "라이트",
@@ -4501,7 +4499,6 @@
   "radio": "라디오",
   "radio_button_checked": "라디오_버튼_선택됨",
   "radio_button_unchecked": "라디오_버튼_미선택",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb 옵션, 쉼표 구분",
   "reached": "도달함",
   "reached (%1)": "도달함 (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "탭 방식",
   "tall": "높음",
   "taller": "더 길게",
-  "tanzaku": "tanzaku",
   "tap to replay": "다시 재생하려면 탭",
   "tap to set": "설정하려면 탭",
   "template": "템플릿",
@@ -4687,5 +4683,8 @@
   "● current": "● 현재",
   "★ Set as default": "★ 기본값으로 설정",
   "★ Update default": "★ 기본값 업데이트",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

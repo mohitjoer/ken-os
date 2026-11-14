@@ -4322,7 +4322,6 @@
   "installed": "நிறுவப்பட்டது",
   "internet radio · 24/7 live": "இணையம் வானொலி · 24/7 நேரலை",
   "internet radio · fallback station": "இணையம் வானொலி · வெகு வேகம் நிலையம்",
-  "islands": "islands",
   "its own effect": "அதன் சொந்த விளைவு",
   "iwd": "ஐடபிள்யூடி",
   "just now": "இப்போதுதான்",
@@ -4340,7 +4339,6 @@
   "launch": "தொடங்கு",
   "launcher": "தொடக்க",
   "launcher grid": "லாஞ்சர் கட்டம்",
-  "ledger": "ledger",
   "left": "இடது",
   "legacy island bar": "மரபு தீவு பட்டி",
   "light": "ஒளி",
@@ -4501,7 +4499,6 @@
   "radio": "வானொலி",
   "radio_button_checked": "வானொலி பொத்தான் சரிபார்க்கப்பட்டது",
   "radio_button_unchecked": "வானொலி பொத்தான் சரிபார்க்கப்படாத",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb விருப்பங்கள், கோமா பிரிந்தது",
   "reached": "அடைந்தது",
   "reached (%1)": "அடைந்தது (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "தாவல்",
   "tall": "உயரமான",
   "taller": "உயரமான",
-  "tanzaku": "tanzaku",
   "tap to replay": "மீண்டும் பார்க்க தட்டவும்",
   "tap to set": "அமைக்க தட்டவும்",
   "template": "வடிவம்",
@@ -4687,5 +4683,8 @@
   "● current": "● தற்போதைய",
   "★ Set as default": "★ முன்னிருப்பாக அமை",
   "★ Update default": "★ முன்னிருப்பு புதுப்பி",
-  "❯ fastfetch": "❯ ஃபாஸ்ட்ஃபெட்ச்"
+  "❯ fastfetch": "❯ ஃபாஸ்ட்ஃபெட்ச்",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

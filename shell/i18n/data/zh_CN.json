@@ -4322,7 +4322,6 @@
   "installed": "已安装",
   "internet radio · 24/7 live": "网络电台 · 全天直播",
   "internet radio · fallback station": "网络电台 · 备用电台",
-  "islands": "islands",
   "its own effect": "自身效果",
   "iwd": "iwd",
   "just now": "刚刚",
@@ -4340,7 +4339,6 @@
   "launch": "启动",
   "launcher": "启动器",
   "launcher grid": "启动器网格",
-  "ledger": "ledger",
   "left": "左",
   "legacy island bar": "旧版 island bar",
   "light": "浅色",
@@ -4501,7 +4499,6 @@
   "radio": "单选",
   "radio_button_checked": "单选按钮已选中",
   "radio_button_unchecked": "单选按钮未选中",
-  "rail": "rail",
   "raw xkb options, comma separated": "原始 xkb 选项，逗号分隔",
   "reached": "已达到",
   "reached (%1)": "已达到 (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "选项卡式",
   "tall": "高",
   "taller": "更高",
-  "tanzaku": "tanzaku",
   "tap to replay": "轻触以重播",
   "tap to set": "轻触以设置",
   "template": "模板",
@@ -4687,5 +4683,8 @@
   "● current": "● 当前",
   "★ Set as default": "★ 设为默认",
   "★ Update default": "★ 更新默认",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

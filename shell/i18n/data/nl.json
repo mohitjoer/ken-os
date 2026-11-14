@@ -4322,7 +4322,6 @@
   "installed": "geïnstalleerd",
   "internet radio · 24/7 live": "internetradio · 24/7 live",
   "internet radio · fallback station": "internetradio · reservestation",
-  "islands": "islands",
   "its own effect": "eigen effect",
   "iwd": "iwd",
   "just now": "zojuist",
@@ -4340,7 +4339,6 @@
   "launch": "start",
   "launcher": "starter",
   "launcher grid": "launcher raster",
-  "ledger": "ledger",
   "left": "links",
   "legacy island bar": "verouderde island bar",
   "light": "licht",
@@ -4501,7 +4499,6 @@
   "radio": "radio",
   "radio_button_checked": "keuzerondje aangevinkt",
   "radio_button_unchecked": "keuzerondje niet aangevinkt",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb-opties, kommagescheiden",
   "reached": "bereikt",
   "reached (%1)": "bereikt (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "getabbed",
   "tall": "hoog",
   "taller": "langer",
-  "tanzaku": "tanzaku",
   "tap to replay": "tik om af te spelen",
   "tap to set": "tik om in te stellen",
   "template": "sjabloon",
@@ -4687,5 +4683,8 @@
   "● current": "● huidige",
   "★ Set as default": "★ Als standaard instellen",
   "★ Update default": "★ Standaard bijwerken",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

@@ -4322,7 +4322,6 @@
   "installed": "yüklü",
   "internet radio · 24/7 live": "internet radyosu · 24/7 canlı",
   "internet radio · fallback station": "internet radyosu · yedek istasyonu",
-  "islands": "islands",
   "its own effect": "kendi efekti",
   "iwd": "iwd",
   "just now": "az önce",
@@ -4340,7 +4339,6 @@
   "launch": "başlat",
   "launcher": "başlatıcı",
   "launcher grid": "launcher ızgarası",
-  "ledger": "ledger",
   "left": "sol",
   "legacy island bar": "eski island bar",
   "light": "açık",
@@ -4501,7 +4499,6 @@
   "radio": "radyo",
   "radio_button_checked": "radyo_düğmesi_işaretli",
   "radio_button_unchecked": "radyo_düğmesi_işaretsiz",
-  "rail": "rail",
   "raw xkb options, comma separated": "ham xkb seçenekleri, virgülle ayrılmış",
   "reached": "ulaşıldı",
   "reached (%1)": "ulaşıldı (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "sekmeli",
   "tall": "uzun",
   "taller": "daha uzun",
-  "tanzaku": "tanzaku",
   "tap to replay": "yeniden oynatmak için dokunun",
   "tap to set": "ayarlamak için dokunun",
   "template": "şablon",
@@ -4687,5 +4683,8 @@
   "● current": "● mevcut",
   "★ Set as default": "★ Varsayılan yap",
   "★ Update default": "★ Varsayılanı güncelle",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

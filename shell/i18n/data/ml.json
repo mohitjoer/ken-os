@@ -4322,7 +4322,6 @@
   "installed": "ഇൻസ്റ്റാൾ ചെയ്തു",
   "internet radio · 24/7 live": "ഇന്റർനെറ്റ് റേഡിയോ · 24/7 തത്സമയം",
   "internet radio · fallback station": "ഇന്റർനെറ്റ് റേഡിയോ · പ്രതിലോമ സ്ഥലം",
-  "islands": "islands",
   "its own effect": "അതിന്റെ സ്വന്തം ഫലം",
   "iwd": "iwd",
   "just now": "ഇപ്പോൾ തന്നെ",
@@ -4340,7 +4339,6 @@
   "launch": "പ്രവർത്തിപ്പിക്കുക",
   "launcher": "ലോഞ്ചർ",
   "launcher grid": "ലോഞ്ചർ ഗ്രിഡ്",
-  "ledger": "ledger",
   "left": "വലത്ത്",
   "legacy island bar": "പഴയ island bar",
   "light": "ലൈറ്റ്",
@@ -4501,7 +4499,6 @@
   "radio": "റേഡിയോ",
   "radio_button_checked": "റേഡിയോ_ബട്ടൺ_സജ്ജീകൃതം",
   "radio_button_unchecked": "റേഡിയോ_ബട്ടൺ_അസജ്ജീകൃതം",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb options, കോമ വിടിപ്പിച്ച",
   "reached": "എത്തി",
   "reached (%1)": "എത്തി (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "ടാബുകൾ",
   "tall": "ദൈർഘ്യമായ",
   "taller": "ഉയരംകൂടിയ",
-  "tanzaku": "tanzaku",
   "tap to replay": "പുനരാവർത്തനത്തിനായി ടാപ്പ് ചെയ്യുക",
   "tap to set": "സജ്ജീകരിക്കാൻ ടാപ്പ് ചെയ്യുക",
   "template": "ടെംപ്ലേറ്റ്",
@@ -4687,5 +4683,8 @@
   "● current": "● വർത്തമാനം",
   "★ Set as default": "★ ഡിഫോൾട്ടായി സെറ്റ് ചെയ്യുക",
   "★ Update default": "★ ഡിഫോൾട്ട് അപ്ഡേറ്റ് ചെയ്യുക",
-  "❯ fastfetch": "❯ ഫാസ്റ്റ്ഫെച്ച്"
+  "❯ fastfetch": "❯ ഫാസ്റ്റ്ഫെച്ച്",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

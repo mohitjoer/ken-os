@@ -4322,7 +4322,6 @@
   "installed": "מותקן",
   "internet radio · 24/7 live": "רדיו אינטרנט · שידור חי 24/7",
   "internet radio · fallback station": "רדיו אינטרנט · תחנת חירום",
-  "islands": "islands",
   "its own effect": "האפקט שלו",
   "iwd": "iwd",
   "just now": "זה עתה",
@@ -4340,7 +4339,6 @@
   "launch": "הפעל",
   "launcher": "מפעיל",
   "launcher grid": "רשת launcher",
-  "ledger": "ledger",
   "left": "שמאל",
   "legacy island bar": "island bar קדום",
   "light": "בהיר",
@@ -4501,7 +4499,6 @@
   "radio": "רדיו",
   "radio_button_checked": "כפתור רדיו מסומן",
   "radio_button_unchecked": "כפתור רדיו לא מסומן",
-  "rail": "rail",
   "raw xkb options, comma separated": "אפשרויות xkb גולמיות, מופרדות בפסיק",
   "reached": "הושג",
   "reached (%1)": "הושג (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "עם כרטיסיות",
   "tall": "גבוה",
   "taller": "גבוה יותר",
-  "tanzaku": "tanzaku",
   "tap to replay": "הקש להשמעה חוזרת",
   "tap to set": "הקש להגדרה",
   "template": "תבנית",
@@ -4687,5 +4683,8 @@
   "● current": "● נוכחי",
   "★ Set as default": "★ הגדר כברירת מחדל",
   "★ Update default": "★ עדכן ברירת מחדל",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

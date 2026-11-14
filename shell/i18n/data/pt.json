@@ -4322,7 +4322,6 @@
   "installed": "instalado",
   "internet radio · 24/7 live": "rádio internet · transmissão 24/7",
   "internet radio · fallback station": "rádio internet · estação reserva",
-  "islands": "islands",
   "its own effect": "o seu próprio efeito",
   "iwd": "iwd",
   "just now": "agora mesmo",
@@ -4340,7 +4339,6 @@
   "launch": "iniciar",
   "launcher": "lançador",
   "launcher grid": "grade do launcher",
-  "ledger": "ledger",
   "left": "esquerda",
   "legacy island bar": "island bar legada",
   "light": "claro",
@@ -4501,7 +4499,6 @@
   "radio": "rádio",
   "radio_button_checked": "radio_button_checked",
   "radio_button_unchecked": "radio_button_unchecked",
-  "rail": "rail",
   "raw xkb options, comma separated": "opções xkb cruas, separadas por vírgulas",
   "reached": "alcançado",
   "reached (%1)": "alcançado (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "com abas",
   "tall": "alto",
   "taller": "mais alto",
-  "tanzaku": "tanzaku",
   "tap to replay": "tocar para repetir",
   "tap to set": "tocar para definir",
   "template": "modelo",
@@ -4687,5 +4683,8 @@
   "● current": "● atual",
   "★ Set as default": "★ Definir como predefinido",
   "★ Update default": "★ Atualizar predefinido",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

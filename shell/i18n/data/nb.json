@@ -4322,7 +4322,6 @@
   "installed": "installert",
   "internet radio · 24/7 live": "internetradio · 24/7 direkte",
   "internet radio · fallback station": "internetradio · reservekanal",
-  "islands": "islands",
   "its own effect": "egen effekt",
   "iwd": "iwd",
   "just now": "akkurat nå",
@@ -4340,7 +4339,6 @@
   "launch": "start",
   "launcher": "starter",
   "launcher grid": "launcher-rutenett",
-  "ledger": "ledger",
   "left": "venstre",
   "legacy island bar": "eldre island-bar",
   "light": "lys",
@@ -4501,7 +4499,6 @@
   "radio": "radio",
   "radio_button_checked": "radioknapp_valgt",
   "radio_button_unchecked": "radioknapp_uvalgt",
-  "rail": "rail",
   "raw xkb options, comma separated": "rå xkb-alternativer, kommaseparert",
   "reached": "nådd",
   "reached (%1)": "nådd (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "faner",
   "tall": "høy",
   "taller": "høyere",
-  "tanzaku": "tanzaku",
   "tap to replay": "trykk for å spille av igjen",
   "tap to set": "trykk for å angi",
   "template": "mal",
@@ -4687,5 +4683,8 @@
   "● current": "● gjeldende",
   "★ Set as default": "★ Sett som standard",
   "★ Update default": "★ Oppdater standard",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

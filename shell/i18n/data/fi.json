@@ -4322,7 +4322,6 @@
   "installed": "asennettu",
   "internet radio · 24/7 live": "internet-radio · 24/7 live",
   "internet radio · fallback station": "internet-radio · varaasema",
-  "islands": "islands",
   "its own effect": "oma tehoste",
   "iwd": "iwd",
   "just now": "juuri nyt",
@@ -4340,7 +4339,6 @@
   "launch": "käynnistä",
   "launcher": "käynnistin",
   "launcher grid": "kehittäjän ruudukko",
-  "ledger": "ledger",
   "left": "vasen",
   "legacy island bar": "vanha saari-palkki",
   "light": "vaalea",
@@ -4501,7 +4499,6 @@
   "radio": "radio",
   "radio_button_checked": "radiopainike valittu",
   "radio_button_unchecked": "radiopainike valitsematon",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb -asetukset, pilkulla erotettu",
   "reached": "saavutettu",
   "reached (%1)": "saavutettu (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "välilehdellinen",
   "tall": "korkea",
   "taller": "pidempi",
-  "tanzaku": "tanzaku",
   "tap to replay": "toista napauttamalla",
   "tap to set": "aseta napauttamalla",
   "template": "malli",
@@ -4687,5 +4683,8 @@
   "● current": "● nykyinen",
   "★ Set as default": "★ Aseta oletukseksi",
   "★ Update default": "★ Päivitä oletukseksi",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

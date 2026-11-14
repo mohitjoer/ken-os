@@ -4322,7 +4322,6 @@
   "installed": "встановлено",
   "internet radio · 24/7 live": "інтернет-радіо · 24/7 live",
   "internet radio · fallback station": "інтернет-радіо · резервна станція",
-  "islands": "islands",
   "its own effect": "його власний ефект",
   "iwd": "iwd",
   "just now": "щойно",
@@ -4340,7 +4339,6 @@
   "launch": "запустити",
   "launcher": "запускач",
   "launcher grid": "сітка лаунчера",
-  "ledger": "ledger",
   "left": "ліворуч",
   "legacy island bar": "застаріла island bar",
   "light": "світла",
@@ -4501,7 +4499,6 @@
   "radio": "радіо",
   "radio_button_checked": "перемикач_увімкнено",
   "radio_button_unchecked": "перемикач_вимкнено",
-  "rail": "rail",
   "raw xkb options, comma separated": "сирі параметри xkb, розділені комою",
   "reached": "досягнуто",
   "reached (%1)": "досягнуто (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "вкладки",
   "tall": "висока",
   "taller": "вище",
-  "tanzaku": "tanzaku",
   "tap to replay": "натисніть для повтору",
   "tap to set": "натисніть для встановлення",
   "template": "шаблон",
@@ -4687,5 +4683,8 @@
   "● current": "● поточна",
   "★ Set as default": "★ Встановити за замовч.",
   "★ Update default": "★ Оновити замовч.",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

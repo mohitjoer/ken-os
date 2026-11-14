@@ -4322,7 +4322,6 @@
   "installed": "已安裝",
   "internet radio · 24/7 live": "網路廣播 · 24/7 直播",
   "internet radio · fallback station": "網路廣播 · 備用電臺",
-  "islands": "islands",
   "its own effect": "其專屬效果",
   "iwd": "iwd",
   "just now": "剛才",
@@ -4340,7 +4339,6 @@
   "launch": "啟動",
   "launcher": "啟動器",
   "launcher grid": "啟動器網格",
-  "ledger": "ledger",
   "left": "左",
   "legacy island bar": "舊版島形 Bar",
   "light": "淺色",
@@ -4501,7 +4499,6 @@
   "radio": "廣播",
   "radio_button_checked": "單選按鈕已選",
   "radio_button_unchecked": "單選按鈕未選",
-  "rail": "rail",
   "raw xkb options, comma separated": "原始 xkb 選項,逗號分隔",
   "reached": "已到達",
   "reached (%1)": "已到達（%1）",
@@ -4573,7 +4570,6 @@
   "tabbed": "分頁",
   "tall": "高",
   "taller": "較高",
-  "tanzaku": "tanzaku",
   "tap to replay": "點擊重新播放",
   "tap to set": "點擊設定",
   "template": "範本",
@@ -4687,5 +4683,8 @@
   "● current": "● 目前",
   "★ Set as default": "★ 設為預設",
   "★ Update default": "★ 更新預設",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

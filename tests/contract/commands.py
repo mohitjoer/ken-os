@@ -125,7 +125,13 @@ def providers():
         for entry in os.listdir(cmd_dir):
             if os.path.isdir(os.path.join(cmd_dir, entry)):
                 bins.add(entry)
-    bins.update(["asura-vmd", "asura-vm-mon", "asura-vm-ssh", "os-ctl", "asura-installer", "void-installer"])
+    bins.update(["asura-vmd", "asura-vm-mon", "asura-vm-ssh", "os-ctl", "asura-installer", "void-installer", "asura-user-services"])
+
+    runit_dir = os.path.join(ROOT, "session", "runit")
+    if os.path.isdir(runit_dir):
+        for s in os.listdir(runit_dir):
+            if os.path.isfile(os.path.join(runit_dir, s)):
+                bins.add(s)
 
     for s in ("asura-hub", "asura-idle", "asura-pin", "asura-reload-cover", "asura-shot", "asura-vm", "asura-wallpaper-ui", "asura-welcome", "asura-greeter"):
         if os.path.isfile(os.path.join(ROOT, "session", s)):

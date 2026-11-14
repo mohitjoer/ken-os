@@ -4322,7 +4322,6 @@
   "installed": "instalat",
   "internet radio · 24/7 live": "radio internet · 24/7 live",
   "internet radio · fallback station": "radio internet · stație de rezervă",
-  "islands": "islands",
   "its own effect": "efectul propriu",
   "iwd": "iwd",
   "just now": "acum",
@@ -4340,7 +4339,6 @@
   "launch": "lansare",
   "launcher": "lansator",
   "launcher grid": "grilă launcher",
-  "ledger": "ledger",
   "left": "stânga",
   "legacy island bar": "bară island moștenită",
   "light": "luminos",
@@ -4501,7 +4499,6 @@
   "radio": "radio",
   "radio_button_checked": "radio_button_checked",
   "radio_button_unchecked": "radio_button_unchecked",
-  "rail": "rail",
   "raw xkb options, comma separated": "opțiuni xkb brute, separate prin virgulă",
   "reached": "atins",
   "reached (%1)": "atins (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "cu tab-uri",
   "tall": "înalt",
   "taller": "mai înalt",
-  "tanzaku": "tanzaku",
   "tap to replay": "atinge pentru redare",
   "tap to set": "atinge pentru setare",
   "template": "șablon",
@@ -4687,5 +4683,8 @@
   "● current": "● curent",
   "★ Set as default": "★ Setează implicit",
   "★ Update default": "★ Actualizează implicit",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

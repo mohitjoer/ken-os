@@ -4322,7 +4322,6 @@
   "installed": "nainstalováno",
   "internet radio · 24/7 live": "internetové rádio · 24/7 vysílání",
   "internet radio · fallback station": "internetové rádio · náhradní stanice",
-  "islands": "islands",
   "its own effect": "svůj vlastní účinek",
   "iwd": "iwd",
   "just now": "právě teď",
@@ -4340,7 +4339,6 @@
   "launch": "spustit",
   "launcher": "spouštěč",
   "launcher grid": "mřížka spouštěče",
-  "ledger": "ledger",
   "left": "vlevo",
   "legacy island bar": "starší lišta ostrova",
   "light": "světlo",
@@ -4501,7 +4499,6 @@
   "radio": "rádio",
   "radio_button_checked": "radio_button_checked",
   "radio_button_unchecked": "radio_button_unchecked",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb možnosti, oddělené čárkou",
   "reached": "dosaženo",
   "reached (%1)": "dosaženo (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "záložkové",
   "tall": "vysoký",
   "taller": "vyšší",
-  "tanzaku": "tanzaku",
   "tap to replay": "klepnutím znovu přehrajete",
   "tap to set": "klepnutím nastavte",
   "template": "šablona",
@@ -4687,5 +4683,8 @@
   "● current": "● aktuální",
   "★ Set as default": "★ Nastavit jako výchozí",
   "★ Update default": "★ Aktualizovat výchozí",
-  "❯ fastfetch": "❯ rychlé načtení"
+  "❯ fastfetch": "❯ rychlé načtení",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

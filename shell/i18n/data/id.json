@@ -4322,7 +4322,6 @@
   "installed": "terpasang",
   "internet radio · 24/7 live": "radio internet · 24/7 live",
   "internet radio · fallback station": "radio internet · stasiun cadangan",
-  "islands": "islands",
   "its own effect": "efek miliknya sendiri",
   "iwd": "iwd",
   "just now": "baru saja",
@@ -4340,7 +4339,6 @@
   "launch": "luncurkan",
   "launcher": "peluncur",
   "launcher grid": "kisi launcher",
-  "ledger": "ledger",
   "left": "kiri",
   "legacy island bar": "bar pulau lawas",
   "light": "terang",
@@ -4501,7 +4499,6 @@
   "radio": "radio",
   "radio_button_checked": "tombol_radio_tercentang",
   "radio_button_unchecked": "tombol_radio_tidak_tercentang",
-  "rail": "rail",
   "raw xkb options, comma separated": "opsi xkb mentah, dipisah koma",
   "reached": "tercapai",
   "reached (%1)": "tercapai (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "bertabel",
   "tall": "tinggi",
   "taller": "lebih tinggi",
-  "tanzaku": "tanzaku",
   "tap to replay": "ketuk untuk putar ulang",
   "tap to set": "ketuk untuk atur",
   "template": "template",
@@ -4687,5 +4683,8 @@
   "● current": "● saat ini",
   "★ Set as default": "★ Jadikan default",
   "★ Update default": "★ Perbarui default",
-  "❯ fastfetch": "❯ fastfetch"
+  "❯ fastfetch": "❯ fastfetch",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }

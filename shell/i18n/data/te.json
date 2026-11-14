@@ -4322,7 +4322,6 @@
   "installed": "ఇన్‌స్టాల్ చేయబడింది",
   "internet radio · 24/7 live": "ఇంటర్నెట్ రేడియో · 24/7 ప్రత్యక్ష",
   "internet radio · fallback station": "ఇంటర్నెట్ రేడియో · ఫాల్‌బ్యాక్ స్టేషన్",
-  "islands": "islands",
   "its own effect": "దాని స్వంత ప్రభావం",
   "iwd": "iwd",
   "just now": "ఇప్పుడే",
@@ -4340,7 +4339,6 @@
   "launch": "ప్రారంభించండి",
   "launcher": "లాంచర్",
   "launcher grid": "లాంచర్ గ్రిడ్",
-  "ledger": "ledger",
   "left": "ఎడమ",
   "legacy island bar": "లిగేసీ island bar",
   "light": "లైట్",
@@ -4501,7 +4499,6 @@
   "radio": "రేడియో",
   "radio_button_checked": "రేడియో బటన్ చెక్ చేయబడింది",
   "radio_button_unchecked": "రేడియో బటన్ చెక్ చేయబడలేదు",
-  "rail": "rail",
   "raw xkb options, comma separated": "raw xkb ఎంపికలు, కామా వేరు",
   "reached": "చేరుకోసారు",
   "reached (%1)": "చేరుకోసారు (%1)",
@@ -4573,7 +4570,6 @@
   "tabbed": "ట్యాబ్‌లు",
   "tall": "పొడవైన",
   "taller": "పొడవైనది",
-  "tanzaku": "tanzaku",
   "tap to replay": "replay కోసం నొక్కండి",
   "tap to set": "సెట్ చేయడానికి నొక్కండి",
   "template": "టెంప్లేట్",
@@ -4687,5 +4683,8 @@
   "● current": "● ప్రస్తుత",
   "★ Set as default": "★ డిఫాల్ట్‌గా సెట్ చేయండి",
   "★ Update default": "★ డిఫాల్ట్ నవీకరించండి",
-  "❯ fastfetch": "❯ ఫాస్ట్‌ఫెచ్"
+  "❯ fastfetch": "❯ ఫాస్ట్‌ఫెచ్",
+  "floating": "floating",
+  "row": "row",
+  "bar": "bar"
 }
