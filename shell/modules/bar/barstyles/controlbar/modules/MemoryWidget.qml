@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Ui.Singletons
+import "../IconMap.js" as IconMap
 
 Item {
     id: rootMod
@@ -24,55 +25,15 @@ Item {
     Row {
         id: row
         anchors.centerIn: parent
-        anchors.horizontalCenterOffset: -1
         spacing: 4
 
-        Item {
+        IconText {
             anchors.verticalCenter: parent.verticalCenter
-            width: 16
-            height: 16
-
-            Canvas {
-                id: memoryRing
-                anchors.fill: parent
-
-                property color tint: rootMod.contentColor
-                property color base: rootMod.contentColor
-                onTintChanged: requestPaint()
-                onBaseChanged: requestPaint()
-
-                onPaint: {
-                    var ctx = getContext("2d")
-                    ctx.clearRect(0, 0, width, height)
-                    var cx = width / 2
-                    var cy = height / 2
-                    var r = (width / 2) - 1.5
-                    var ratio = Math.max(0, Math.min(1, rootMod.percent / 100))
-                    var start = -Math.PI / 2
-                    var end = start + Math.PI * 2 * ratio
-
-                    ctx.lineWidth = 1.7
-                    ctx.lineCap = "round"
-
-                    ctx.beginPath()
-                    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-                    ctx.strokeStyle = Qt.rgba(base.r, base.g, base.b, 0.18)
-                    ctx.stroke()
-
-                    if (ratio > 0) {
-                        ctx.beginPath()
-                        ctx.arc(cx, cy, r, start, end)
-                        ctx.strokeStyle = tint
-                        ctx.stroke()
-                    }
-                }
-
-                Component.onCompleted: requestPaint()
-                Connections {
-                    target: rootMod
-                    function onPercentChanged() { memoryRing.requestPaint() }
-                }
-            }
+            text: IconMap.icon("memory")
+            color: rootMod.contentColor
+            font.pixelSize: 15
+            font.weight: Font.Medium
+            fill: 0
         }
 
         UiText {

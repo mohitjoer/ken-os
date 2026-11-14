@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import qs.Services
+import "../IconMap.js" as IconMap
 
 Item {
     id: rootMod
@@ -141,13 +142,14 @@ Item {
         NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
     }
 
-    // ── idle: a single music-note, clickable to open the no-song panel ──
+    // ── idle: audio equalizer bars, clickable to open the player panel ──
     IconText {
         id: idleNote
         anchors.centerIn: parent
         visible: !rootMod.active
-        text: ""   // music_note
+        text: IconMap.icon("equalizer")
         font.pixelSize: 15
+        fill: 0
         color: Qt.rgba(rootMod.contentColor.r, rootMod.contentColor.g, rootMod.contentColor.b, 0.45)
         MouseArea {
             anchors.fill: parent

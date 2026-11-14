@@ -102,11 +102,11 @@ Item {
         IconText {
             anchors.verticalCenter: parent.verticalCenter
             visible: rootMod.mode !== "wifi"
-            text: IconMap.icon(rootMod.mode === "ethernet" ? "lan" : "signal_wifi_off")
+            text: IconMap.icon(rootMod.mode === "ethernet" ? "swap_vert" : "signal_wifi_off")
             color: rootMod.mode === "ethernet"
                 ? rootMod.contentColor
                 : Qt.rgba(rootMod.contentColor.r, rootMod.contentColor.g, rootMod.contentColor.b, 0.65)
-            font.pixelSize: rootMod.mode === "ethernet" ? 14 : 15
+            font.pixelSize: 15
             Behavior on color { ColorAnimation { duration: 160 } }
         }
 

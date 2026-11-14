@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Ui.Singletons
+import "../IconMap.js" as IconMap
 
 Item {
     id: rootMod
@@ -21,14 +22,13 @@ Item {
         anchors.centerIn: parent
         spacing: 4
 
-        UiText {
+        IconText {
             anchors.verticalCenter: parent.verticalCenter
-            width: 15
-            text: "󰋊"
+            text: IconMap.icon("storage")
             color: rootMod.contentColor
-            font.family: root.mono
             font.pixelSize: 15
-            horizontalAlignment: Text.AlignHCenter
+            font.weight: Font.Medium
+            fill: 0
         }
 
         UiText {

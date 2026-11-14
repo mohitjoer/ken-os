@@ -18,7 +18,7 @@ var GLYPHS = {
     "volume":     "graphic_eq",
     "ai":         "smart_toy",
     "clock":      "schedule",
-    "media":      "music_note",
+    "media":      "equalizer",
     "quick":      "tune",
     "network":    "signal_wifi_4_bar",
     "battery":    "battery_full",

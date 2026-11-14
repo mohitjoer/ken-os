@@ -43,7 +43,7 @@ Item {
                 : rootMod.contentColor
             font.pixelSize: 15
             font.weight: Font.Medium
-            fill: 1
+            fill: 0
             Behavior on color { ColorAnimation { duration: 160 } }
         }
 

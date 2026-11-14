@@ -22,7 +22,12 @@ var icons = {
     "mic": "\uE029",
     "mic_off": "\uE02B",
     "memory": "\uE322",
+    "developer_board": "\uE875",
     "storage": "\uE1DB",
+    "equalizer": "\uE01D",
+    "graphic_eq": "\uE1B8",
+    "swap_vert": "\uE8D5",
+    "router": "\uEAD2",
     "speed": "\uE9E4",
     "package_2": "\uF569",
 }

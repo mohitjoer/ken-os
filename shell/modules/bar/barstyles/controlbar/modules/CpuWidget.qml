@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../IconMap.js" as IconMap
 
 Item {
     id: rootMod
@@ -23,11 +24,11 @@ Item {
 
         IconText {
             anchors.verticalCenter: parent.verticalCenter
-            text: "planner_review"
+            text: IconMap.icon("developer_board")
             color: rootMod.contentColor
             font.pixelSize: 15
-            font.weight: Font.DemiBold
-            fill: 1
+            font.weight: Font.Medium
+            fill: 0
         }
 
         UiText {
