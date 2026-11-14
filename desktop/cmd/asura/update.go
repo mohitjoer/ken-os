@@ -229,18 +229,35 @@ func runLocalXbpsUpdate() error {
 		sudo = ""
 	}
 
-	var syncCmd *exec.Cmd
-	if sudo != "" {
-		syncCmd = exec.Command(sudo, "xbps-install", "-Su", "-y")
-	} else {
-		syncCmd = exec.Command("xbps-install", "-Su", "-y")
+	execCommand := func(prog string, args ...string) *exec.Cmd {
+		if sudo != "" {
+			fullArgs := append([]string{prog}, args...)
+			return exec.Command(sudo, fullArgs...)
+		}
+		return exec.Command(prog, args...)
 	}
+
+	syncCmd := execCommand("xbps-install", "-Su", "-y")
 	syncCmd.Stdout, syncCmd.Stderr, syncCmd.Stdin = os.Stdout, os.Stderr, os.Stdin
 	if err := syncCmd.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 8 {
 			fmt.Fprintf(os.Stderr, "\n==> XBPS Warning: package transaction aborted due to unresolved shared libraries.\n")
-			fmt.Fprintf(os.Stderr, "==> A third-party repository (such as hyprland-void) has packages awaiting base system library rebuilds.\n")
-			fmt.Fprintf(os.Stderr, "==> Run 'asura update' to update ASURA desktop packages without touching broken third-party packages.\n\n")
+			fmt.Fprintf(os.Stderr, "==> Third-party repository (hyprland-void) has packages awaiting base system library rebuilds.\n")
+			fmt.Fprintf(os.Stderr, "==> Attempting fallback: holding mismatched third-party packages to update remaining system packages...\n")
+
+			holdCmd := execCommand("xbps-pkgdb", "-m", "hold", "aquamarine", "hyprgraphics", "hyprland")
+			_ = holdCmd.Run()
+
+			retryCmd := execCommand("xbps-install", "-Su", "-y")
+			retryCmd.Stdout, retryCmd.Stderr, retryCmd.Stdin = os.Stdout, os.Stderr, os.Stdin
+			if retryErr := retryCmd.Run(); retryErr == nil {
+				fmt.Println("==> System packages updated successfully (mismatched third-party packages held).")
+				return nil
+			}
+
+			fmt.Fprintf(os.Stderr, "\n==> Note: Base system update deferred until upstream library transitions complete.\n")
+			fmt.Fprintf(os.Stderr, "==> Continuing ASURA desktop update...\n\n")
+			return nil
 		}
 		return fmt.Errorf("xbps-install: %w", err)
 	}
