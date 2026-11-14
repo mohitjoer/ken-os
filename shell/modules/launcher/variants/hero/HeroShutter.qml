@@ -85,22 +85,29 @@ Item {
         precision: SystemClock.Minutes
     }
 
-    HeroCrop {
-        anchors.fill: parent
-        source: LauncherConfig.heroImage
-        fallbackSource: Qt.resolvedUrl("../../shared/art/hands-adam.png")
-        focalX: LauncherConfig.heroPosX
-        focalY: LauncherConfig.heroPosY
-        strength: LauncherConfig.heroStrength
-    }
-
+    // Sleek monochrome ASURA launcher header background
     Rectangle {
+        id: bgCard
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(root.shade, root.shade, root.shade, 0.52) }
-            GradientStop { position: 0.34; color: Qt.rgba(root.shade, root.shade, root.shade, 0.06) }
-            GradientStop { position: 0.68; color: Qt.rgba(root.shade, root.shade, root.shade, 0.10) }
-            GradientStop { position: 1; color: Qt.rgba(root.shade, root.shade, root.shade, 0.64) }
+        color: Tokens.light ? Qt.rgba(0.96, 0.96, 0.97, 0.96) : Qt.rgba(0.08, 0.08, 0.09, 0.96)
+
+        // Subtle upper surface reflection
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: 1
+            color: Tokens.light ? Qt.rgba(1, 1, 1, 0.7) : Qt.rgba(1, 1, 1, 0.1)
+        }
+
+        // Soft vertical depth gradient
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(root.shade, root.shade, root.shade, 0.08) }
+                GradientStop { position: 0.5; color: "transparent" }
+                GradientStop { position: 1.0; color: Qt.rgba(1 - root.shade, 1 - root.shade, 1 - root.shade, 0.08) }
+            }
         }
     }
 
@@ -190,29 +197,25 @@ Item {
     Column {
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.leftMargin: 16 * root.s
-        anchors.topMargin: 12 * root.s
-        spacing: 1 * root.s
+        anchors.leftMargin: 18 * root.s
+        anchors.topMargin: 14 * root.s
+        spacing: 2 * root.s
 
         Text {
             visible: LauncherConfig.showGreeting && !root.compressed
             text: root.greeting
-            color: Theme.bright
-            style: Text.Raised
-            styleColor: Qt.rgba(root.shade, root.shade, root.shade, 0.82)
+            color: Theme.faint
             font.family: Theme.mono
             font.pixelSize: 9 * root.s
             font.weight: Font.DemiBold
-            font.letterSpacing: 1.5 * root.s
+            font.letterSpacing: 1.8 * root.s
         }
 
         Text {
             text: Qt.formatTime(root.now, "HH:mm")
             color: Theme.bright
-            style: Text.Raised
-            styleColor: Qt.rgba(root.shade, root.shade, root.shade, 0.86)
             font.family: Theme.font
-            font.pixelSize: (root.compressed ? 17 : 28) * root.s
+            font.pixelSize: (root.compressed ? 18 : 28) * root.s
             font.weight: Font.Light
             font.features: ({ "tnum": 1 })
         }
@@ -221,13 +224,13 @@ Item {
     Column {
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.rightMargin: 16 * root.s
-        anchors.topMargin: 12 * root.s
-        spacing: 1 * root.s
+        anchors.rightMargin: 18 * root.s
+        anchors.topMargin: 14 * root.s
+        spacing: 2 * root.s
 
         Row {
             anchors.right: parent.right
-            spacing: 5 * root.s
+            spacing: 6 * root.s
             visible: LauncherConfig.showWeather && Weather.available
 
             Shared.WeatherGlyph {
@@ -243,8 +246,6 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Weather.temp
                 color: Theme.bright
-                style: Text.Raised
-                styleColor: Qt.rgba(root.shade, root.shade, root.shade, 0.86)
                 font.family: Theme.font
                 font.pixelSize: (root.compressed ? 14 : 19) * root.s
                 font.weight: Font.Medium
@@ -256,9 +257,7 @@ Item {
             anchors.right: parent.right
             visible: LauncherConfig.showWeather && Weather.available && !root.compressed
             text: Weather.condition
-            color: Theme.subtle
-            style: Text.Raised
-            styleColor: Qt.rgba(root.shade, root.shade, root.shade, 0.86)
+            color: Theme.faint
             font.family: Theme.font
             font.pixelSize: 10 * root.s
         }
@@ -266,21 +265,19 @@ Item {
         Text {
             anchors.right: parent.right
             text: root.dateText
-            color: Theme.bright
-            style: Text.Raised
-            styleColor: Qt.rgba(root.shade, root.shade, root.shade, 0.86)
+            color: Theme.subtle
             font.family: Theme.mono
-            font.pixelSize: 9 * root.s
-            font.letterSpacing: 0.6 * root.s
+            font.pixelSize: 10 * root.s
+            font.letterSpacing: 0.8 * root.s
         }
     }
 
     Item {
         id: queryLine
         anchors.horizontalCenter: parent.horizontalCenter
-        y: (root.compressed ? 34 : 96) * root.s
-        width: Math.min(parent.width - 56 * root.s, 440 * root.s)
-        height: 38 * root.s
+        y: (root.compressed ? 32 : 92) * root.s
+        width: Math.min(parent.width - 48 * root.s, 480 * root.s)
+        height: 40 * root.s
 
         // Ambient soft drop shadow
         Rectangle {
@@ -288,7 +285,7 @@ Item {
             anchors.topMargin: 2 * root.s
             radius: 10 * root.s
             color: Theme.shadow
-            opacity: 0.45
+            opacity: 0.35
             antialiasing: true
         }
 
@@ -297,9 +294,9 @@ Item {
             id: well
             anchors.fill: parent
             radius: 10 * root.s
-            color: Tokens.light ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(0.06, 0.06, 0.07, 0.76)
+            color: Tokens.light ? Qt.rgba(0.93, 0.93, 0.94, 0.92) : Qt.rgba(0.12, 0.12, 0.13, 0.88)
             border.width: 1
-            border.color: field.activeFocus ? Theme.bright : Qt.rgba(1, 1, 1, 0.16)
+            border.color: field.activeFocus ? Theme.bright : Qt.rgba(1, 1, 1, 0.15)
             Behavior on border.color {
                 ColorAnimation { duration: Motion.selection; easing.type: Easing.OutCubic }
             }
