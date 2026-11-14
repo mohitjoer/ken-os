@@ -8,13 +8,11 @@ import "../modules"
 import qs.Ui.Singletons
 
 // The now-playing card: the record on the left, the track and its transport on
-// the right, and the desktop's 10-band equalizer underneath.
+// the right. Equalizer settings live on the dedicated Audio settings page in Hub.
 //
 // It is the mpris widget's popup, so it opens where the widget is and closes on
 // a click outside or Escape, like every other qsbar panel. The spectrum ringing
-// the record is the shell's one cava feed (AudioBars), not a private analyser,
-// and the equalizer is the Equalizer service: bands are live, and the filter only
-// exists in the audio graph while the equalizer is on.
+// the record is the shell's one cava feed (AudioBars), not a private analyser.
 PanelWindow {
     id: mprisPanel
     required property var root
@@ -97,11 +95,6 @@ PanelWindow {
     readonly property int bands: AudioBars.bars
     onVisibleChanged: {
         AudioBars.setActive(mprisPanel, mprisPanel.visible)
-        // Ask the script what the graph actually looks like. The state file is
-        // watched, but it is replaced by a rename, and a card that opens showing
-        // last week's curve is worse than one that costs a process to be right.
-        if (mprisPanel.visible)
-            Equalizer.refresh()
     }
     Component.onDestruction: AudioBars.setActive(mprisPanel, false)
 
@@ -117,13 +110,10 @@ PanelWindow {
 
     // ── entry stagger ───────────────────────────────────────────────────────
     // The card assembles rather than appearing: the record swings in, then the
-    // track, the transport, the equalizer and finally its presets. Each value is
-    // an opacity AND the amount of travel left, so one number drives both.
+    // track and transport. Each value is an opacity AND the amount of travel left.
     property real inCover: 0
     property real inText: 0
     property real inControls: 0
-    property real inEq: 0
-    property real inPresets: 0
 
     ParallelAnimation {
         id: intro
@@ -136,14 +126,6 @@ PanelWindow {
             PauseAnimation { duration: 110 }
             NumberAnimation { target: mprisPanel; property: "inControls"; from: 0; to: 1; duration: 340; easing.type: Easing.OutCubic }
         }
-        SequentialAnimation {
-            PauseAnimation { duration: 160 }
-            NumberAnimation { target: mprisPanel; property: "inEq"; from: 0; to: 1; duration: 380; easing.type: Easing.OutCubic }
-        }
-        SequentialAnimation {
-            PauseAnimation { duration: 220 }
-            NumberAnimation { target: mprisPanel; property: "inPresets"; from: 0; to: 1; duration: 380; easing.type: Easing.OutCubic }
-        }
     }
 
     Connections {
@@ -151,7 +133,6 @@ PanelWindow {
         function onMprisVisibleChanged() {
             if (!mprisPanel.root.mprisVisible) return
             mprisPanel.inCover = 0; mprisPanel.inText = 0; mprisPanel.inControls = 0
-            mprisPanel.inEq = 0; mprisPanel.inPresets = 0
             intro.restart()
         }
     }
@@ -600,239 +581,6 @@ PanelWindow {
                             glyph: "skip_next"
                             enabled: mprisPanel.player ? mprisPanel.player.canGoNext : false
                             onActivated: if (mprisPanel.player) mprisPanel.player.next()
-                        }
-                    }
-                }
-            }
-
-            Rectangle { width: parent.width; height: 1; color: root.sep }
-
-            // ── equalizer ───────────────────────────────────────────────────
-            Item {
-                width: parent.width
-                height: 20
-                opacity: mprisPanel.inEq
-                transform: Translate { y: 8 * (1 - mprisPanel.inEq) }
-
-                UiText {
-                    anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    text: I18n.tr("EQUALIZER")
-                    color: root.ink; font.family: root.mono; font.pixelSize: 11
-                    font.letterSpacing: 2; font.weight: Font.Medium
-                }
-                Row {
-                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
-                    // The state, in the user's words: which curve is loaded, and
-                    // whether the filter is actually in the audio graph.
-                    UiText {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: Equalizer.presetLabel(Equalizer.preset)
-                        color: root.sumiHi
-                        font.family: root.mono; font.pixelSize: 10; font.letterSpacing: 1
-                    }
-                    Rectangle {
-                        id: eqToggle
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 44; height: 20
-                        radius: root.panelButtonRadius
-                        color: Equalizer.on ? root.fillActive
-                             : (eqToggleMa.containsMouse ? root.fillHover : root.fillIdle)
-                        border.width: 1
-                        border.color: (Equalizer.on || eqToggleMa.containsMouse) ? root.seal : root.sep
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        UiText {
-                            anchors.centerIn: parent
-                            text: Equalizer.on ? I18n.tr("ON") : I18n.tr("OFF")
-                            color: Equalizer.on ? root.seal : Qt.rgba(root.seal.r, root.seal.g, root.seal.b, 0.45)
-                            font.family: root.mono; font.pixelSize: 10; font.weight: Font.Medium
-                        }
-                        MouseArea {
-                            id: eqToggleMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Equalizer.setOn(!Equalizer.on)
-                        }
-                    }
-                }
-            }
-
-            // ── the ten bands ──
-            Row {
-                id: bandRow
-                width: parent.width
-                height: 132
-                opacity: mprisPanel.inEq
-                transform: Translate { y: 14 * (1 - mprisPanel.inEq) }
-
-                Repeater {
-                    model: Equalizer.bandCount
-                    delegate: Item {
-                        id: band
-                        required property int index
-                        width: bandRow.width / Equalizer.bandCount
-                        height: bandRow.height
-
-                        // While the finger is down the slider owns its value, so
-                        // the service's answer (which arrives a few ms later, and
-                        // once more after the debounce) can never yank it back.
-                        property bool dragging: false
-                        property int dragDb: 0
-                        readonly property int db: dragging ? dragDb : Equalizer.gainAt(index)
-                        readonly property real frac: (db + Equalizer.range) / (2 * Equalizer.range)
-
-                        readonly property int trackHeight: band.height - 34
-                        readonly property real handleSize: 13
-
-                        function dbAt(y) {
-                            var usable = band.trackHeight - band.handleSize
-                            var t = 1 - Math.max(0, Math.min(1, (y - band.handleSize / 2) / usable))
-                            return Math.round(t * 2 * Equalizer.range - Equalizer.range)
-                        }
-
-                        Timer {
-                            id: livePush
-                            interval: 110
-                            onTriggered: Equalizer.setBand(band.index, band.dragDb)
-                        }
-
-                        Rectangle {
-                            id: bandTrack
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: parent.top
-                            width: 10
-                            height: band.trackHeight
-                            radius: 5
-                            color: root.fillIdle
-                            border.width: 1
-                            border.color: bandMa.containsMouse || band.dragging ? root.seal : root.sep
-                            Behavior on border.color { ColorAnimation { duration: 120 } }
-
-                            // filled from the floor, the way a graphic EQ reads
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.margins: 1
-                                height: Math.max(0, (parent.height - 2) * band.frac)
-                                radius: 4
-                                color: Equalizer.on ? root.seal
-                                     : Qt.rgba(root.seal.r, root.seal.g, root.seal.b, 0.35)
-                                Behavior on height { NumberAnimation { duration: band.dragging ? 0 : 220; easing.type: Easing.OutCubic } }
-                            }
-
-                            // 0 dB, so a boost reads apart from a cut
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                y: (parent.height - 2) * 0.5
-                                width: parent.width + 6
-                                height: 1
-                                color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.22)
-                            }
-                        }
-
-                        Rectangle {
-                            id: handle
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: band.handleSize
-                            height: width
-                            radius: width / 2
-                            y: (band.trackHeight - band.handleSize) * (1 - band.frac)
-                            color: root.paper
-                            border.width: 2
-                            border.color: Equalizer.on ? root.seal
-                                : Qt.rgba(root.seal.r, root.seal.g, root.seal.b, 0.45)
-                            scale: band.dragging ? 1.18 : 1
-                            Behavior on y { NumberAnimation { duration: band.dragging ? 0 : 220; easing.type: Easing.OutCubic } }
-                            Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-                        }
-
-                        MouseArea {
-                            id: bandMa
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: parent.top
-                            width: 22
-                            height: band.trackHeight
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onPressed: (m) => {
-                                band.dragDb = band.dbAt(m.y)
-                                band.dragging = true
-                                livePush.restart()
-                            }
-                            onPositionChanged: (m) => {
-                                if (!band.dragging) return
-                                var next = band.dbAt(m.y)
-                                if (next === band.dragDb) return
-                                band.dragDb = next
-                                if (!livePush.running) livePush.restart()
-                            }
-                            onReleased: {
-                                livePush.stop()
-                                Equalizer.setBand(band.index, band.dragDb)
-                                band.dragging = false
-                            }
-                            onCanceled: {
-                                livePush.stop()
-                                band.dragging = false
-                            }
-                            onWheel: (w) => {
-                                var step = w.angleDelta.y > 0 ? 1 : -1
-                                Equalizer.setBand(band.index, Equalizer.gainAt(band.index) + step)
-                            }
-                        }
-
-                        UiText {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: bandTrack.bottom
-                            anchors.topMargin: 4
-                            text: bandMa.containsMouse || band.dragging
-                                ? (band.db > 0 ? "+" + band.db : "" + band.db)
-                                : Equalizer.bandLabels[band.index]
-                            color: bandMa.containsMouse || band.dragging ? root.seal : root.sumi
-                            font.family: root.mono; font.pixelSize: 9
-                        }
-                    }
-                }
-            }
-
-            // ── presets ──
-            Grid {
-                width: parent.width
-                columns: 4
-                rows: 2
-                columnSpacing: 6
-                rowSpacing: 6
-                opacity: mprisPanel.inPresets
-                transform: Translate { y: 12 * (1 - mprisPanel.inPresets) }
-
-                Repeater {
-                    model: Equalizer.presets
-                    delegate: Rectangle {
-                        id: presetTile
-                        required property string modelData
-                        readonly property bool on: Equalizer.preset === modelData
-                        width: (parent.width - 3 * 6) / 4
-                        height: 24
-                        radius: root.panelButtonRadius
-                        color: presetTile.on ? root.fillActive
-                             : (presetMa.containsMouse ? root.fillHover : root.fillIdle)
-                        border.width: 1
-                        border.color: (presetTile.on || presetMa.containsMouse) ? root.seal : root.sep
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        UiText {
-                            anchors.centerIn: parent
-                            text: Equalizer.presetLabel(presetTile.modelData)
-                            color: presetTile.on ? root.seal : root.ink
-                            font.family: root.mono; font.pixelSize: 10
-                        }
-                        MouseArea {
-                            id: presetMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Equalizer.applyPreset(presetTile.modelData)
                         }
                     }
                 }

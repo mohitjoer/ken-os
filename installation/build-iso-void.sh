@@ -894,13 +894,13 @@ MENU COLOR tabmsg       * #66666666 #00000000 none
 LABEL linux
 MENU LABEL Asura OS (Live Session)
 KERNEL /boot/vmlinuz
-APPEND initrd=/boot/initrd root=live:CDLABEL=ASURA_LIVE init=/sbin/init ro rd.luks=0 rd.md=0 rd.dm=0 vconsole.unicode=1 vconsole.keymap=@@KEYMAP@@ locale.LANG=@@LOCALE@@ @@BOOT_CMDLINE@@
+APPEND initrd=/boot/initrd root=live:CDLABEL=ASURA_LIVE init=/sbin/init ro rd.luks=0 rd.md=0 rd.dm=0 vconsole.unicode=1 vconsole.keymap=@@KEYMAP@@ locale.LANG=@@LOCALE@@ vga=current @@BOOT_CMDLINE@@
 
 LABEL linuxram
 MENU LABEL Asura OS (Copy to RAM)
 
 KERNEL /boot/vmlinuz
-APPEND initrd=/boot/initrd root=live:CDLABEL=ASURA_LIVE init=/sbin/init ro rd.luks=0 rd.md=0 rd.dm=0 vconsole.unicode=1 vconsole.keymap=@@KEYMAP@@ locale.LANG=@@LOCALE@@ @@BOOT_CMDLINE@@ rd.live.ram
+APPEND initrd=/boot/initrd root=live:CDLABEL=ASURA_LIVE init=/sbin/init ro rd.luks=0 rd.md=0 rd.dm=0 vconsole.unicode=1 vconsole.keymap=@@KEYMAP@@ locale.LANG=@@LOCALE@@ vga=current @@BOOT_CMDLINE@@ rd.live.ram
 
 LABEL reboot
 MENU LABEL Reboot System
