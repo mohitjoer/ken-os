@@ -23,6 +23,12 @@ import (
 // reason: the code that matters is the code a test can reach.
 func overlayPaths(rootOverride string) (overlay.Paths, error) {
 	home, err := os.UserHomeDir()
+	if sudoUser := os.Getenv("SUDO_USER"); sudoUser != "" && sudoUser != "root" && os.Geteuid() == 0 {
+		userHome := filepath.Join("/home", sudoUser)
+		if fi, err := os.Stat(userHome); err == nil && fi.IsDir() {
+			home = userHome
+		}
+	}
 	if err != nil {
 		return overlay.Paths{}, fmt.Errorf("cannot determine the home directory: %w", err)
 	}

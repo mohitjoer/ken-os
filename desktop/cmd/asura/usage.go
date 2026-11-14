@@ -47,10 +47,11 @@ fixture cannot contain a serial.
 `
 
 const updateUsage = `Usage: asura update [flags]
+       sudo asura update [flags]
 
-Snapshots the config tree to git, preserves the current base, fetches packages,
-pulls latest branch code when on unstable, and re-materializes. The user's edits
-survive every step.
+Updates ASURA desktop packages and configuration. When run as a normal user,
+it updates ASURA packages, overlays, and git code. When run as root (or with sudo),
+it also updates all base system packages (XBPS) and creates a Btrfs snapshot.
 
   --root DIR       operate on a tree under this directory
   --dry-run        do the snapshot and preserve steps, fetch nothing
@@ -58,6 +59,8 @@ survive every step.
   --unstable       pull latest code changes from the dev-unstable branch
   --branch NAME    specify a git branch to pull code updates from
   --channel NAME   update channel (stable, unstable)
+  --system         update all system packages (XBPS) even when unprivileged
+  --asura-only     only update ASURA packages and components (skip XBPS)
 `
 
 const rollbackUsage = `Usage: asura rollback [flags] [snapshot-name]

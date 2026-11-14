@@ -34,6 +34,8 @@ func asuraUpdate(args []string) int {
 		unstable   = set.Bool("unstable", false, "pull the latest code from the dev-unstable branch")
 		branch     = set.String("branch", "", "git branch to pull code updates from (default: dev-unstable)")
 		channel    = set.String("channel", "", "channel to update from (stable, unstable, dev-unstable)")
+		system     = set.Bool("system", false, "force update of all system packages (XBPS)")
+		asuraOnly  = set.Bool("asura-only", false, "only update ASURA packages and desktop components")
 	)
 	if err := set.Parse(args); err != nil {
 		return exitUsage
@@ -60,13 +62,16 @@ func asuraUpdate(args []string) int {
 		return exitFail
 	}
 
+	isRoot := os.Geteuid() == 0
+	updateSystemPkgs := (isRoot || *system) && !*asuraOnly
+
 	var snapshot func(overlay.Paths) error
 	if !*noSnapshot {
 		snapshot = func(p overlay.Paths) error {
 			if err := gitSnapshot(p); err != nil {
 				return err
 			}
-			if !*dryRun {
+			if !*dryRun && updateSystemPkgs {
 				if snap, err := createBtrfsSnapshot(); err != nil {
 					fmt.Fprintf(os.Stderr, "asura update: btrfs snapshot: %v\n", err)
 				} else if snap != "" {
@@ -80,17 +85,27 @@ func asuraUpdate(args []string) int {
 	var fetch func() error
 	if !*dryRun {
 		fetch = func() error {
-			// Step 2a: If on unstable channel or branch requested, pull git code updates
+			// Step: Update ASURA git code and packages
 			if targetBranch != "" {
-				fmt.Printf("==> Unstable update: pulling latest code from '%s' branch...\n", targetBranch)
+				fmt.Printf("==> Updating ASURA packages from '%s' branch...\n", targetBranch)
 				if err := pullGitUpdates(targetBranch, *root); err != nil {
 					fmt.Fprintf(os.Stderr, "asura update: git pull warning: %v\n", err)
 				} else {
-					fmt.Printf("==> Successfully pulled latest '%s' branch changes\n", targetBranch)
+					fmt.Printf("==> Successfully updated ASURA packages from '%s'\n", targetBranch)
+				}
+			} else {
+				// If a local source repo exists, pull and sync updates
+				if repo, err := findOrCloneRepo("dev-unstable"); err == nil && repo != "" {
+					fmt.Printf("==> Updating ASURA components from local repository (%s)...\n", repo)
+					_ = pullGitUpdates("dev-unstable", *root)
 				}
 			}
-			// Step 2b: System packages update via XBPS
-			return voidFetch()
+
+			// Full system package update via XBPS (only when root or --system)
+			if updateSystemPkgs {
+				return voidFetch()
+			}
+			return nil
 		}
 	} else {
 		fetch = nil
@@ -107,10 +122,8 @@ func asuraUpdate(args []string) int {
 		updateFlatpaks()
 	}
 
-	// Regenerate GRUB so the new Btrfs snapshot gets a boot entry. This is
-	// what makes rollback (option b) actually bootable: the boot guard selects
-	// the snapshot by its exact menuentry title via grub-reboot.
-	if !*dryRun && isBtrfsRoot() {
+	// Regenerate GRUB so the new Btrfs snapshot gets a boot entry (only on system updates)
+	if !*dryRun && updateSystemPkgs && isBtrfsRoot() {
 		if _, err := exec.LookPath("grub-mkconfig"); err == nil {
 			fmt.Println("==> Regenerating GRUB boot menu (snapshot entries)...")
 			cmd := exec.Command("grub-mkconfig", "-o", "/boot/grub/grub.cfg")
@@ -140,6 +153,16 @@ func asuraUpdate(args []string) int {
 	if !*dryRun {
 		fmt.Println("triggering live shell and service reload...")
 		reloadMain(nil, os.Stdout, os.Stderr, runner.Exec(15*time.Second))
+	}
+
+	if !updateSystemPkgs {
+		fmt.Println("\n--------------------------------------------------------------------------------")
+		fmt.Println("==> ASURA packages and desktop components are up to date.")
+		fmt.Println("==> Recommendation: To update all base system packages (XBPS) and OS, run:")
+		fmt.Println("    sudo asura update")
+		fmt.Println("--------------------------------------------------------------------------------")
+	} else {
+		fmt.Println("\n==> Full system and ASURA update complete.")
 	}
 
 	return exitOK
@@ -214,6 +237,11 @@ func runLocalXbpsUpdate() error {
 	}
 	syncCmd.Stdout, syncCmd.Stderr, syncCmd.Stdin = os.Stdout, os.Stderr, os.Stdin
 	if err := syncCmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 8 {
+			fmt.Fprintf(os.Stderr, "\n==> XBPS Warning: package transaction aborted due to unresolved shared libraries.\n")
+			fmt.Fprintf(os.Stderr, "==> A third-party repository (such as hyprland-void) has packages awaiting base system library rebuilds.\n")
+			fmt.Fprintf(os.Stderr, "==> Run 'asura update' to update ASURA desktop packages without touching broken third-party packages.\n\n")
+		}
 		return fmt.Errorf("xbps-install: %w", err)
 	}
 	return nil
@@ -299,17 +327,17 @@ func pullGitUpdates(branch string, root string) error {
 
 	fmt.Printf("==> Pulling latest changes from branch '%s' in %s...\n", branch, repoDir)
 
-	fetchCmd := exec.Command("git", "-C", repoDir, "fetch", "origin", branch)
+	fetchCmd := exec.Command("git", "-c", "safe.directory=*", "-C", repoDir, "fetch", "origin", branch)
 	fetchCmd.Stdout, fetchCmd.Stderr = os.Stdout, os.Stderr
 	if err := fetchCmd.Run(); err != nil {
 		return fmt.Errorf("git fetch: %w", err)
 	}
 
-	checkoutCmd := exec.Command("git", "-C", repoDir, "checkout", branch)
+	checkoutCmd := exec.Command("git", "-c", "safe.directory=*", "-C", repoDir, "checkout", branch)
 	checkoutCmd.Stdout, checkoutCmd.Stderr = os.Stdout, os.Stderr
 	_ = checkoutCmd.Run()
 
-	pullCmd := exec.Command("git", "-C", repoDir, "pull", "--ff-only", "origin", branch)
+	pullCmd := exec.Command("git", "-c", "safe.directory=*", "-C", repoDir, "pull", "--ff-only", "origin", branch)
 	pullCmd.Stdout, pullCmd.Stderr = os.Stdout, os.Stderr
 	if err := pullCmd.Run(); err != nil {
 		return fmt.Errorf("git pull: %w", err)
@@ -368,6 +396,14 @@ func findOrCloneRepo(branch string) (string, error) {
 		"/usr/src/asura",
 		"/usr/share/asura",
 		"/var/cache/asura/source",
+	}
+	if sudoUser := os.Getenv("SUDO_USER"); sudoUser != "" && sudoUser != "root" {
+		userHome := filepath.Join("/home", sudoUser)
+		candidates = append([]string{
+			filepath.Join(userHome, "code", "ASURA-OS"),
+			filepath.Join(userHome, "code", "asura", "ASURA-OS"),
+			filepath.Join(userHome, "ASURA-OS"),
+		}, candidates...)
 	}
 	for _, c := range candidates {
 		if isAsuraRepo(c) {
