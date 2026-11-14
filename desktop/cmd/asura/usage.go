@@ -49,11 +49,15 @@ fixture cannot contain a serial.
 const updateUsage = `Usage: asura update [flags]
 
 Snapshots the config tree to git, preserves the current base, fetches packages,
-and re-materializes. The user's edits survive every step.
+pulls latest branch code when on unstable, and re-materializes. The user's edits
+survive every step.
 
   --root DIR       operate on a tree under this directory
   --dry-run        do the snapshot and preserve steps, fetch nothing
   --no-snapshot    skip the config snapshot
+  --unstable       pull latest code changes from the dev-unstable branch
+  --branch NAME    specify a git branch to pull code updates from
+  --channel NAME   update channel (stable, unstable)
 `
 
 const rollbackUsage = `Usage: asura rollback [flags] [snapshot-name]
