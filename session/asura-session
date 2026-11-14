@@ -229,8 +229,9 @@ if grep -qa "VirtualBox\|VMware\|QEMU\|KVM" /sys/class/dmi/id/product_name 2>/de
     export WLR_RENDERER_ALLOW_SOFTWARE=1
     export AQ_NO_MODIFIERS=1
     export WLR_NO_HARDWARE_CURSORS=1
-    # Allow software scanout and disable hardware cursor planes for virtual machines
-    export LP_NUM_THREADS=2
+    # Maximize software rasterization threads across all assigned vCPUs
+    CPU_CORES=$(nproc 2>/dev/null || echo 4)
+    export LP_NUM_THREADS="$CPU_CORES"
     export LP_PERF=no_mipmap
     USER_HYPR_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/asura/hyprland"
     mkdir -p "$USER_HYPR_DIR"
