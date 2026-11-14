@@ -220,13 +220,14 @@ Item {
     readonly property real deskCardW: 122 * root.s
     readonly property real deskCardH: 58 * root.s
     readonly property real deskGap: 14 * root.s
-    readonly property real stripTopMargin: 40 * root.s
+    readonly property real stripRightMargin: 48 * root.s
+    readonly property real stripGap: 40 * root.s
 
     // ---- layout: cells wrap into as many rows as needed, shrinking so every
     // row fits the width AND all rows fit the height (no overflow, no scroll) ---
-    readonly property real regionTop: root.stripTopMargin + root.deskCardH + 46 * root.s
+    readonly property real regionTop: 80 * root.s
     readonly property real regionBottom: root.height - 78 * root.s
-    readonly property real availW: root.width - 2 * (72 * root.s)
+    readonly property real availW: root.width - (72 * root.s) - (root.deskCardW + root.stripRightMargin + root.stripGap)
     readonly property real availH: Math.max(150 * root.s, root.regionBottom - root.regionTop)
     readonly property real rowGap: 18 * root.s
     readonly property real thinRatio: 0.42  // a thin slat's width = full cell * this
@@ -485,11 +486,11 @@ Item {
     function deskAtRoot(px, py) {
         var lx = px - stripWrap.x;
         var ly = py - stripWrap.y;
-        if (ly < 0 || ly > root.deskCardH || lx < 0)
+        if (lx < 0 || lx > root.deskCardW || ly < 0)
             return root.noWs;
-        var unit = root.deskCardW + root.deskGap;
-        var i = Math.floor(lx / unit);
-        if (lx - i * unit > root.deskCardW)
+        var unit = root.deskCardH + root.deskGap;
+        var i = Math.floor(ly / unit);
+        if (ly - i * unit > root.deskCardH)
             return root.noWs;
         if (i < 0 || i >= root.deskList.length)
             return root.noWs;
@@ -510,13 +511,13 @@ Item {
         }
     }
 
-    // ---- desktop strip (top centre) -------------------------------------------
+    // ---- desktop strip (right side) -------------------------------------------
     Item {
         id: stripWrap
-        x: (root.width - stripInner.width) / 2
-        y: root.stripTopMargin
-        width: stripInner.width
-        height: root.deskCardH
+        x: root.width - root.deskCardW - root.stripRightMargin
+        y: Math.max(root.regionTop, (root.height - stripInner.implicitHeight) / 2)
+        width: root.deskCardW
+        height: stripInner.implicitHeight
         DesktopStrip {
             id: stripInner
             s: root.s

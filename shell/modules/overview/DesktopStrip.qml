@@ -5,16 +5,16 @@ import "Singletons"
 import qs.Ui.Singletons
 
 /**
- * The desktop strip along the top: each card is a "desktop", a block of
+ * The desktop strip along the right side: each card is a "desktop", a block of
  * workspace IDs holding its own set of workspaces (Hyprland has no native
  * space-group, so a desktop is just ids [d*10+1 .. d*10+10]). Click a card to
- * view that desktop's workspaces in the grid below; the trailing card is an
- * empty desktop to move into for a different kind of work. The active desktop
- * wears the vermillion accent, the viewed one a lighter ring. Every card carries
- * the hard offset shadow. Dragging a window tile onto a card moves it to that
- * desktop (Overview drives the hit-test; this just reflects dropHot).
+ * view that desktop's workspaces in the grid; the trailing card is an empty
+ * desktop to move into for a different kind of work. The active desktop wears
+ * the vermillion accent, the viewed one a lighter ring. Every card carries the
+ * hard offset shadow. Dragging a window tile onto a card moves it to that desktop
+ * (Overview drives the hit-test; this just reflects dropHot).
  */
-Row {
+Column {
     id: strip
     property real s: 1
     property var ov: null
