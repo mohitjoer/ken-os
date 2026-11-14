@@ -44,7 +44,6 @@ Item {
         switch (key) {
         case "desktop.appearance.dimStrength": return d["desktop.appearance.dimInactive"] === true;
         case "desktop.appearance.wobblyWindows": case "desktop.appearance.windowStyle": return d["desktop.appearance.animations"] === true;
-        case "desktop.appearance.glowRange": case "desktop.appearance.glowColor": return d["desktop.appearance.glowEnabled"] === true;
         case "desktop.appearance.borderAngleSpeed": return d["desktop.appearance.animatedBorder"] === true;
         case "desktop.appearance.blurContrast": case "desktop.appearance.blurBrightness": case "desktop.appearance.blurSpecial":
         case "desktop.appearance.blurPopups": case "desktop.appearance.blurIgnoreOpacity": case "desktop.appearance.blurNewOptimizations":

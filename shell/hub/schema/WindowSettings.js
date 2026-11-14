@@ -452,33 +452,6 @@ var rows = [{
         "ctl": "color",
         "src": "desktop.json"
     },{
-        "tab": "Look",
-        "group": "GLOW",
-        "key": "desktop.appearance.glowEnabled",
-        "label": "Glow behind windows",
-        "desc": "A coloured halo cast behind every window",
-        "ctl": "sw",
-        "src": "desktop.json"
-    },{
-        "tab": "Look",
-        "group": "GLOW",
-        "key": "desktop.appearance.glowRange",
-        "label": "Range",
-        "desc": "How far the halo reaches past the window edge",
-        "ctl": "step",
-        "src": "desktop.json",
-        "lo": 4.0,
-        "hi": 60.0,
-        "unit": "px"
-    },{
-        "tab": "Look",
-        "group": "GLOW",
-        "key": "desktop.appearance.glowColor",
-        "label": "Colour",
-        "desc": "The halo's tint, picked here, not taken from the theme",
-        "ctl": "color",
-        "src": "desktop.json"
-    },{
         "tab": "Borders",
         "group": "THICKNESS",
         "key": "desktop.appearance.borderSize",

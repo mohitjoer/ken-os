@@ -58,7 +58,7 @@ Item {
     function readTz() { tzRead.running = false; tzRead.running = true; }
     function applyTimezone(z) {
         if (!z) return;
-        tzApply.command = ["timedatectl", "set-timezone", z];
+        tzApply.command = ["sh", "-c", "timedatectl set-timezone \"$1\" 2>/dev/null || (pkexec ln -sf \"/usr/share/zoneinfo/$1\" /etc/localtime && printf '%s' \"$1\" | pkexec tee /etc/timezone >/dev/null)", "sh", z];
         tzApply.running = false;
         tzApply.running = true;
         tzMap.close();
@@ -75,12 +75,12 @@ Item {
     }
     Process {
         id: tzRead
-        command: ["timedatectl", "show", "-p", "Timezone", "--value"]
+        command: ["sh", "-c", "timedatectl show -p Timezone --value 2>/dev/null || (readlink /etc/localtime 2>/dev/null | sed -e 's|.*/usr/share/zoneinfo/||' -e 's|.*/zoneinfo/||') || cat /etc/timezone 2>/dev/null || true"]
         stdout: StdioCollector { onStreamFinished: pg.currentTimezone = ("" + text).trim() }
     }
     Process {
         id: shellRestart
-        command: ["systemctl", "--user", "restart", "asura-shell.service"]
+        command: ["sh", "-c", "asura-user-services restart quickshell 2>/dev/null || pkill -HUP asura-shell 2>/dev/null || true"]
     }
     // set-timezone talks to systemd-timedated over D-Bus; the shipped polkit
     // rule authorises it for the active user, so no password prompt.

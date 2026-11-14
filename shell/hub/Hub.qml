@@ -103,9 +103,9 @@ Rectangle {
         { name: "OVERVIEW", items: [ { key: "profile", name: "Profile" }, { key: "global", name: "General" }, { key: "updates", name: "Updates" } ] },
         { name: "DEVICES", items: [
             { key: "displays", name: "Displays", needs: { cap: "monitorConfig" } }, { key: "connections", name: "Connections" },
-            { key: "input", name: "Input" }, { key: "gpu", name: "Graphics & Power" } ] },
+            { key: "input", name: "Input" } ] },
         { name: "LOOK", items: [
-            { key: "animations", name: "Animations" }, { key: "lockscreen", name: "Lockscreen" } ] },
+            { key: "animations", name: "Animations" } ] },
         { name: "COMPOSITOR", items: [
             { key: "windowmanager", name: "Window Manager", needs: { provider: true } }, { key: "plugins", name: "Plugins", needs: { cap: "plugins" } },
             { key: "layerrules", name: "Layer Rules", adv: true, needs: { rows: true } } ] },
@@ -117,7 +117,7 @@ Rectangle {
             { key: "windowrules", name: "Window Rules", adv: true } ] },
         { name: "SYSTEM", items: [
             { key: "performance", name: "Performance" }, { key: "session", name: "Session" },
-            { key: "recording", name: "Recording" }, { key: "dictation", name: "Dictation", needs: { voiceEngine: true } }, { key: "fastfetch", name: "Fastfetch", adv: true },
+            { key: "recording", name: "Recording" }, { key: "fastfetch", name: "Fastfetch", adv: true },
             { key: "import", name: "Import config", adv: true, wired: true } ] },
         { name: "EXTEND", items: [
             { key: "addons", name: "Add-ons" } ] },

@@ -1315,10 +1315,10 @@ Item {
         }
 
         // revive a stopped bluetoothd. pkexec raises the polkit prompt;
-        // enable --now so it also survives the next boot.
+        // works with systemd or runit on Void Linux.
         Process {
             id: svcProc
-            command: ["pkexec", "systemctl", "enable", "--now", "bluetooth.service"]
+            command: ["pkexec", "sh", "-c", "if command -v systemctl >/dev/null 2>&1; then systemctl enable --now bluetooth.service; elif [ -d /etc/sv/bluetoothd ]; then ln -sf /etc/sv/bluetoothd /var/service/ && sv up bluetoothd; fi"]
             stdout: StdioCollector {}
             stderr: StdioCollector {}
             onExited: function(exitCode) {

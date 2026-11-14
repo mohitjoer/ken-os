@@ -11,9 +11,6 @@
 
 var plugins = [
     { "id": "hyprbars", "tab": "Title bars" },
-    { "id": "hyprglass", "tab": "Glass" },
-    { "id": "imgborders", "tab": "Image borders" },
-    { "id": "dynamic-cursors", "tab": "Cursor motion" },
     { "id": "hyprfocus", "tab": "Focus flash" },
-    { "id": "keysounds", "tab": "Key sounds" }
+    { "id": "hyprscrolling", "tab": "Scrolling layout" }
 ];

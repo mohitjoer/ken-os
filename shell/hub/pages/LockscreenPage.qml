@@ -25,7 +25,7 @@ Item {
         running: true
         command: ["sh", "-c",
             "for t in hyprlock hypridle; do command -v $t >/dev/null || echo $t; done; "
-            + "systemctl --user is-active --quiet asura-idle.service || echo idle-off"]
+            + "pgrep -x hypridle >/dev/null 2>&1 || echo idle-off"]
         stdout: StdioCollector {
             onStreamFinished: pg.missing = text.trim().split("\n").filter(s => s !== "")
         }

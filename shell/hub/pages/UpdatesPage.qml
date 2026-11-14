@@ -224,11 +224,10 @@ Item {
             pg.dismiss();
     }
 
-    // The rest of the archive is apt's, not Asura's: `asura update` moves the
-    // Asura packages only. apt asks for the root password and for confirmation
-    // itself, in the terminal.
+    // The base system packages use XBPS: `asura update` moves the
+    // Asura packages only. xbps asks for root password and confirmation in terminal.
     function upgradeSystem() {
-        pg.inTerminal("sudo apt update && sudo apt upgrade");
+        pg.inTerminal("sudo xbps-install -Syu");
     }
 
     // dismiss a finished/failed run: clear the run-state file so the page and
@@ -620,7 +619,7 @@ Item {
                 // the section has to name what moves the rest.
                 Text {
                     width: idleCol.width
-                    text: I18n.tr("From Ubuntu's archive, kernel included. `asura update` moves Asura's own packages; take the rest with:  sudo apt update && sudo apt upgrade")
+                    text: I18n.tr("From the base archive, kernel included. `asura update` moves Asura's own packages; take the rest with:  sudo xbps-install -Syu")
                     color: Tokens.inkFaint
                     font.family: Tokens.ui; font.pixelSize: Tokens.fTiny
                     wrapMode: Text.WordWrap

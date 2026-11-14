@@ -304,9 +304,8 @@ Item {
     function applyOptionsArg() { return String(pg.hv("desktop.input.kbOptions") || ""); }
     Process {
         id: sysApplyProc
-        // set-x11-keymap takes LAYOUT MODEL VARIANT OPTIONS; the empty model
-        // keeps the default, and the other three are the saved keyboard keys.
-        command: ["localectl", "set-x11-keymap", pg.applyLayoutArg(), "", pg.applyVariantArg(), pg.applyOptionsArg()]
+        // set-x11-keymap takes LAYOUT MODEL VARIANT OPTIONS; on Void Linux falls back to rc.conf/loadkeys.
+        command: ["sh", "-c", "localectl set-x11-keymap \"$1\" \"\" \"$2\" \"$3\" 2>/dev/null || (pkexec sh -c \"grep -q '^KEYMAP=' /etc/rc.conf 2>/dev/null && sed -i 's/^KEYMAP=.*/KEYMAP=$1/' /etc/rc.conf || echo 'KEYMAP=$1' >> /etc/rc.conf; command -v loadkeys >/dev/null 2>&1 && loadkeys $1 || true\")", "sh", pg.applyLayoutArg(), pg.applyVariantArg(), pg.applyOptionsArg()]
         onExited: (code, status) => {
             pg.sysApplyState = code === 0 ? "ok" : "err";
             sysApplyClear.restart();
