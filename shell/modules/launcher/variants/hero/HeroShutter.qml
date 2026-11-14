@@ -278,52 +278,44 @@ Item {
     Item {
         id: queryLine
         anchors.horizontalCenter: parent.horizontalCenter
-        y: (root.compressed ? 39 : 105) * root.s
-        width: Math.min(parent.width - 48 * root.s, 430 * root.s)
-        height: 30 * root.s
+        y: (root.compressed ? 34 : 96) * root.s
+        width: Math.min(parent.width - 56 * root.s, 440 * root.s)
+        height: 38 * root.s
 
-        // the field: a recessed well over the art, hairline-edged; the edge
-        // brightens while the caret is in. Radius 7 is the project scale's
-        // field stop. The old floating underline is gone — the well is the
-        // affordance now.
+        // Ambient soft drop shadow
+        Rectangle {
+            anchors.fill: parent
+            anchors.topMargin: 2 * root.s
+            radius: 10 * root.s
+            color: Theme.shadow
+            opacity: 0.45
+            antialiasing: true
+        }
+
+        // The field: translucent frosted well with hairline contact border
         Rectangle {
             id: well
             anchors.fill: parent
-            radius: 7 * root.s
-            color: Tokens.light ? Qt.rgba(1, 1, 1, 0.30) : Qt.rgba(0, 0, 0, 0.35)
-            border.width: Math.max(1, root.s)
-            border.color: field.activeFocus ? Theme.bright : Theme.faint
+            radius: 10 * root.s
+            color: Tokens.light ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(0.06, 0.06, 0.07, 0.76)
+            border.width: 1
+            border.color: field.activeFocus ? Theme.bright : Qt.rgba(1, 1, 1, 0.16)
             Behavior on border.color {
                 ColorAnimation { duration: Motion.selection; easing.type: Easing.OutCubic }
             }
         }
 
-        Item {
+        Text {
             id: searchGlyph
             anchors.left: parent.left
             anchors.leftMargin: 12 * root.s
             anchors.verticalCenter: parent.verticalCenter
-            width: 16 * root.s
-            height: 16 * root.s
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                width: 9 * root.s
-                height: 9 * root.s
-                radius: width / 2
-                color: "transparent"
-                border.width: Math.max(1, 1.4 * root.s)
-                border.color: Theme.bright
-            }
-            Rectangle {
-                width: 7 * root.s
-                height: Math.max(1, 1.4 * root.s)
-                color: Theme.bright
-                x: 8 * root.s
-                y: 10 * root.s
-                rotation: 45
-                transformOrigin: Item.Left
+            text: "search"
+            font.family: "Material Symbols Rounded"
+            font.pixelSize: 18 * root.s
+            color: field.activeFocus ? Theme.bright : Theme.faint
+            Behavior on color {
+                ColorAnimation { duration: Motion.fast }
             }
         }
 
@@ -331,17 +323,16 @@ Item {
             id: field
             anchors.left: searchGlyph.right
             anchors.leftMargin: 10 * root.s
-            anchors.right: parent.right
-            anchors.rightMargin: 12 * root.s
+            anchors.right: trailingItem.left
+            anchors.rightMargin: 8 * root.s
             anchors.verticalCenter: parent.verticalCenter
-            height: 26 * root.s
+            height: 28 * root.s
             color: Theme.bright
             selectionColor: Theme.modeActive
             selectedTextColor: Theme.onModeActive
-            font.family: Theme.mono
+            font.family: Theme.font
             font.pixelSize: 13 * root.s
-            font.weight: Font.Medium
-            font.letterSpacing: query.length === 0 ? 1.2 * root.s : 0
+            font.weight: Font.Normal
             selectByMouse: true
             clip: true
             Accessible.role: Accessible.EditableText
@@ -401,21 +392,72 @@ Item {
             anchors.left: field.left
             anchors.verticalCenter: field.verticalCenter
             visible: field.text.length === 0 && field.preeditText.length === 0
-            text: I18n.tr("TYPE TO SEARCH")
+            text: I18n.tr("Search apps, files, commands…")
             color: Theme.faint
-            style: Text.Raised
-            styleColor: Qt.rgba(root.shade, root.shade, root.shade, 0.86)
-            font.family: Theme.mono
-            font.pixelSize: 11 * root.s
-            font.weight: Font.Medium
-            font.letterSpacing: 1.3 * root.s
+            font.family: Theme.font
+            font.pixelSize: 13 * root.s
+            font.weight: Font.Normal
+        }
+
+        Item {
+            id: trailingItem
+            anchors.right: parent.right
+            anchors.rightMargin: 12 * root.s
+            anchors.verticalCenter: parent.verticalCenter
+            width: clearBtn.visible ? 20 * root.s : escBadge.implicitWidth
+            height: 20 * root.s
+
+            Item {
+                id: clearBtn
+                anchors.fill: parent
+                visible: field.text.length > 0
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "close"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: 15 * root.s
+                    color: clearTap.hovered ? Theme.bright : Theme.faint
+                    Behavior on color { ColorAnimation { duration: Motion.fast } }
+                }
+                HoverHandler { id: clearTap; cursorShape: Qt.PointingHandCursor }
+                TapHandler {
+                    onTapped: {
+                        field.text = "";
+                        field.forceActiveFocus();
+                    }
+                }
+            }
+
+            Rectangle {
+                id: escBadge
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                visible: field.text.length === 0
+                width: escLabel.implicitWidth + 8 * root.s
+                height: 16 * root.s
+                radius: 3 * root.s
+                color: Qt.rgba(1, 1, 1, 0.08)
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.12)
+
+                Text {
+                    id: escLabel
+                    anchors.centerIn: parent
+                    text: "ESC"
+                    font.family: Theme.mono
+                    font.pixelSize: 8 * root.s
+                    font.weight: Font.DemiBold
+                    color: Theme.faint
+                }
+            }
         }
     }
 
     Row {
         id: modeKeys
         anchors.horizontalCenter: parent.horizontalCenter
-        y: (root.compressed ? 83 : 154) * root.s
+        y: (root.compressed ? 78 : 146) * root.s
         spacing: 7 * root.s
 
         HeroVariant.ModeKey {

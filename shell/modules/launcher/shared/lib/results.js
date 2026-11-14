@@ -1,5 +1,5 @@
 var LAYOUT = Object.freeze({
-  baseWidth: 720,
+  baseWidth: 580,
   workMargin: 32,
   heroRest: 250,
   heroCompressed: 126,

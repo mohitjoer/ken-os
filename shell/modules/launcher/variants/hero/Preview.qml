@@ -11,7 +11,7 @@ Item {
     property var settings: ({})
     signal editRequested(string key, var value)
 
-    implicitWidth: 720
+    implicitWidth: 580
     implicitHeight: 250
     clip: true
 

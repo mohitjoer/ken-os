@@ -153,7 +153,7 @@ test("packActions produces the expected rows for zero through seven actions", ()
 
 test("Shutter geometry keeps the approved dense dimensions", () => {
   assert.deepEqual(LAYOUT, {
-    baseWidth: 720,
+    baseWidth: 580,
     workMargin: 32,
     heroRest: 250,
     heroCompressed: 126,
@@ -163,28 +163,28 @@ test("Shutter geometry keeps the approved dense dimensions", () => {
   });
 });
 
-test("card width is 720px at base scale and caps inside the work area", () => {
-  assert.equal(cardGeometry(1920, 1080, 1, 0).width, 720);
-  assert.equal(cardGeometry(700, 1080, 1, 0).width, 668);
-  assert.equal(cardGeometry(960, 1080, 1.2, 0).width, 864);
-  assert.equal(cardGeometry(820, 1080, 1.2, 0).width, 788);
+test("card width is 580px at base scale and caps inside the work area", () => {
+  assert.equal(cardGeometry(1920, 1080, 1, 0).width, 580);
+  assert.equal(cardGeometry(550, 1080, 1, 0).width, 518);
+  assert.equal(cardGeometry(960, 1080, 1.2, 0).width, 696);
+  assert.equal(cardGeometry(700, 1080, 1.2, 0).width, 668);
 });
 
 test("card height keeps fixed hero and lead while capping the scrollable drawer", () => {
   assert.deepEqual(cardGeometry(1920, 1080, 1, 874), {
-    width: 720,
+    width: 580,
     height: 1000,
     heroHeight: 126,
     bodyHeight: 874
   });
   assert.deepEqual(cardGeometry(1920, 620, 1, 1000), {
-    width: 720,
+    width: 580,
     height: 588,
     heroHeight: 126,
     bodyHeight: 462
   });
   assert.deepEqual(cardGeometry(1920, 620, 1, 0), {
-    width: 720,
+    width: 580,
     height: 250,
     heroHeight: 250,
     bodyHeight: 0
